@@ -200,3 +200,253 @@ Import trace for requested module:
 ./components/AppShell.tsx
 ./app/layout.tsx
  GET /admin/dashboard 500 in 412ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 345ms
+ GET /admin/login 500 in 74ms
+ GET /admin/login 500 in 99ms
+ GET /admin/login 500 in 227ms
+ GET / 500 in 301ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET / 200 in 829ms
+ GET /admin/login 500 in 8318ms
+ GET / 500 in 117ms
+ GET / 500 in 1097ms
+ GET /admin/login 500 in 135ms
+ GET /admin/login 500 in 284ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:180:1]
+ [2m177[0m |                     })}
+ [2m178[0m |                 </div>
+ [2m179[0m |             </nav>
+ [2m180[0m |         )}
+     : [35;1m         ^[0m
+ [2m181[0m |         </div>
+ [2m182[0m |     );
+ [2m183[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET / 200 in 626ms
+ GET /admin/login 500 in 8131ms
+ GET / 500 in 365ms
+ GET /admin/login 500 in 1156ms
+ GET / 500 in 115ms
+ GET /admin/dashboard 500 in 181ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 5.6s (2933 modules)
+ GET / 200 in 340ms
+ GET /admin/login 200 in 230ms
+ GET / 200 in 2175ms
+ GET /admin/login 200 in 1038ms
+ GET /admin/dashboard 200 in 567ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.6s (2924 modules)
+ GET /manifest.json 404 in 16544ms
+ GET / 200 in 13101ms
+ GET /admin/dashboard 200 in 2521ms
+ GET /manifest.json 404 in 860ms
+ GET /manifest.json 404 in 1478ms
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+ GET /admin/dashboard 200 in 4831ms
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+ GET /admin/dashboard 200 in 4240ms
+ GET /manifest.json 404 in 2221ms
+ ○ Compiling /admin/settings ...
+ ✓ Compiled /admin/settings in 24.1s (2929 modules)
+ GET /admin/settings 200 in 37618ms
+ GET /admin/login 200 in 7876ms
+ GET /admin/dashboard 200 in 731ms
+ GET /manifest.json 404 in 800ms
+ GET /admin/login 200 in 5864ms
+ GET /admin/dashboard 200 in 1294ms
+ GET /manifest.json 404 in 5048ms
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+ GET /admin/dashboard 200 in 8769ms
+ GET /manifest.json 404 in 3706ms
+ GET /admin/dashboard 200 in 24526ms
+ GET /admin/dashboard 200 in 24460ms
+ ✓ Compiled in 174.9s (3052 modules)
+ GET / 200 in 143100ms
+ ○ Compiling /access ...
+ ✓ Compiled /access in 22.7s (2933 modules)
+ GET /access 200 in 25701ms
+ GET /access 200 in 1148ms
+ GET /access 200 in 1665ms
+ GET /access 200 in 1173ms
+ ○ Compiling /api/auth/access ...
+ ✓ Compiled /api/auth/access in 69.3s (2958 modules)
+ POST /api/auth/access 401 in 71909ms
+ GET /access 200 in 35091ms
+ GET /access 200 in 1870ms
+Error: Route "/api/auth/access" used `cookies().set('site_access_token', ...)`. `cookies()` should be awaited before using its value. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at createCookiesAccessError (../../../src/server/request/cookies.ts:529:10)
+    at syncIODev (../../../src/server/request/cookies.ts:517:3)
+    at Promise.set (../../../src/server/request/cookies.ts:379:9)
+    at POST (app/api/auth/access/route.ts:15:23)
+  527 | ) {
+  528 |   const prefix = route ? `Route "${route}" ` : 'This route '
+> 529 |   return new Error(
+      |          ^
+  530 |     `${prefix}used ${expression}. ` +
+  531 |       `\`cookies()\` should be awaited before using its value. ` +
+  532 |       `Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis`
+ POST /api/auth/access 200 in 3713ms
+ GET / 200 in 555ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 15.6s (2963 modules)
+ GET /manifest.json 404 in 20262ms
+ GET /access 200 in 4219ms
+ ○ Compiling /services ...
+ ✓ Compiled /services in 40s (2943 modules)
+ GET /services 200 in 19099ms
+ GET /services 200 in 43714ms
+ GET /services 200 in 23805ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 6.6s (2948 modules)
+ GET /manifest.json 404 in 10514ms
+ ✓ Compiled in 82.3s (2955 modules)
+ GET /access 200 in 15834ms
+ GET / 200 in 12106ms
+ GET / 200 in 5630ms
+ GET /services 200 in 5669ms
+ GET /access 200 in 5704ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 5s (2946 modules)
+ GET /manifest.json 404 in 7564ms
+ GET /grid.svg 404 in 7842ms
+ GET /manifest.json 404 in 345ms
+ GET /access 200 in 1063ms
+ GET /services 200 in 2728ms
+ GET / 200 in 594ms
+ GET /manifest.json 404 in 713ms
+ GET / 200 in 264ms
+ GET /manifest.json 404 in 378ms
+ GET /services 200 in 119ms
+ GET /manifest.json 404 in 198ms
+ ○ Compiling /portfolio ...
+ ✓ Compiled /portfolio in 3.2s (2955 modules)
+ GET /portfolio 200 in 3461ms
+ GET /portfolio 200 in 54ms
+ GET /manifest.json 404 in 460ms
+ GET /access 200 in 163ms
+ ○ Compiling /portal ...
+ ✓ Compiled /portal in 1284ms (2508 modules)
+ GET /portal 200 in 1437ms
+ GET /manifest.json 404 in 437ms
+ GET /portfolio 200 in 41ms
+ GET /manifest.json 404 in 125ms
+ ✓ Compiled in 1519ms (2486 modules)
+ GET /services 200 in 92ms
+ GET /services 200 in 60ms
+ GET /access 200 in 49ms
+ GET /manifest.json 404 in 280ms
+ GET /access 200 in 161ms
+ GET /access 200 in 117ms
+ GET /manifest.json 404 in 126ms
+ GET /access 200 in 121ms
+ GET / 200 in 41ms
+ GET /manifest.json 404 in 141ms
+ GET / 200 in 285ms
+ ✓ Compiled in 33.9s (2481 modules)
+ GET / 200 in 11532ms
+ GET / 200 in 1710ms
+ GET / 200 in 468ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 5.7s (2472 modules)
+ GET /manifest.json 404 in 8555ms
+ GET /manifest.json 404 in 712ms
+ GET /access 200 in 2278ms
+ GET /access 200 in 1119ms
+ GET /access 200 in 642ms
+ GET /access 200 in 1117ms
+ ✓ Compiled in 31.3s (2481 modules)
+ GET /access 200 in 15743ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 6259ms
+ GET / 200 in 16103ms
+ GET / 200 in 1346ms
+ GET /access 200 in 1626ms
+ ○ Compiling /_not-found ...
+ GET /access 200 in 3074ms
+ ✓ Compiled /_not-found in 8.5s (2472 modules)
+ GET /manifest.json 404 in 17712ms
+ GET /access 200 in 16730ms
+ GET /manifest.json 404 in 2594ms
+ GET /access 200 in 1489ms
+ GET /services 200 in 630ms
+ GET /manifest.json 404 in 833ms
+ ✓ Compiled in 40.2s (2482 modules)
+ GET /services 200 in 24467ms
+ GET /services 200 in 504ms
+ GET / 200 in 798ms
+ GET / 200 in 387ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.4s (2472 modules)
+ GET /manifest.json 404 in 9151ms
+ GET /manifest.json 404 in 344ms
+ GET / 200 in 958ms

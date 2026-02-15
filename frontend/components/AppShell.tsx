@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const isAdminRoute = pathname.startsWith('/admin');
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden flex flex-col">
+        <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden flex flex-col pb-24 md:pb-0">
 
             {/* ========================================= */}
             {/* DESKTOP TOP NAVIGATION                    */}
@@ -59,13 +59,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
                         {/* Logo & Brand */}
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 p-[1px]">
-                                <div className="absolute inset-0 bg-[#0B0F19] rounded-xl group-hover:bg-transparent transition-colors duration-300"></div>
-                                <Terminal className="relative z-10 w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
+                            <div className="relative w-[50rem] h-[16rem] translate-y-6">
+                                <img
+                                    src="/logo.png"
+                                    alt="Stormglide Logo"
+                                    className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]"
+                                />
                             </div>
-                            <span className="text-xl font-bold tracking-wider text-white">
-                                STORMGLIDE<span className="text-cyan-400">.IO</span>
-                            </span>
                         </Link>
 
                         {/* Desktop Links */}
@@ -112,6 +112,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         </div>
                     </div>
                 </header>
+            )}
 
             {/* ========================================= */}
             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
@@ -136,47 +137,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* ========================================= */}
             {/* MOBILE BOTTOM NAVIGATION (PWA FEEL)       */}
             {/* ========================================= */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-2">
-                <div className="relative flex items-center justify-around w-full bg-[#111827]/80 backdrop-blur-xl border border-white/10 rounded-2xl py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-                    {NAV_LINKS.map((link) => {
-                        const isActive = pathname === link.path;
-                        const Icon = link.icon;
+            {!isAdminRoute && (
+                <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-2">
+                    <div className="relative flex items-center justify-around w-full bg-[#111827]/80 backdrop-blur-xl border border-white/10 rounded-2xl py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+                        {NAV_LINKS.map((link) => {
+                            const isActive = pathname === link.path;
+                            const Icon = link.icon;
 
-                        return (
-                            <Link
-                                key={link.name}
-                                href={link.path}
-                                className="relative flex flex-col items-center justify-center w-16 h-12 rounded-xl"
-                                // Haptic feedback trigger for mobile browsers that support it
-                                onClick={() => {
-                                    if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
-                                        window.navigator.vibrate(50);
-                                    }
-                                }}
-                            >
-                                <div className={`relative z-10 transition-colors duration-300 ${isActive ? "text-cyan-400" : "text-gray-500"}`}>
-                                    <Icon strokeWidth={isActive ? 2.5 : 2} size={22} />
-                                </div>
+                            return (
+                                <Link
+                                    key={link.name}
+                                    href={link.path}
+                                    className="relative flex flex-col items-center justify-center w-16 h-12 rounded-xl"
+                                    // Haptic feedback trigger for mobile browsers that support it
+                                    onClick={() => {
+                                        if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+                                            window.navigator.vibrate(50);
+                                        }
+                                    }}
+                                >
+                                    <div className={`relative z-10 transition-colors duration-300 ${isActive ? "text-cyan-400" : "text-gray-500"}`}>
+                                        <Icon strokeWidth={isActive ? 2.5 : 2} size={22} />
+                                    </div>
 
-                                {/* Text indicator for mobile */}
-                                <span className={`text-[10px] mt-1 font-medium transition-all duration-300 ${isActive ? "text-cyan-400 opacity-100" : "text-gray-500 opacity-0 h-0"}`}>
-                                    {link.name.split(" ")[0]}
-                                </span>
+                                    {/* Text indicator for mobile */}
+                                    <span className={`text-[10px] mt-1 font-medium transition-all duration-300 ${isActive ? "text-cyan-400 opacity-100" : "text-gray-500 opacity-0 h-0"}`}>
+                                        {link.name.split(" ")[0]}
+                                    </span>
 
-                                {/* Animated Glowing Background Pill for Active State */}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="mobile-active-indicator"
-                                        className="absolute inset-0 bg-cyan-500/10 rounded-xl border border-cyan-500/20"
-                                        transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                                    />
-                                )}
-                            </Link>
-                        );
-                    })}
-                </div>
-            </nav>
-        )}
+                                    {/* Animated Glowing Background Pill for Active State */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="mobile-active-indicator"
+                                            className="absolute inset-0 bg-cyan-500/10 rounded-xl border border-cyan-500/20"
+                                            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                                        />
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }

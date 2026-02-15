@@ -1351,13 +1351,13 @@ let SettingsController = class SettingsController {
 exports.SettingsController = SettingsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.OMEGA),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "getSettings", null);
 __decorate([
     (0, common_1.Put)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.OMEGA),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -1365,7 +1365,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], SettingsController.prototype, "updateSettings", null);
 exports.SettingsController = SettingsController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('v1/settings'),
     __metadata("design:paramtypes", [typeof (_a = typeof settings_service_1.SettingsService !== "undefined" && settings_service_1.SettingsService) === "function" ? _a : Object])
 ], SettingsController);

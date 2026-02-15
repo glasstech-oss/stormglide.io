@@ -229,9 +229,15 @@ export default function DashboardPage() {
                 </>
             )}
 
-            {activeTab === 'cms' && <SiteControl />}
+            {activeTab === 'dashboard' && (
+                <>
+                    {/* ... existing dashboard content ... */}
+                </>
+            )}
 
-            {(activeTab !== 'dashboard' && activeTab !== 'cms') && (
+            {activeTab === 'settings' && <SettingsPage />}
+
+            {(activeTab !== 'dashboard' && activeTab !== 'settings') && (
                 <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
                     <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-4xl">
                         🛠️
