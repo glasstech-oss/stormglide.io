@@ -1,334 +1,215 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
-    Settings2,
     Palette,
     Type,
-    Share2,
-    Save,
     Image as ImageIcon,
-    Globe,
-    Mail,
-    Phone,
-    Twitter,
-    Linkedin,
-    Github,
+    Moon,
+    Sun,
+    Save,
+    RefreshCw,
     CheckCircle2,
-    AlertCircle,
-    Loader2
+    Layout
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import { useSiteSettings } from "@/context/SiteSettingsProvider";
+import axios from "axios";
 
-export default function AdminSettingsPage() {
-    const { settings: initialSettings, refreshSettings } = useSiteSettings();
-    const [activeTab, setActiveTab] = useState("general");
-    const [settings, setSettings] = useState<any>(null);
+export default function SettingsPage() {
+    const { settings, refreshSettings } = useSiteSettings();
+    const [formData, setFormData] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+    const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
 
     useEffect(() => {
-        if (initialSettings) {
-            setSettings(initialSettings);
+        if (settings) {
+            setFormData(settings);
         }
-    }, [initialSettings]);
+    }, [settings]);
+
+    if (!formData) return (
+        <div className="flex items-center justify-center p-20">
+            <RefreshCw className="animate-spin text-cyan-500" size={32} />
+        </div>
+    );
 
     const handleSave = async () => {
         setIsSaving(true);
-        setStatus(null);
+        setSaveStatus("idle");
         try {
-            // Basic Auth: admin@stormglide.com : unlockme
-            const authHeader = 'Basic ' + btoa('admin@stormglide.com:unlockme');
+            const adminToken = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('admin_token='))
+                ?.split('=')[1];
 
             await axios.put(
                 `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/v1/settings`,
-                settings,
-                { headers: { 'Authorization': authHeader } }
+                formData,
+                { headers: { Authorization: `Bearer ${adminToken}` } }
             );
-
             await refreshSettings();
-            setStatus({ type: 'success', msg: 'Global Site Settings updated and deployed.' });
+            setSaveStatus("success");
+            setTimeout(() => setSaveStatus("idle"), 3000);
         } catch (error) {
-            console.error('Save failed:', error);
-            setStatus({ type: 'error', msg: 'Commander, the deployment failed. Check backend logs.' });
+            console.error("Failed to update settings:", error);
+            setSaveStatus("error");
         } finally {
             setIsSaving(false);
         }
     };
 
-    if (!settings) return (
-        <div className="h-[60vh] flex flex-col items-center justify-center gap-4 text-gray-500">
-            <Loader2 className="animate-spin" size={32} />
-            <p className="font-mono text-xs uppercase tracking-widest">Synchronizing Settings...</p>
-        </div>
-    );
-
-    const tabs = [
-        { id: "general", label: "General", icon: Settings2 },
-        { id: "theme", label: "Theme & Colors", icon: Palette },
-        { id: "content", label: "Hero & Content", icon: Type },
-        { id: "socials", label: "Socials", icon: Share2 },
-    ];
+    const toggleMode = (mode: 'dark' | 'light') => {
+        if (mode === 'dark') {
+            setFormData({ ...formData, backgroundColor: "#0B0F19", foregroundColor: "#ffffff" });
+        } else {
+            setFormData({ ...formData, backgroundColor: "#ffffff", foregroundColor: "#0B0F19" });
+        }
+    };
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-20">
-            <div className="flex justify-between items-end">
+        <div className="max-w-4xl mx-auto space-y-10">
+            {/* Header Area */}
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">Global Site Control</h1>
-                    <p className="text-gray-400">Manage Stormglide.io branding and public identity from the command center.</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <Layout className="text-cyan-400" /> Site Orchestration
+                    </h1>
+                    <p className="text-gray-500 mt-2">Manage global theme, branding and core site content.</p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-8 py-3 rounded-2xl bg-cyan-500 text-[#0B0F19] font-bold hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50"
                 >
-                    {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                    {isSaving ? "Deploying..." : "Save Changes"}
-                </motion.button>
+                    {isSaving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                    {saveStatus === "success" ? "Protocol Saved" : "Apply Changes"}
+                </button>
             </div>
 
-            {status && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`p-4 rounded-2xl flex items-center gap-3 border ${status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
-                        }`}
+            {/* Quick Actions: Dark/Light Mode */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button
+                    onClick={() => toggleMode('dark')}
+                    className="p-6 rounded-2xl bg-slate-900 border border-white/5 flex items-center justify-between hover:border-cyan-500/50 transition-all group"
                 >
-                    {status.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-                    <span className="text-sm font-medium">{status.msg}</span>
-                </motion.div>
-            )}
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center">
+                            <Moon className="text-cyan-400" />
+                        </div>
+                        <div className="text-left">
+                            <span className="block text-white font-bold text-lg">Midnight Protocol</span>
+                            <span className="text-gray-500 text-sm">Deep space aesthetic (Standard)</span>
+                        </div>
+                    </div>
+                </button>
+                <button
+                    onClick={() => toggleMode('light')}
+                    className="p-6 rounded-2xl bg-white border border-black/5 flex items-center justify-between hover:border-cyan-500/50 transition-all group"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+                            <Sun className="text-orange-500" />
+                        </div>
+                        <div className="text-left">
+                            <span className="block text-black font-bold text-lg">Solar Interface</span>
+                            <span className="text-gray-400 text-sm">High clarity / Light mode</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Sidebar Tabs */}
-                <div className="space-y-2">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl transition-all duration-200 group ${activeTab === tab.id
-                                    ? "bg-white/5 text-cyan-400 border border-white/10 shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]"
-                                    : "text-gray-400 hover:bg-white/5 hover:text-white"
-                                }`}
-                        >
-                            <tab.icon size={20} className={activeTab === tab.id ? "scale-110" : "group-hover:scale-110"} />
-                            <span className="font-bold text-sm">{tab.label}</span>
-                        </button>
-                    ))}
+            {/* Theming System */}
+            <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 space-y-8">
+                <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+                    <Palette className="text-purple-400" />
+                    <h2 className="text-xl font-bold text-white">Visual Engine</h2>
                 </div>
 
-                {/* Content Area */}
-                <div className="lg:col-span-3 bg-[#111827] border border-white/5 rounded-3xl p-8 shadow-xl">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, x: 10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            className="space-y-8"
-                        >
-                            {activeTab === "general" && (
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-bold flex items-center gap-2">
-                                            <Globe className="text-cyan-400" size={20} />
-                                            General Identity
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Company Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={settings.companyName}
-                                                    onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Admin Email</label>
-                                                <input
-                                                    type="email"
-                                                    value={settings.contactEmail || ""}
-                                                    onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium"
-                                                    placeholder="admin@stormglide.io"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 pt-6 border-t border-white/5">
-                                        <h3 className="text-lg font-bold flex items-center gap-2">
-                                            <ImageIcon className="text-purple-400" size={20} />
-                                            Visual Assets
-                                        </h3>
-                                        <div className="grid grid-cols-1 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Logo URL</label>
-                                                <input
-                                                    type="text"
-                                                    value={settings.logoUrl || ""}
-                                                    onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium"
-                                                    placeholder="https://stormglide.io/logo.png"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Favicon URL</label>
-                                                <input
-                                                    type="text"
-                                                    value={settings.faviconUrl || ""}
-                                                    onChange={(e) => setSettings({ ...settings, faviconUrl: e.target.value })}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium"
-                                                    placeholder="https://stormglide.io/favicon.ico"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === "theme" && (
-                                <div className="space-y-8">
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-bold flex items-center gap-2">
-                                            <Palette className="text-cyan-400" size={20} />
-                                            Color System Control
-                                        </h3>
-                                        <p className="text-sm text-gray-400 italic">Adjusting these values will instantly transform the public frontend tokens.</p>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {/* Primary Color */}
-                                            <div className="p-6 rounded-2xl bg-black/20 border border-white/5 space-y-6">
-                                                <div className="flex justify-between items-center">
-                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Primary Accent</label>
-                                                    <div className="px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-mono border border-cyan-500/20">CSS TOKEN: --primary</div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <input
-                                                        type="color"
-                                                        value={settings.primaryColor}
-                                                        onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
-                                                        className="w-16 h-16 rounded-xl bg-transparent border-none cursor-pointer outline-none transition-transform hover:scale-105"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={settings.primaryColor}
-                                                        onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
-                                                        className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-white font-mono uppercase text-lg focus:outline-none focus:border-cyan-500/50"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Secondary Color */}
-                                            <div className="p-6 rounded-2xl bg-black/20 border border-white/5 space-y-6">
-                                                <div className="flex justify-between items-center">
-                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Secondary Accent</label>
-                                                    <div className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 text-[10px] font-mono border border-purple-500/20">CSS TOKEN: --secondary</div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <input
-                                                        type="color"
-                                                        value={settings.secondaryColor}
-                                                        onChange={(e) => setSettings({ ...settings, secondaryColor: e.target.value })}
-                                                        className="w-16 h-16 rounded-xl bg-transparent border-none cursor-pointer outline-none transition-transform hover:scale-105"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={settings.secondaryColor}
-                                                        onChange={(e) => setSettings({ ...settings, secondaryColor: e.target.value })}
-                                                        className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-white font-mono uppercase text-lg focus:outline-none focus:border-purple-500/50"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 rounded-2xl bg-black/20 border border-white/5 space-y-4 mt-6">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Deep Background Control</label>
-                                            <div className="flex items-center gap-4">
-                                                <input
-                                                    type="color"
-                                                    value={settings.backgroundColor}
-                                                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
-                                                    className="w-16 h-16 rounded-xl bg-transparent border-none cursor-pointer outline-none transition-transform hover:scale-105"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    value={settings.backgroundColor}
-                                                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
-                                                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-white font-mono uppercase text-lg focus:outline-none focus:border-gray-500/50"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === "content" && (
-                                <div className="space-y-6">
-                                    <h3 className="text-lg font-bold flex items-center gap-2">
-                                        <Type className="text-cyan-400" size={20} />
-                                        Hero Section Messaging
-                                    </h3>
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Primary Headline</label>
-                                            <input
-                                                type="text"
-                                                value={settings.heroHeadline}
-                                                onChange={(e) => setSettings({ ...settings, heroHeadline: e.target.value })}
-                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-bold text-xl"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Hero Subtext</label>
-                                            <textarea
-                                                rows={5}
-                                                value={settings.heroSubtext}
-                                                onChange={(e) => setSettings({ ...settings, heroSubtext: e.target.value })}
-                                                className="w-full bg-black/20 border border-white/10 rounded-2xl px-4 py-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium leading-relaxed resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === "socials" && (
-                                <div className="space-y-6">
-                                    <h3 className="text-lg font-bold flex items-center gap-2">
-                                        <Share2 className="text-cyan-400" size={20} />
-                                        Social Ecosystem
-                                    </h3>
-                                    <div className="grid grid-cols-1 gap-6">
-                                        {[
-                                            { id: "twitterUrl", label: "X / Twitter", icon: Twitter, color: "text-blue-400" },
-                                            { id: "linkedinUrl", label: "LinkedIn", icon: Linkedin, color: "text-blue-600" },
-                                            { id: "githubUrl", label: "GitHub", icon: Github, color: "text-gray-300" },
-                                        ].map((platform) => (
-                                            <div key={platform.id} className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-2">
-                                                    <platform.icon size={14} className={platform.color} />
-                                                    {platform.label}
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={settings[platform.id] || ""}
-                                                    onChange={(e) => setSettings({ ...settings, [platform.id]: e.target.value })}
-                                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all font-medium font-mono text-sm"
-                                                    placeholder={`https://${platform.label.toLowerCase()}.com/stormglide`}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <ColorInput
+                        label="Primary Color"
+                        value={formData.primaryColor}
+                        onChange={(val) => setFormData({ ...formData, primaryColor: val })}
+                    />
+                    <ColorInput
+                        label="Secondary Color"
+                        value={formData.secondaryColor}
+                        onChange={(val) => setFormData({ ...formData, secondaryColor: val })}
+                    />
+                    <ColorInput
+                        label="Accent Color"
+                        value={formData.accentColor || "#F472B6"}
+                        onChange={(val) => setFormData({ ...formData, accentColor: val })}
+                    />
+                    <ColorInput
+                        label="Background"
+                        value={formData.backgroundColor}
+                        onChange={(val) => setFormData({ ...formData, backgroundColor: val })}
+                    />
                 </div>
+            </div>
+
+            {/* Branding & Content */}
+            <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 space-y-8">
+                <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+                    <ImageIcon className="text-cyan-400" />
+                    <h2 className="text-xl font-bold text-white">Branding Authority</h2>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-mono font-bold text-gray-500 tracking-widest uppercase">Company Name</label>
+                            <input
+                                value={formData.companyName}
+                                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-mono font-bold text-gray-500 tracking-widest uppercase">Logo URL</label>
+                            <input
+                                value={formData.logoUrl || ""}
+                                placeholder="https://..."
+                                onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-mono font-bold text-gray-500 tracking-widest uppercase">Hero Headline</label>
+                        <input
+                            value={formData.heroHeadline}
+                            onChange={(e) => setFormData({ ...formData, heroHeadline: e.target.value })}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ColorInput({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) {
+    return (
+        <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <label className="text-xs font-mono font-bold text-gray-500 tracking-widest uppercase">{label}</label>
+                <span className="text-[10px] font-mono text-gray-400">{value}</span>
+            </div>
+            <div className="flex gap-4">
+                <div
+                    className="w-12 h-12 rounded-xl border border-white/20 shadow-lg"
+                    style={{ backgroundColor: value }}
+                ></div>
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 font-mono text-sm"
+                />
             </div>
         </div>
     );

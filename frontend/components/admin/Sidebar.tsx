@@ -25,7 +25,7 @@ const menuItems = [
     { id: "crm", label: "Entities", icon: Users, category: "DATA" },
     { id: "kanban", label: "Operations", icon: Kanban, category: "DATA" },
     { id: "billing", label: "Ledger", icon: CreditCard, category: "COMMERCE" },
-    { id: "cms", label: "Orchestration", icon: Settings2, category: "SYSTEM" },
+    { id: "settings", label: "Orchestration", icon: Settings2, category: "SYSTEM" },
     { id: "logs", label: "Audit Protocol", icon: ShieldAlert, category: "SECURITY" },
 ];
 

@@ -40,75 +40,78 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    const isAdminRoute = pathname.startsWith('/admin');
+
     return (
         <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden flex flex-col">
 
             {/* ========================================= */}
             {/* DESKTOP TOP NAVIGATION                    */}
             {/* ========================================= */}
-            <header
-                className={`fixed top-0 w-full z-50 transition-all duration-300 hidden md:block ${isScrolled
-                    ? "bg-[#0B0F19]/70 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-cyan-900/10"
-                    : "bg-transparent border-b border-transparent"
-                    }`}
-            >
-                <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
+            {!isAdminRoute && (
+                <header
+                    className={`fixed top-0 w-full z-50 transition-all duration-300 hidden md:block ${isScrolled
+                        ? "bg-[#0B0F19]/70 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-cyan-900/10"
+                        : "bg-transparent border-b border-transparent"
+                        }`}
+                >
+                    <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
 
-                    {/* Logo & Brand */}
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 p-[1px]">
-                            <div className="absolute inset-0 bg-[#0B0F19] rounded-xl group-hover:bg-transparent transition-colors duration-300"></div>
-                            <Terminal className="relative z-10 w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
-                        </div>
-                        <span className="text-xl font-bold tracking-wider text-white">
-                            STORMGLIDE<span className="text-cyan-400">.IO</span>
-                        </span>
-                    </Link>
-
-                    {/* Desktop Links */}
-                    <nav className="flex items-center gap-8">
-                        {NAV_LINKS.map((link) => {
-                            const isActive = pathname === link.path;
-                            return (
-                                <Link
-                                    key={link.name}
-                                    href={link.path}
-                                    className="relative px-1 py-2 text-sm font-medium tracking-wide transition-colors hover:text-cyan-400"
-                                >
-                                    <span className={isActive ? "text-cyan-400" : "text-gray-400"}>
-                                        {link.name}
-                                    </span>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="desktop-active-indicator"
-                                            className="absolute left-0 bottom-0 w-full h-[2px] bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-
-                    {/* Live Pulse & CTA */}
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                        {/* Logo & Brand */}
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 p-[1px]">
+                                <div className="absolute inset-0 bg-[#0B0F19] rounded-xl group-hover:bg-transparent transition-colors duration-300"></div>
+                                <Terminal className="relative z-10 w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
+                            </div>
+                            <span className="text-xl font-bold tracking-wider text-white">
+                                STORMGLIDE<span className="text-cyan-400">.IO</span>
                             </span>
-                            <span className="text-xs font-mono text-emerald-400 tracking-wider">ALL SYSTEMS WORKING</span>
-                        </div>
-
-                        <Link
-                            href="/contact"
-                            className="px-6 py-2.5 rounded-lg bg-white text-[#0B0F19] font-semibold text-sm hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all duration-300 transform hover:-translate-y-0.5"
-                        >
-                            Start Your Project
                         </Link>
+
+                        {/* Desktop Links */}
+                        <nav className="flex items-center gap-8">
+                            {NAV_LINKS.map((link) => {
+                                const isActive = pathname === link.path;
+                                return (
+                                    <Link
+                                        key={link.name}
+                                        href={link.path}
+                                        className="relative px-1 py-2 text-sm font-medium tracking-wide transition-colors hover:text-cyan-400"
+                                    >
+                                        <span className={isActive ? "text-cyan-400" : "text-gray-400"}>
+                                            {link.name}
+                                        </span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="desktop-active-indicator"
+                                                className="absolute left-0 bottom-0 w-full h-[2px] bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+
+                        {/* Live Pulse & CTA */}
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                                </span>
+                                <span className="text-xs font-mono text-emerald-400 tracking-wider">ALL SYSTEMS WORKING</span>
+                            </div>
+
+                            <Link
+                                href="/contact"
+                                className="px-6 py-2.5 rounded-lg bg-white text-[#0B0F19] font-semibold text-sm hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all duration-300 transform hover:-translate-y-0.5"
+                            >
+                                Start Your Project
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
             {/* ========================================= */}
             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
@@ -128,8 +131,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </AnimatePresence>
             </main>
 
-            {/* Footer added here */}
-            <Footer />
+            {!isAdminRoute && <Footer />}
 
             {/* ========================================= */}
             {/* MOBILE BOTTOM NAVIGATION (PWA FEEL)       */}
@@ -174,7 +176,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     })}
                 </div>
             </nav>
-
+        )}
         </div>
     );
 }

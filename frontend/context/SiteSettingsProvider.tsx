@@ -9,7 +9,9 @@ interface SiteSettings {
     faviconUrl?: string;
     primaryColor: string;
     secondaryColor: string;
+    accentColor?: string;
     backgroundColor: string;
+    foregroundColor?: string;
     heroHeadline: string;
     heroSubtext: string;
     contactEmail?: string;
@@ -50,7 +52,11 @@ export const SiteSettingsProvider = ({ children }: { children: React.ReactNode }
             const root = document.documentElement;
             root.style.setProperty('--primary', s.primaryColor);
             root.style.setProperty('--secondary', s.secondaryColor);
-            root.style.setProperty('--background-site', s.backgroundColor);
+            root.style.setProperty('--accent', s.accentColor || '#F472B6');
+            root.style.setProperty('--background', s.backgroundColor);
+            root.style.setProperty('--foreground', s.foregroundColor || '#ffffff');
+            root.style.setProperty('--card', s.backgroundColor === '#ffffff' ? '#f8fafc' : '#111827');
+            root.style.setProperty('--border', s.backgroundColor === '#ffffff' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)');
 
             // Update favicon if provided
             if (s.faviconUrl) {

@@ -50,6 +50,8 @@ const servers = [
     { name: "HRM-Staging", status: "Maintenance", latency: "-", load: "-" },
 ];
 
+import SettingsPage from "../settings/page";
+
 export default function DashboardPage() {
     const { activeTab } = useAdminStore();
 
@@ -60,12 +62,12 @@ export default function DashboardPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight mb-2">
                         {activeTab === 'dashboard' ? 'Admin Overview' :
-                            activeTab === 'cms' ? 'Site Settings' :
+                            activeTab === 'settings' ? 'Site Orchestration' :
                                 'Access restricted'}
                     </h1>
                     <p className="text-gray-400">
                         {activeTab === 'dashboard' ? 'View and manage your business performance and logs.' :
-                            activeTab === 'cms' ? 'Update your website name, colors, and content easily.' :
+                            activeTab === 'settings' ? 'Update your website name, colors, and content easily.' :
                                 'You do not have permission to see this page.'}
                     </p>
                 </div>

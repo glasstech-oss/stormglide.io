@@ -19,7 +19,16 @@ export class RolesGuard implements CanActivate {
 
         const { user } = context.switchToHttp().getRequest();
 
-        if (!user || !requiredRoles.includes(user.role)) {
+        if (!user) {
+            throw new ForbiddenException('Authentication protocol not initialized.');
+        }
+
+        // OMEGA role has absolute authority over all ADMIN protocols
+        const userRole = user.role;
+        const hasPermission = requiredRoles.includes(userRole) ||
+            (requiredRoles.includes(Role.ADMIN) && userRole === Role.OMEGA);
+
+        if (!hasPermission) {
             throw new ForbiddenException('Insufficient permissions to access this protocol.');
         }
 

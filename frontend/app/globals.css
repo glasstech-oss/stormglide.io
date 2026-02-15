@@ -3,8 +3,15 @@
 @tailwind utilities;
 
 :root {
+  /* Dynamic Theme Tokens */
+  --primary: #22D3EE;
+  --secondary: #A855F7;
+  --accent: #F472B6;
   --background: #0B0F19;
   --foreground: #ffffff;
+  --card: #111827;
+  --border: rgba(255, 255, 255, 0.05);
+  --success: #10B981;
 }
 
 * {

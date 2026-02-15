@@ -1,0 +1,202 @@
+
+> stormglide-frontend@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.100.226:3000
+
+ ✓ Starting...
+ ✓ Ready in 3.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 4s (1577 modules)
+ GET / 200 in 5071ms
+ ✓ Compiled in 368ms (687 modules)
+ GET / 200 in 267ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 966ms (114 modules)
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 5.5s (1628 modules)
+ GET /admin/login 200 in 9837ms
+ GET /admin/login 200 in 638ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 19.3s (1633 modules)
+ GET /manifest.json 404 in 23236ms
+ ○ Compiling /admin/dashboard ...
+ ✓ Compiled /admin/dashboard in 42.4s (2570 modules)
+ GET /admin/dashboard 200 in 44598ms
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin/dashboard 500 in 1209ms
+ ○ Compiling /_error ...
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 2550ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 35ms
+ GET /admin/dashboard 500 in 17ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 410ms
+ ✓ Compiled /_error in 375ms (1318 modules)
+ GET /admin/dashboard 500 in 19ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin/dashboard 200 in 338ms
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 1124ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 354ms
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./components/AppShell.tsx
+Error:   [31mx[0m Expected '</', got '{'
+     ,-[[36;1;4m/Users/truth/.gemini/antigravity/scratch/stormglide.io/frontend/components/AppShell.tsx[0m:116:1]
+ [2m113[0m |                     </div>
+ [2m114[0m |                 </header>
+ [2m115[0m | 
+ [2m116[0m |             {/* ========================================= */}
+     : [35;1m            ^[0m
+ [2m117[0m |             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
+ [2m118[0m |             {/* ========================================= */}
+ [2m119[0m |             <main className="pt-0 md:pt-20 flex-1 relative z-10">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/AppShell.tsx
+./app/layout.tsx
+ GET /admin/dashboard 500 in 412ms
