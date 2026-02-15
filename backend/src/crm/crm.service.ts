@@ -103,4 +103,26 @@ export class CrmService {
         this.logger.log(`New Staging Feedback received for Project ID: ${projectId}`);
         return feedback;
     }
+
+    /**
+     * 5. Register a new Lead from the public contact form
+     */
+    async createLead(data: { name: string; email: string; organization?: string; missionScope: string; details: string }) {
+        try {
+            const lead = await this.prisma.lead.create({
+                data: {
+                    name: data.name,
+                    email: data.email,
+                    organization: data.organization,
+                    missionScope: data.missionScope,
+                    details: data.details,
+                },
+            });
+            this.logger.log(`New Lead registered: ${data.name} (${data.organization || 'Individual'})`);
+            return lead;
+        } catch (error) {
+            this.logger.error('Failed to register lead', error.stack);
+            throw new BadRequestException('Could not process mission briefing.');
+        }
+    }
 }

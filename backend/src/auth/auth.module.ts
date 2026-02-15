@@ -3,18 +3,20 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
     imports: [
+        ConfigModule,
         PrismaModule,
         JwtModule.register({
-            global: true,
-            // In production, this MUST come from your .env file
-            secret: process.env.JWT_SECRET || 'STORMGLIDE_SUPER_SECRET_FALLBACK_KEY_2026',
+            secret: process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod',
+            signOptions: { expiresIn: '7d' },
         }),
     ],
-    providers: [AuthService],
     controllers: [AuthController],
-    exports: [AuthService],
+    providers: [AuthService, JwtAuthGuard],
+    exports: [AuthService, JwtModule, JwtAuthGuard],
 })
 export class AuthModule { }

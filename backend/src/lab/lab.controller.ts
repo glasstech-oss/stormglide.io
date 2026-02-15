@@ -1,13 +1,17 @@
-import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { LabService } from './lab.service';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
-// In production, uncomment the line below to enforce Super Admin access only
-// @UseGuards(JwtAuthGuard, RolesGuard) 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('v1/lab')
 export class LabController {
     constructor(private readonly labService: LabService) { }
 
     @Post('blueprint')
+    @Roles(Role.OMEGA)
     @HttpCode(HttpStatus.CREATED)
     async createBlueprint(
         @Body() body: { authorId: string; title: string; rawPrompt: string }

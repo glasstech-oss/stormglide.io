@@ -6,9 +6,9 @@ export function middleware(request: NextRequest) {
 
     // Protect /admin routes (except /admin/login)
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-        const adminSession = request.cookies.get('admin_session');
+        const adminToken = request.cookies.get('admin_token');
 
-        if (!adminSession || adminSession.value !== 'true') {
+        if (!adminToken) {
             return NextResponse.redirect(new URL('/admin/login', request.url));
         }
     }

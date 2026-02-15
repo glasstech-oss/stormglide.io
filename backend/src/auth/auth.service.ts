@@ -121,4 +121,29 @@ export class AuthService {
             throw new UnauthorizedException('Authentication failed. Please request a new link.');
         }
     }
+
+    /**
+     * STEP 3: Secure Admin Login via Commander Key
+     */
+    async validateAdminKey(key: string): Promise<{ accessToken: string }> {
+        const expectedKey = process.env.ADMIN_ACCESS_KEY || 'stormglide-2026';
+
+        if (key !== expectedKey) {
+            throw new UnauthorizedException('Invalid Commander Authorization Key.');
+        }
+
+        // Generate a high-privilege OMEGA session token
+        const sessionToken = this.jwtService.sign(
+            {
+                email: 'commander@stormglide.io',
+                sub: 'omega-prime',
+                role: 'OMEGA'
+            },
+            { expiresIn: '24h' } // Shorter duration for sensitive admin access
+        );
+
+        this.logger.log('New Mission Control session established via Commander Key.');
+
+        return { accessToken: sessionToken };
+    }
 }

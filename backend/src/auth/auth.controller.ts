@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('v1/auth')
@@ -27,5 +27,14 @@ export class AuthController {
             };
         }
         return await this.authService.verifyMagicLink(token);
+    }
+
+    @Post('admin-login')
+    @HttpCode(HttpStatus.OK)
+    async adminLogin(@Body('accessKey') accessKey: string) {
+        if (!accessKey) {
+            throw new UnauthorizedException('Authorization key is required.');
+        }
+        return await this.authService.validateAdminKey(accessKey);
     }
 }

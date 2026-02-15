@@ -18,11 +18,13 @@ import {
 
 // The core navigation map for Stormglide
 const NAV_LINKS = [
-    { name: "Command Center", path: "/", icon: Home },
-    { name: "The Ecosystem", path: "/ecosystem", icon: Layers },
-    { name: "Architecture", path: "/architecture", icon: Terminal },
-    { name: "Client Portal", path: "/portal", icon: ShieldAlert },
+    { name: "Home", path: "/", icon: Home },
+    { name: "Services", path: "/services", icon: Layers },
+    { name: "Portfolio", path: "/portfolio", icon: Briefcase },
+    { name: "Dashboard", path: "/portal", icon: Activity },
 ];
+
+import Footer from "./Footer";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -39,15 +41,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+        <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden flex flex-col">
 
             {/* ========================================= */}
             {/* DESKTOP TOP NAVIGATION                    */}
             {/* ========================================= */}
             <header
                 className={`fixed top-0 w-full z-50 transition-all duration-300 hidden md:block ${isScrolled
-                        ? "bg-[#0B0F19]/70 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-cyan-900/10"
-                        : "bg-transparent border-b border-transparent"
+                    ? "bg-[#0B0F19]/70 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-cyan-900/10"
+                    : "bg-transparent border-b border-transparent"
                     }`}
             >
                 <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -95,14 +97,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                             </span>
-                            <span className="text-xs font-mono text-emerald-400 tracking-wider">SYSTEMS NOMINAL</span>
+                            <span className="text-xs font-mono text-emerald-400 tracking-wider">ALL SYSTEMS WORKING</span>
                         </div>
 
                         <Link
                             href="/contact"
                             className="px-6 py-2.5 rounded-lg bg-white text-[#0B0F19] font-semibold text-sm hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all duration-300 transform hover:-translate-y-0.5"
                         >
-                            Deploy Project
+                            Start Your Project
                         </Link>
                     </div>
                 </div>
@@ -111,7 +113,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* ========================================= */}
             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
             {/* ========================================= */}
-            <main className="pt-0 md:pt-20 pb-24 md:pb-0 min-h-screen relative z-10">
+            <main className="pt-0 md:pt-20 flex-1 relative z-10">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={pathname}
@@ -125,6 +127,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     </motion.div>
                 </AnimatePresence>
             </main>
+
+            {/* Footer added here */}
+            <Footer />
 
             {/* ========================================= */}
             {/* MOBILE BOTTOM NAVIGATION (PWA FEEL)       */}

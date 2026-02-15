@@ -3,36 +3,28 @@ import {
     Get,
     Put,
     Body,
-    Headers,
-    UnauthorizedException,
     UseGuards
 } from '@nestjs/common';
 import { SettingsService } from './settings.service';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('v1/settings')
 export class SettingsController {
     constructor(private settingsService: SettingsService) { }
 
     @Get()
+    @Roles(Role.ADMIN, Role.OMEGA)
     async getSettings() {
         return this.settingsService.getSettings();
     }
 
     @Put()
-    async updateSettings(
-        @Body() data: any,
-        @Headers('authorization') auth: string
-    ) {
-        // Basic verification for the requested credentials
-        // Note: In a real system, this should be handled by a proper JwtAuthGuard
-        // but we'll implement this manual check as requested for the Command Center.
-        if (auth !== 'Basic YWRtaW5Ac3Rvcm1nbGlkZS5jb206dW5sb2NrbWU=') { // base64 of admin@stormglide.com:unlockme
-            // Also allow standard Bearer token if session exists, but let's stick to the prompt's explicit requirement.
-            if (auth !== 'Bearer stormglide-admin-token') {
-                throw new UnauthorizedException('Commander authorization required');
-            }
-        }
-
+    @Roles(Role.OMEGA)
+    async updateSettings(@Body() data: any) {
         return this.settingsService.updateSettings(data);
     }
 }

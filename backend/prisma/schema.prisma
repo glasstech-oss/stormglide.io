@@ -19,7 +19,8 @@ datasource db {
 // ==========================================
 
 enum Role {
-  SUPER_ADMIN
+  OMEGA
+  ADMIN
   CLIENT
 }
 
@@ -287,4 +288,19 @@ model KanbanTask {
 
   // Relationships
   project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}
+// ==========================================
+// CRM: LEADS (PROSPECTIVE CLIENTS)
+// ==========================================
+
+model Lead {
+  id              String   @id @default(uuid())
+  name            String
+  organization    String?
+  email           String
+  missionScope    String   // e.g., "Enterprise ERP", "Custom Web App"
+  details         String   @db.Text
+  status          String   @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, ARCHIVED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

@@ -59,20 +59,20 @@ export default function DashboardPage() {
             <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight mb-2">
-                        {activeTab === 'dashboard' ? 'Command Center Overview' :
-                            activeTab === 'cms' ? 'Site Configuration' :
-                                'Restricted Access Module'}
+                        {activeTab === 'dashboard' ? 'Admin Overview' :
+                            activeTab === 'cms' ? 'Site Settings' :
+                                'Access restricted'}
                     </h1>
                     <p className="text-gray-400">
-                        {activeTab === 'dashboard' ? 'Real-time financial and operational intelligence for Stormglide.io' :
-                            activeTab === 'cms' ? 'Manage global branding, typography, and visual identity tokens.' :
-                                'Unauthorized viewing of secure command module.'}
+                        {activeTab === 'dashboard' ? 'View and manage your business performance and logs.' :
+                            activeTab === 'cms' ? 'Update your website name, colors, and content easily.' :
+                                'You do not have permission to see this page.'}
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-sm">
                         <Clock size={16} className="text-cyan-400" />
-                        <span className="font-mono">{new Date().toLocaleTimeString()} UTC</span>
+                        <span className="font-mono">{new Date().toLocaleTimeString()}</span>
                     </div>
                 </div>
             </div>
@@ -84,8 +84,8 @@ export default function DashboardPage() {
                         {[
                             { label: "Monthly Revenue", value: 32000, color: "cyan", icon: TrendingUp, trend: "+12.5%" },
                             { label: "Active Clients", value: 24, color: "purple", icon: Users, trend: "+2" },
-                            { label: "Project Pulse", value: "98.2%", color: "emerald", icon: Zap, trend: "Nominal" },
-                            { label: "Security Status", value: "Locked", color: "blue", icon: ShieldCheck, trend: "Active" },
+                            { label: "Project Progress", value: "98.2%", color: "emerald", icon: Zap, trend: "Good" },
+                            { label: "Security", value: "Safe", color: "blue", icon: ShieldCheck, trend: "Active" },
                         ].map((kpi, i) => (
                             <div key={i} className="p-6 rounded-3xl bg-[#111827] border border-white/5 relative overflow-hidden group">
                                 <div className={`absolute top-0 right-0 w-24 h-24 bg-${kpi.color}-500/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-${kpi.color}-500/10 transition-colors`}></div>
@@ -113,12 +113,12 @@ export default function DashboardPage() {
                         <div className="lg:col-span-2 p-8 rounded-3xl bg-[#111827] border border-white/5">
                             <div className="flex justify-between items-start mb-8">
                                 <div>
-                                    <h3 className="text-lg font-bold mb-1">Financial Trajectory</h3>
-                                    <p className="text-sm text-gray-400">Monthly Recurring Revenue (MRR) Scaling</p>
+                                    <h3 className="text-lg font-bold mb-1">Revenue Overview</h3>
+                                    <p className="text-sm text-gray-400">Monthly revenue growth</p>
                                 </div>
                                 <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-400 focus:outline-none focus:border-cyan-500/50">
                                     <option>Last 7 Months</option>
-                                    <option>Year to Date</option>
+                                    <option>This Year</option>
                                 </select>
                             </div>
 
