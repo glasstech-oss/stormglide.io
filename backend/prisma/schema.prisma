@@ -1,0 +1,290 @@
+// ==============================================================================
+// STORMGLIDE.IO - MASTER DATABASE SCHEMA
+// Engine: PostgreSQL | ORM: Prisma
+// Architecture: Enterprise Multi-Tenant & Agency Command Center
+// ==============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "metrics", "tracing"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS (STRICT TYPING FOR BUSINESS LOGIC)
+// ==========================================
+
+enum Role {
+  SUPER_ADMIN
+  CLIENT
+}
+
+enum ProjectPhase {
+  DISCOVERY
+  UI_UX_DESIGN
+  BACKEND_ARCHITECTURE
+  STAGING
+  PRODUCTION
+  MAINTENANCE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIAL
+}
+
+enum PaymentGateway {
+  STRIPE
+  PAYSTACK
+  FLUTTERWAVE
+  MANUAL_BANK_TRANSFER
+}
+
+enum FeedbackStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+// ==========================================
+// CORE ENTITIES: USERS & CLIENT CRM
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   // Nullable because clients use JWT Magic Links
+  role          Role      @default(CLIENT)
+  magicLinkToken String?  @unique
+  tokenExpiry   DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  clientProfile ClientProfile?
+  auditLogs     AuditLog[]     @relation("AdminActions")
+  labNotes      LabNote[]      @relation("AuthorNotes")
+}
+
+model ClientProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  companyName      String
+  contactName      String
+  whatsappNumber   String?  // For Omnichannel CRM integration
+  industry         String?
+  region           String   @default("GLOBAL") // Used to route Stripe vs Paystack
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects         Project[]
+  invoices         Invoice[]
+  subscriptions    Subscription[]
+  stagingFeedback  StagingFeedback[]
+}
+
+// ==========================================
+// PROJECT MANAGEMENT & LIVE TRACKING (JOB IDs)
+// ==========================================
+
+model Project {
+  id               String       @id @default(uuid()) // This acts as the secure Job ID
+  clientId         String
+  projectName      String
+  description      String?
+  currentPhase     ProjectPhase @default(DISCOVERY)
+  isLiveSandboxActive Boolean   @default(false)
+  stagingUrl       String?
+  productionUrl    String?
+  startDate        DateTime     @default(now())
+  estimatedEnd     DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relationships
+  client           ClientProfile      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  milestones       ProjectMilestone[]
+  feedback         StagingFeedback[]
+  invoices         Invoice[]          // Link specific invoices to a project build
+  kanbanTasks      KanbanTask[]
+}
+
+model ProjectMilestone {
+  id               String       @id @default(uuid())
+  projectId        String
+  phase            ProjectPhase
+  title            String
+  description      String?
+  isCompleted      Boolean      @default(false)
+  completedAt      DateTime?
+  targetDate       DateTime?
+  createdAt        DateTime     @default(now())
+
+  // Relationships
+  project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// CLIENT SANDBOX: LIVE STAGING FEEDBACK
+// ==========================================
+
+model StagingFeedback {
+  id                  String         @id @default(uuid())
+  projectId           String
+  clientId            String
+  componentIdentifier String         // e.g., "nav-bar-login-btn" or DOM selector
+  screenX             Int?           // Coordinates of the click on staging
+  screenY             Int?
+  comment             String
+  status              FeedbackStatus @default(OPEN)
+  adminReply          String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relationships
+  project             Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client              ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// FINANCIAL HUB: BILLING, INVOICES & SUBSCRIPTIONS
+// ==========================================
+
+model Invoice {
+  id               String         @id @default(uuid())
+  invoiceNumber    String         @unique // e.g., INV-2026-001
+  clientId         String
+  projectId        String?        // Nullable if it's a general consultation invoice
+  amount           Decimal        @db.Decimal(10, 2)
+  currency         String         @default("USD") // Can dynamically swap to GHS, NGN, etc.
+  status           InvoiceStatus  @default(DRAFT)
+  paymentGateway   PaymentGateway
+  pdfUrl           String?
+  issuedAt         DateTime       @default(now())
+  dueDate          DateTime
+  paidAt           DateTime?
+  transactionId    String?        // From Stripe/Paystack
+
+  // Relationships
+  client           ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  project          Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  clientId         String
+  serviceName      String             // e.g., "Nexus-HRM Enterprise License"
+  monthlyRate      Decimal            @db.Decimal(10, 2)
+  currency         String             @default("USD")
+  status           SubscriptionStatus @default(ACTIVE)
+  nextBillingDate  DateTime
+  gatewaySubId     String?            // External ID from Stripe/Paystack billing engine
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relationships
+  client           ClientProfile      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+}
+
+// ==========================================
+// COMMAND CENTER: THE LAB & BLUEPRINTS
+// ==========================================
+
+model LabNote {
+  id               String   @id @default(uuid())
+  authorId         String
+  title            String
+  markdownContent  String   @db.Text
+  aiSchemaOutput   Json?    // Stores the AI-generated JSON blueprints
+  tags             String[] // e.g., ["systems-thinking", "nexus-mfg", "postgres"]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  author           User     @relation("AuthorNotes", fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// SECURITY: IMMUTABLE AUDIT TRAIL
+// ==========================================
+
+model AuditLog {
+  id               String   @id @default(uuid())
+  adminId          String
+  action           String   // e.g., "GENERATED_INVOICE", "CHANGED_PROJECT_PHASE"
+  entityType       String   // e.g., "Invoice", "Project"
+  entityId         String
+  ipAddress        String?
+  timestamp        DateTime @default(now())
+
+  // Relationships
+  admin            User     @relation("AdminActions", fields: [adminId], references: [id], onDelete: Restrict)
+}
+
+// ==========================================
+// CMS: GLOBAL SITE CONFIGURATION
+// ==========================================
+
+model SiteSettings {
+  id              String   @id @default("singleton")
+  // Branding
+  companyName     String   @default("Stormglide")
+  logoUrl         String?
+  faviconUrl      String?
+  
+  // Theme Colors
+  primaryColor    String   @default("#22D3EE")
+  secondaryColor  String   @default("#A855F7")
+  backgroundColor String   @default("#0B0F19")
+  
+  // Public Content
+  heroHeadline    String   @default("We Don't Just Write Code")
+  heroSubtext     String   @default("We architect high-performance software systems, custom web apps, and enterprise ERPs that transform businesses.")
+  contactEmail    String?
+  contactPhone    String?
+  
+  // Social Links
+  twitterUrl      String?
+  linkedinUrl     String?
+  githubUrl       String?
+  
+  updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// OPERATIONS: KANBAN FOR TASK & SPRINT TRACKING
+// ==========================================
+
+model KanbanTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("BACKLOG") // BACKLOG, UI_UX, ARCHITECTURE, DEVELOPMENT, STAGING, DEPLOYED
+  priority    String   @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
+  assigneeId  String?
+  projectId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}

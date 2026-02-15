@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+/node_modules
+*/node_modules
+
+# build
+.next
+/build
+/dist
+
+# env
+.env
+.env.local
+.env.production
+.env.development
+
+# prisma
+/backend/prisma/*.sqlite
+/backend/prisma/migrations
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev.log
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Gemini / Antigravity
+.gemini
+antigravity
+brain
+.system_generated
