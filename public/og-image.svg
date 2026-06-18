@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#060E21"/>
+      <stop offset="100%" style="stop-color:#0B1730"/>
+    </linearGradient>
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1A56FF"/>
+      <stop offset="50%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#A855F7"/>
+    </linearGradient>
+    <radialGradient id="blob1" cx="80%" cy="20%">
+      <stop offset="0%" style="stop-color:rgba(26,86,255,0.25)"/>
+      <stop offset="100%" style="stop-color:rgba(26,86,255,0)"/>
+    </radialGradient>
+    <radialGradient id="blob2" cx="10%" cy="80%">
+      <stop offset="0%" style="stop-color:rgba(124,58,237,0.2)"/>
+      <stop offset="100%" style="stop-color:rgba(124,58,237,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Blobs -->
+  <ellipse cx="1050" cy="150" rx="400" ry="400" fill="url(#blob1)"/>
+  <ellipse cx="150" cy="500" rx="350" ry="350" fill="url(#blob2)"/>
+
+  <!-- Subtle dot grid -->
+  <pattern id="dots" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.06)"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+
+  <!-- Logo mark -->
+  <rect x="80" y="80" width="52" height="52" rx="14" fill="url(#text-grad)"/>
+  <text x="106" y="116" font-family="monospace" font-size="18" font-weight="700" fill="white" text-anchor="middle">S/</text>
+
+  <!-- Brand name -->
+  <text x="148" y="116" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" letter-spacing="-0.5">Stormglide</text>
+  <text x="148" y="138" font-family="monospace" font-size="11" fill="rgba(255,255,255,0.35)" letter-spacing="2">TECHNOLOGIES</text>
+
+  <!-- Main headline -->
+  <text x="80" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="800" fill="white" letter-spacing="-2">Custom Software</text>
+  <text x="80" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="800" fill="url(#text-grad)" letter-spacing="-2">Built for Africa.</text>
+
+  <!-- Sub text -->
+  <text x="80" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="rgba(255,255,255,0.5)">Enterprise systems · SaaS products · AI-powered tools</text>
+  <text x="80" y="472" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.35)">Accra, Ghana 🇬🇭 · Scoped in 48 hrs · Shipped on time</text>
+
+  <!-- Stats row -->
+  <g transform="translate(80, 530)">
+    <!-- Stat 1 -->
+    <rect width="140" height="52" rx="10" fill="rgba(26,86,255,0.15)" stroke="rgba(26,86,255,0.3)" stroke-width="1"/>
+    <text x="70" y="22" font-family="system-ui" font-size="20" font-weight="800" fill="white" text-anchor="middle">5+</text>
+    <text x="70" y="40" font-family="monospace" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="1">LIVE PRODUCTS</text>
+    <!-- Stat 2 -->
+    <rect x="155" width="140" height="52" rx="10" fill="rgba(124,58,237,0.15)" stroke="rgba(124,58,237,0.3)" stroke-width="1"/>
+    <text x="225" y="22" font-family="system-ui" font-size="20" font-weight="800" fill="white" text-anchor="middle">10+</text>
+    <text x="225" y="40" font-family="monospace" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="1">SYSTEMS SHIPPED</text>
+    <!-- Stat 3 -->
+    <rect x="310" width="140" height="52" rx="10" fill="rgba(5,150,105,0.15)" stroke="rgba(5,150,105,0.3)" stroke-width="1"/>
+    <text x="380" y="22" font-family="system-ui" font-size="20" font-weight="800" fill="white" text-anchor="middle">4 wk</text>
+    <text x="380" y="40" font-family="monospace" font-size="9" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="1">AVG DELIVERY</text>
+  </g>
+
+  <!-- URL watermark -->
+  <text x="1120" y="610" font-family="monospace" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="end">stormglide.vercel.app</text>
+</svg>
