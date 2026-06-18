@@ -37,24 +37,33 @@ export default function FeaturedWork() {
             </motion.div>
 
             <div className="sg-case-grid">
-              {productStudies.map((study, idx) => (
-                <div key={study.id} className="sg-case-grid-item">
-                  <CaseStudyCard
-                    title={study.title}
-                    industry={study.industry}
-                    problem={study.problem}
-                    solution={study.solution}
-                    outcome={study.outcome}
-                    features={study.features}
-                    technologies={study.technologies}
-                    demoUrl={study.demoUrl}
-                    caseStudyUrl={`/case-studies/${study.id}`}
-                    color={study.color}
-                    delay={idx * 0.08}
-                    badge="LIVE PRODUCT"
-                  />
-                </div>
-              ))}
+              {productStudies.map((study, idx) => {
+                // Map product IDs to landing page URLs
+                const landingPageMap = {
+                  'hrm-system': '/nexus-hrm',
+                  'cargoscan': '/cargoscan',
+                  'sano': '/sano-health',
+                }
+                return (
+                  <div key={study.id} className="sg-case-grid-item">
+                    <CaseStudyCard
+                      title={study.title}
+                      industry={study.industry}
+                      problem={study.problem}
+                      solution={study.solution}
+                      outcome={study.outcome}
+                      features={study.features}
+                      technologies={study.technologies}
+                      demoUrl={study.demoUrl}
+                      caseStudyUrl={`/case-studies/${study.id}`}
+                      landingPageUrl={landingPageMap[study.id]}
+                      color={study.color}
+                      delay={idx * 0.08}
+                      badge="LIVE PRODUCT"
+                    />
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

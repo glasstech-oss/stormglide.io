@@ -15,6 +15,7 @@ export default function CaseStudyCard({
   technologies = [],
   demoUrl,
   caseStudyUrl,
+  landingPageUrl,
   color = 'var(--sg-accent)',
   delay = 0,
   badge,
@@ -260,6 +261,30 @@ export default function CaseStudyCard({
             }}
           >
             {demoUrl.startsWith('#') ? 'Coming Soon' : 'Visit Live Site'} <ExternalLink size={16} />
+          </a>
+        )}
+        {landingPageUrl && (
+          <a
+            href={landingPageUrl}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem', flex: 'none',
+              padding: '0.85rem 1.25rem', background: 'transparent',
+              border: `1px solid color-mix(in srgb, var(--card-accent) 20%, transparent)`,
+              color: 'var(--card-accent)', textDecoration: 'none',
+              borderRadius: '12px', fontWeight: 700, fontSize: '0.75rem',
+              textAlign: 'center', justifyContent: 'center', transition: 'all 0.2s',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--card-accent)'
+              e.currentTarget.style.background = `color-mix(in srgb, var(--card-accent) 8%, transparent)`
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = `color-mix(in srgb, var(--card-accent) 20%, transparent)`
+              e.currentTarget.style.background = 'transparent'
+            }}
+          >
+            Product Details <ChevronRight size={14} />
           </a>
         )}
       </div>
