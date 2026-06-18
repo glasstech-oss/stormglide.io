@@ -12,6 +12,9 @@ import SplashScreen from './components/common/SplashScreen'
 const Home          = lazy(() => import('./pages/Home'))
 const ProductsPage  = lazy(() => import('./pages/ProductsPage'))
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
+const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
+const SANOLanding   = lazy(() => import('./pages/ProductLandingSANO'))
 const ServicesPage  = lazy(() => import('./pages/ServicesPage'))
 const AboutPage     = lazy(() => import('./pages/AboutPage'))
 const ContactPage   = lazy(() => import('./pages/ContactPage'))
@@ -83,6 +86,9 @@ function AnimatedRoutes() {
         <Suspense fallback={<PageLoader />}>
           <Routes location={location}>
             <Route path="/"               element={<Home />} />
+            <Route path="/nexus-hrm"      element={<NexusHRMLanding />} />
+            <Route path="/cargoscan"      element={<CargoScanLanding />} />
+            <Route path="/sano-health"    element={<SANOLanding />} />
             <Route path="/products"       element={<ProductsPage />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/services"       element={<ServicesPage />} />
