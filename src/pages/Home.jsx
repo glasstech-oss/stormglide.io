@@ -18,15 +18,53 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>StormGlide Technologies — Practical Software for African Businesses</title>
-        <meta name="description" content="We build practical software for ambitious African businesses. Custom business systems, SaaS platforms, automation tools, and high-performance websites." />
-        <meta property="og:title" content="StormGlide Technologies" />
-        <meta property="og:description" content="Practical software for ambitious African businesses." />
+        <title>StormGlide: SaaS Software Company for African Businesses</title>
+        <meta name="description" content="StormGlide builds and operates SaaS products (Nexus HRM, CargoScan, SANO Health) serving 100+ African companies. We also develop custom business software, ERP systems, and automation tools. Production-grade platforms built for African operations." />
+        <meta name="keywords" content="SaaS software Africa, custom software development, ERP software, HR management system, logistics software, African tech, business software" />
+        <meta name="author" content="StormGlide Technologies" />
+        <meta property="og:title" content="StormGlide — SaaS Software Company" />
+        <meta property="og:description" content="Build or launch your next software platform. We own and operate SaaS products serving African businesses." />
         <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
         <meta property="og:url" content="https://stormglide.vercel.app" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
         <link rel="canonical" href="https://stormglide.vercel.app" />
+
+        {/* Schema.org Organization markup */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "StormGlide Technologies",
+            "url": "https://stormglide.vercel.app",
+            "logo": "https://stormglide.vercel.app/logo.svg",
+            "description": "SaaS software company building and operating enterprise platforms for African businesses",
+            "foundingDate": "2021",
+            "founders": [{ "@type": "Person", "name": "StormGlide Team" }],
+            "areaServed": "Africa",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "Customer Service",
+              "email": "hello@stormglide.io"
+            },
+            "sameAs": [
+              "https://linkedin.com/company/stormglide",
+              "https://github.com/glasstech-oss"
+            ]
+          })}
+        </script>
+
+        {/* Schema.org WebPage markup */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "StormGlide — SaaS Software Company",
+            "description": "Build or launch your next software platform. SaaS products and custom development for African businesses.",
+            "url": "https://stormglide.vercel.app",
+            "isPartOf": { "@id": "https://stormglide.vercel.app" }
+          })}
+        </script>
       </Helmet>
 
       <Navbar />

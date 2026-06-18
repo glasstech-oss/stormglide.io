@@ -26,15 +26,34 @@ export default function ServicesPage() {
   return (
     <PageLayout>
       <Helmet>
-        <title>Services — Stormglide Technologies</title>
-        <meta name="description" content="Custom websites with full admin backoffice — payroll, invoicing, inventory, client management. Built in Accra, Ghana for African businesses." />
-        <meta property="og:title" content="Services — Stormglide Technologies" />
-        <meta property="og:description" content="Custom websites + full admin backoffice for every business. Scoped in 48 hrs, shipped on time." />
+        <title>Custom Software Development & SaaS Services | StormGlide</title>
+        <meta name="description" content="Custom software development services: SaaS platforms, ERP systems, HR management, logistics software, and web applications. Built for African businesses by StormGlide." />
+        <meta name="keywords" content="custom software development, SaaS development, ERP software, HR management system, logistics software, business automation, custom web development" />
+        <meta property="og:title" content="Custom Software & SaaS Development Services" />
+        <meta property="og:description" content="We develop SaaS products, custom business software, and automation tools. From MVP to enterprise-scale platforms." />
         <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
         <meta property="og:url" content="https://stormglide.vercel.app/services" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
         <link rel="canonical" href="https://stormglide.vercel.app/services" />
+
+        {/* Schema.org Service Provider markup */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfessionalService",
+            "name": "StormGlide Technologies",
+            "description": "Custom software development and SaaS product company",
+            "url": "https://stormglide.vercel.app/services",
+            "areaServed": "Africa",
+            "serviceType": ["Custom Software Development", "SaaS Product Development", "Business Automation", "Web Development"],
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "USD",
+              "priceRange": "$$$$"
+            }
+          })}
+        </script>
       </Helmet>
 
       {/* Header */}

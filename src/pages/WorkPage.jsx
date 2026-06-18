@@ -69,15 +69,38 @@ export default function WorkPage() {
   return (
     <PageLayout>
       <Helmet>
-        <title>Our Work — Stormglide Technologies</title>
-        <meta name="description" content="Live demos and real client systems built by Stormglide — HR software, freight tools, e-commerce platforms, and custom business backoffices." />
-        <meta property="og:title" content="Our Work — Stormglide Technologies" />
-        <meta property="og:description" content="Real client systems and live products built by Stormglide. See what we've shipped across Africa." />
+        <title>Case Studies & Live Demos | StormGlide Software Products</title>
+        <meta name="description" content="See our SaaS products and case studies: Nexus HRM (HR software), CargoScan (logistics), SANO Health, Nexus MFG (manufacturing), and custom client projects built across Africa." />
+        <meta name="keywords" content="case studies, software portfolio, HR software demo, logistics software, SaaS products Africa, custom software examples" />
+        <meta property="og:title" content="Case Studies & Live Product Demos" />
+        <meta property="og:description" content="Real products and client systems we've built. Try them live. See the work." />
         <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
         <meta property="og:url" content="https://stormglide.vercel.app/work" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
         <link rel="canonical" href="https://stormglide.vercel.app/work" />
+
+        {/* BreadcrumbList schema */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://stormglide.vercel.app"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Case Studies",
+                "item": "https://stormglide.vercel.app/work"
+              }
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* Header */}
