@@ -1,9 +1,11 @@
 import { MessageCircle } from 'lucide-react'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function WhatsAppFloat() {
+  const { theme } = useTheme()
   return (
     <a
-      href="https://wa.me/1234567890"
+      href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}`}
       target="_blank"
       rel="noopener noreferrer"
       style={{

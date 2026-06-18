@@ -2,8 +2,10 @@ import urllib.request
 import json
 import os
 
-token = "[REDACTED]"
-deploy_id = "dpl_69ccaokXCTmbZcmtWwmU3PSfjnMU"
+# WARNING: Token and deploy_id removed for security
+# Store these in environment variables or .env file instead
+token = os.getenv("VERCEL_TOKEN", "")
+deploy_id = os.getenv("VERCEL_DEPLOY_ID", "")
 headers = {"Authorization": f"Bearer {token}"}
 
 try:

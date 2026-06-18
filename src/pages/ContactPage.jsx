@@ -92,7 +92,7 @@ export default function ContactPage() {
             </h1>
             {/* WhatsApp hero CTA */}
             <a
-              href={`https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}?text=${encodeURIComponent("Hi Stormglide, I'd like to discuss a project.")}`}
+              href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}?text=${encodeURIComponent("Hi Stormglide, I'd like to discuss a project.")}`}
               target="_blank" rel="noreferrer"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
@@ -135,7 +135,7 @@ export default function ContactPage() {
                   We'll be in touch within 24 hours. You can also reach us on WhatsApp for a faster reply.
                 </p>
                 <a
-                  href={`https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}?text=${encodeURIComponent("Hi, I just submitted the contact form on your site.")}`}
+                  href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}?text=${encodeURIComponent("Hi, I just submitted the contact form on your site.")}`}
                   target="_blank" rel="noreferrer"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
@@ -214,7 +214,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <a href={`https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}`} target="_blank" rel="noreferrer"
+            <a href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}`} target="_blank" rel="noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem', background: 'rgba(37,211,102,0.06)', border: '1.5px solid rgba(37,211,102,0.2)', borderRadius: 'var(--border-radius)', textDecoration: 'none', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(37,211,102,0.1)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,211,102,0.06)'; e.currentTarget.style.transform = 'none' }}

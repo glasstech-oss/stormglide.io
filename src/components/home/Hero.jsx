@@ -37,45 +37,30 @@ function HeroTitle({ lines }) {
 }
 
 function DeviceScene({ variant }) {
-  const { visualLabels, browserLabel } = variant.hero
+  const { browserLabel } = variant.hero
 
   return (
     <div className="sg-device-stage" aria-hidden>
-      <div className="sg-device-card sg-device-browser">
+      <div className="sg-device-card sg-device-browser" style={{ display: 'flex', flexDirection: 'column' }}>
         <div className="sg-browser-top">
           <span />
           <span />
           <span />
           <div>{browserLabel}</div>
         </div>
-        <div className="sg-browser-canvas">
-          <div className="sg-canvas-panel">
-            <span>{visualLabels[0]}</span>
-          </div>
-          <div className="sg-canvas-lines">
-            <i />
-            <i />
-            <i />
-          </div>
+        <div style={{ height: '236px', overflow: 'hidden' }}>
+          <img src="/images/mockups/website.png" alt="Website UI" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
         </div>
       </div>
 
-      <div className="sg-device-card sg-device-analytics">
-        <div className="sg-device-label">
-          <span>{visualLabels[1]}</span>
-          <b />
-        </div>
-        <div className="sg-bars">
-          {[42, 72, 56, 94, 66].map((height, index) => (
-            <i key={index} style={{ height: `${height}%` }} />
-          ))}
-        </div>
+      <div className="sg-device-card sg-device-analytics" style={{ padding: 0, height: '180px', overflow: 'hidden' }}>
+        <img src="/images/mockups/webapp.png" alt="Web App UI" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left top' }} />
       </div>
 
       <div className="sg-device-card sg-device-phone">
-        <div className="sg-phone-screen">
-          <b />
-          <span>{visualLabels[2]}</span>
+        <div className="sg-phone-screen" style={{ background: 'none' }}>
+          <b style={{ zIndex: 10 }} />
+          <img src="/images/mockups/mobile.png" alt="Mobile App UI" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', position: 'absolute', inset: 0, borderRadius: '23px' }} />
         </div>
       </div>
     </div>

@@ -82,7 +82,7 @@ export default function Contact() {
           {/* Info */}
           <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <a
-              href={`https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}`}
+              href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}`}
               target="_blank" rel="noreferrer"
               style={{
                 display: 'flex', alignItems: 'center', gap: '1rem',

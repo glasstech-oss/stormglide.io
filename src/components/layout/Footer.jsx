@@ -134,7 +134,7 @@ export default function Footer() {
             {/* Social links */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {[
-                { label: 'WhatsApp', href: `https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}` },
+                { label: 'WhatsApp', href: `https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}` },
                 { label: 'LinkedIn', href: theme.contactLinkedIn },
                 { label: 'Email',    href: `mailto:${theme.contactEmail}` },
               ].map(link => (
@@ -224,7 +224,7 @@ export default function Footer() {
                 {theme.contactEmail}
               </a>
               <a
-                href={`https://wa.me/233${theme.contactWhatsapp.replace(/^0/, '')}`}
+                href={`https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}`}
                 target="_blank" rel="noreferrer"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.375rem',

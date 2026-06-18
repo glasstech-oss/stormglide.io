@@ -36,7 +36,7 @@ export const defaultTheme = {
   siteMission:            'To make enterprise-grade technology accessible to African businesses.',
   siteCurrentlyAccepting: true,
 
-  contactWhatsapp: '0530828898',
+  contactWhatsapp: '+233547738678',
   contactEmail:    'hello@stormglide.io',
   contactLinkedIn: 'https://linkedin.com/company/stormglide',
 
