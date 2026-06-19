@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { BarChart3, AlertTriangle, Users, Zap } from 'lucide-react'
 import { getProjects, getInquiries, getTeam } from '../../firebase/collections'
-import PageLayout from '../../components/layout/PageLayout'
+import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState([])
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
     : 0
 
   return (
-    <PageLayout>
+    <AdminLayout>
       <Helmet>
         <title>Admin Dashboard | StormGlide</title>
       </Helmet>
@@ -255,6 +255,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   )
 }

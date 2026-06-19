@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { AlertTriangle, Calendar, DollarSign, Server } from 'lucide-react'
 import { getProjects } from '../../firebase/collections'
-import PageLayout from '../../components/layout/PageLayout'
+import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminInfrastructure() {
   const [projects, setProjects] = useState([])
@@ -83,7 +83,7 @@ export default function AdminInfrastructure() {
     allTools.filter(t => t.billingCycle === 'annual').reduce((sum, t) => sum + (t.cost || 0), 0)
 
   return (
-    <PageLayout>
+    <AdminLayout>
       <Helmet>
         <title>Infrastructure Tracker | Admin | StormGlide</title>
       </Helmet>
@@ -382,6 +382,6 @@ export default function AdminInfrastructure() {
           </motion.div>
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   )
 }

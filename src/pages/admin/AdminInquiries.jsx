@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { MessageSquare, ArrowRight, Check } from 'lucide-react'
 import { getInquiries, updateInquiry, addProject } from '../../firebase/collections'
-import PageLayout from '../../components/layout/PageLayout'
+import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminInquiries() {
   const [inquiries, setInquiries] = useState([])
@@ -108,7 +108,7 @@ export default function AdminInquiries() {
   }
 
   return (
-    <PageLayout>
+    <AdminLayout>
       <Helmet>
         <title>Inquiries Management | Admin | StormGlide</title>
       </Helmet>
@@ -422,6 +422,6 @@ export default function AdminInquiries() {
           </div>
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   )
 }

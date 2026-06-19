@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { AlertTriangle, Clock, CheckCircle, MessageSquare } from 'lucide-react'
 import { getSupportTickets, updateSupportTicket, addSupportTicket } from '../../firebase/collections'
-import PageLayout from '../../components/layout/PageLayout'
+import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminSupportTickets() {
   const [tickets, setTickets] = useState([])
@@ -103,7 +103,7 @@ export default function AdminSupportTickets() {
   const resolvedTickets = tickets.filter(t => t.status === 'resolved').length
 
   return (
-    <PageLayout>
+    <AdminLayout>
       <Helmet>
         <title>Support Tickets | Admin | StormGlide</title>
       </Helmet>
@@ -537,6 +537,6 @@ export default function AdminSupportTickets() {
           </div>
         </div>
       </div>
-    </PageLayout>
+    </AdminLayout>
   )
 }
