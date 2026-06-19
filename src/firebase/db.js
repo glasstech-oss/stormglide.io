@@ -4,12 +4,12 @@ import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { getStorage, connectStorageEmulator } from 'firebase/storage'
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDemoKey',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'stormglide-demo.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'stormglide-demo',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'stormglide-demo.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abc123def456',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCHX-pEn0slFVJRy8kHZj0l9NiDValIqgA',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'stormglideio.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'stormglideio',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'stormglideio.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1055875955113',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1055875955113:web:fb3afeccbb270b9dbd6cb8',
 }
 
 export const app = initializeApp(firebaseConfig)
