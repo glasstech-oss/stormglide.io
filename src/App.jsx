@@ -31,8 +31,10 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminInfrastructure = lazy(() => import('./pages/admin/AdminInfrastructure'))
 const AdminInvoices = lazy(() => import('./pages/admin/AdminInvoices'))
 const AdminSupportTickets = lazy(() => import('./pages/admin/AdminSupportTickets'))
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'))
 const ClientLogin   = lazy(() => import('./pages/client/ClientLogin'))
 const ClientProject = lazy(() => import('./pages/client/ClientProject'))
+const ClientSupportTickets = lazy(() => import('./pages/client/ClientSupportTickets'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
 
 /* ── Page loading skeleton ── */
@@ -117,6 +119,7 @@ function AnimatedRoutes() {
             <Route path="/admin/infrastructure" element={<ProtectedRoute><AdminInfrastructure /></ProtectedRoute>} />
             <Route path="/admin/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
             <Route path="/admin/support-tickets" element={<ProtectedRoute><AdminSupportTickets /></ProtectedRoute>} />
+            <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
             <Route
               path="/admin/*"
               element={
@@ -127,6 +130,7 @@ function AnimatedRoutes() {
             />
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/project" element={<ClientProject />} />
+            <Route path="/client/support-tickets" element={<ClientSupportTickets />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
