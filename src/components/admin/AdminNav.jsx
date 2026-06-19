@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FileText, MessageSquare, DollarSign, Zap, LogOut } from 'lucide-react'
+import { LayoutDashboard, FileText, MessageSquare, DollarSign, Zap, LogOut, TrendingUp } from 'lucide-react'
 import { auth } from '../../firebase/db'
 import { signOut } from 'firebase/auth'
 
@@ -23,6 +23,7 @@ export default function AdminNav() {
     { label: 'Invoices', icon: DollarSign, path: '/admin/invoices' },
     { label: 'Support', icon: MessageSquare, path: '/admin/support-tickets' },
     { label: 'Infrastructure', icon: Zap, path: '/admin/infrastructure' },
+    { label: 'Insights', icon: TrendingUp, path: '/admin/insights' },
   ]
 
   const isActive = (path) => location.pathname === path
