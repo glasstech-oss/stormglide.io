@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { CheckCircle2, Clock, Plus } from 'lucide-react'
-import { getProjects, updateProject, getClient } from '../../firebase/collections'
+import { CheckCircle2, Clock, Plus, X } from 'lucide-react'
+import { getProjects, updateProject, addProject, getClient } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminProjects() {
@@ -11,6 +11,18 @@ export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState(null)
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState({})
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    clientId: '',
+    description: '',
+    status: 'proposal',
+    budget: { quoted: 0, spent: 0, currency: 'GHS' },
+    startDate: new Date().toISOString().split('T')[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    deliverables: [],
+    team: [],
+  })
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,6 +63,34 @@ export default function AdminProjects() {
     }
   }
 
+  const handleCreateProject = async (e) => {
+    e.preventDefault()
+    try {
+      await addProject({
+        ...createForm,
+        budget: { quoted: parseInt(createForm.budget.quoted) || 0, spent: 0, currency: 'GHS' },
+        startDate: new Date(createForm.startDate),
+        dueDate: new Date(createForm.dueDate),
+      })
+      setShowCreateForm(false)
+      setCreateForm({
+        name: '',
+        clientId: '',
+        description: '',
+        status: 'proposal',
+        budget: { quoted: 0, spent: 0, currency: 'GHS' },
+        startDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        deliverables: [],
+        team: [],
+      })
+      const updated = await getProjects()
+      setProjects(updated)
+    } catch (error) {
+      console.error('Error creating project:', error)
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'proposal': return '#f59e0b'
@@ -80,12 +120,34 @@ export default function AdminProjects() {
       <div style={{ padding: '3rem 2rem', background: 'var(--bg-soft)', minHeight: '100vh' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {/* Header */}
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
-            Projects Management
-          </h1>
-          <p style={{ fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
-            Track and manage all client projects
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '2rem' }}>
+            <div>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                Projects Management
+              </h1>
+              <p style={{ fontSize: '1rem', color: 'var(--color-text-secondary)' }}>
+                Track and manage all client projects
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.5rem',
+                background: 'var(--sg-accent)',
+                color: 'var(--color-background)',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={18} />
+              New Project
+            </button>
+          </div>
 
           {/* Stats */}
           <div style={{
@@ -315,6 +377,109 @@ export default function AdminProjects() {
               )}
             </motion.div>
           </div>
+
+          {/* Create Project Modal */}
+          {showCreateForm && (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                  background: 'var(--color-background)',
+                  borderRadius: '12px',
+                  padding: '2rem',
+                  maxWidth: '500px',
+                  width: '90%',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-heading)' }}>
+                    Create New Project
+                  </h2>
+                  <button
+                    onClick={() => setShowCreateForm(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Project Name"
+                    value={createForm.name}
+                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                    className="input"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Client ID"
+                    value={createForm.clientId}
+                    onChange={(e) => setCreateForm({ ...createForm, clientId: e.target.value })}
+                    className="input"
+                  />
+                  <textarea
+                    placeholder="Description"
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                    className="input"
+                    style={{ minHeight: '80px' }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Budget (GHS)"
+                    value={createForm.budget.quoted}
+                    onChange={(e) => setCreateForm({
+                      ...createForm,
+                      budget: { ...createForm.budget, quoted: parseInt(e.target.value) || 0 }
+                    })}
+                    className="input"
+                  />
+                  <input
+                    type="date"
+                    value={createForm.startDate}
+                    onChange={(e) => setCreateForm({ ...createForm, startDate: e.target.value })}
+                    className="input"
+                  />
+                  <input
+                    type="date"
+                    value={createForm.dueDate}
+                    onChange={(e) => setCreateForm({ ...createForm, dueDate: e.target.value })}
+                    className="input"
+                  />
+                  <select
+                    value={createForm.status}
+                    onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
+                    className="input"
+                  >
+                    <option value="proposal">Proposal</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                    <option value="support">Support</option>
+                  </select>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ justifyContent: 'center', padding: '0.875rem' }}
+                  >
+                    Create Project
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
