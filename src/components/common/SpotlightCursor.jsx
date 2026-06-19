@@ -109,13 +109,13 @@ export default function SpotlightCursor() {
           z-index: 1799;
           pointer-events: none;
           
-          /* The magic: physically brightens and sharpens elements behind it */
-          backdrop-filter: brightness(1.6) contrast(1.15) saturate(1.2);
-          -webkit-backdrop-filter: brightness(1.6) contrast(1.15) saturate(1.2);
+          /* The magic: Inverts the colors to reveal a 'light theme' X-ray effect */
+          backdrop-filter: invert(1) hue-rotate(180deg) brightness(1.2);
+          -webkit-backdrop-filter: invert(1) hue-rotate(180deg) brightness(1.2);
           
           /* Mask out the reveal effect to just a circle around the cursor */
-          mask-image: radial-gradient(circle 200px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
-          -webkit-mask-image: radial-gradient(circle 200px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
+          mask-image: radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
+          -webkit-mask-image: radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
           
           transition: opacity 300ms ease;
           will-change: mask-image, -webkit-mask-image;
@@ -129,29 +129,29 @@ export default function SpotlightCursor() {
           inset: 0;
           z-index: 1800;
           pointer-events: none;
-          mix-blend-mode: color-dodge;
+          mix-blend-mode: screen;
           
           background: 
-            /* The inner intense bulb glow */
-            radial-gradient(circle 40px at var(--cursor-x) var(--cursor-y), color-mix(in srgb, var(--sg-spotlight-color) 70%, white 30%) 0%, transparent 100%),
-            /* The outer ambient color glow */
-            radial-gradient(circle 240px at var(--cursor-x) var(--cursor-y), color-mix(in srgb, var(--sg-spotlight-color) 40%, transparent) 0%, transparent 100%),
-            /* The textured light rays / caustics */
+            /* The inner intense bulb glow - solid white */
+            radial-gradient(circle 60px at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+            /* The outer ambient color glow - pure white fade */
+            radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.1) 0%, transparent 100%),
+            /* The textured light rays / caustics - bright white */
             repeating-conic-gradient(from var(--ray-angle) at var(--cursor-x) var(--cursor-y), 
               transparent 0deg, 
-              color-mix(in srgb, var(--sg-spotlight-color) 12%, transparent) 3deg, 
+              rgba(255, 255, 255, 0.08) 3deg, 
               transparent 6deg,
               transparent 22deg,
-              color-mix(in srgb, var(--sg-spotlight-color) 8%, transparent) 26deg,
+              rgba(255, 255, 255, 0.05) 26deg,
               transparent 30deg,
               transparent 45deg,
-              color-mix(in srgb, var(--sg-spotlight-color) 5%, transparent) 47deg,
+              rgba(255, 255, 255, 0.03) 47deg,
               transparent 49deg
             );
             
           /* Mask the rays so they fade out organically */
-          mask-image: radial-gradient(circle 380px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
-          -webkit-mask-image: radial-gradient(circle 380px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
+          mask-image: radial-gradient(circle 500px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
+          -webkit-mask-image: radial-gradient(circle 500px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
           
           transition: opacity 300ms ease;
           will-change: background, mask-image, -webkit-mask-image;
