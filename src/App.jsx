@@ -15,6 +15,11 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
 const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
 const SANOLanding   = lazy(() => import('./pages/ProductLandingSANO'))
+const ServiceLandingWebsiteDevelopment = lazy(() => import('./pages/ServiceLandingWebsiteDevelopment'))
+const ServiceLandingWebAppDevelopment = lazy(() => import('./pages/ServiceLandingWebAppDevelopment'))
+const ServiceLandingMobileAppDevelopment = lazy(() => import('./pages/ServiceLandingMobileAppDevelopment'))
+const ServiceLandingDesign = lazy(() => import('./pages/ServiceLandingDesign'))
+const ServiceLandingPrototyping = lazy(() => import('./pages/ServiceLandingPrototyping'))
 const ServicesPage  = lazy(() => import('./pages/ServicesPage'))
 const AboutPage     = lazy(() => import('./pages/AboutPage'))
 const ContactPage   = lazy(() => import('./pages/ContactPage'))
@@ -89,9 +94,14 @@ function AnimatedRoutes() {
             <Route path="/nexus-hrm"      element={<NexusHRMLanding />} />
             <Route path="/cargoscan"      element={<CargoScanLanding />} />
             <Route path="/sano-health"    element={<SANOLanding />} />
+            <Route path="/services"       element={<ServicesPage />} />
+            <Route path="/services/website-development-ghana"      element={<ServiceLandingWebsiteDevelopment />} />
+            <Route path="/services/web-app-development-ghana"      element={<ServiceLandingWebAppDevelopment />} />
+            <Route path="/services/mobile-app-development-ghana"   element={<ServiceLandingMobileAppDevelopment />} />
+            <Route path="/services/design-services-ghana"          element={<ServiceLandingDesign />} />
+            <Route path="/services/prototyping-ghana"              element={<ServiceLandingPrototyping />} />
             <Route path="/products"       element={<ProductsPage />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
-            <Route path="/services"       element={<ServicesPage />} />
             <Route path="/about"          element={<AboutPage />} />
             <Route path="/contact"        element={<ContactPage />} />
             <Route path="/work"           element={<WorkPage />} />
