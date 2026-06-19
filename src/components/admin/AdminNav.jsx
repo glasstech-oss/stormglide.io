@@ -1,81 +1,130 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Inbox, PlaySquare, FolderKanban, Palette, LogOut, Menu, X } from 'lucide-react'
-import { useState } from 'react'
-
-const NAV_ITEMS = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/inquiries', label: 'Inquiries', icon: Inbox },
-  { to: '/admin/demos', label: 'Demo Requests', icon: PlaySquare },
-  { to: '/admin/projects', label: 'Projects', icon: FolderKanban },
-  { to: '/admin/customizer', label: 'Site Customizer', icon: Palette },
-]
+import { useNavigate, useLocation } from 'react-router-dom'
+import { LayoutDashboard, FileText, MessageSquare, DollarSign, Zap, LogOut } from 'lucide-react'
+import { auth } from '../../firebase/db'
+import { signOut } from 'firebase/auth'
 
 export default function AdminNav() {
   const navigate = useNavigate()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
 
-  const logout = () => {
-    sessionStorage.removeItem('stormglide_admin_auth')
-    navigate('/admin/login')
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      navigate('/admin/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
-  const SidebarContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '1.5rem 1rem', borderBottom: '1px solid var(--color-border-subtle)', marginBottom: '0.5rem' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-accent-cyan)', fontWeight: 700 }}>S/ ADMIN</div>
-      </div>
-      <nav style={{ flex: 1, padding: '0.5rem 0' }}>
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={() => setMobileOpen(false)}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.625rem',
-              padding: '0.625rem 1rem',
-              textDecoration: 'none',
-              color: isActive ? 'var(--color-accent-cyan)' : 'var(--color-text-secondary)',
-              background: isActive ? 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)' : 'none',
-              borderLeft: isActive ? '2px solid var(--color-accent-cyan)' : '2px solid transparent',
-              fontSize: '0.875rem',
-              transition: 'all 0.15s',
-            })}
-          >
-            <Icon size={16} />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
-      <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem', borderTop: '1px solid var(--color-border-subtle)', width: '100%', textAlign: 'left' }}>
-        <LogOut size={16} /> Logout
-      </button>
-    </div>
-  )
+  const navItems = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { label: 'Inquiries', icon: MessageSquare, path: '/admin/inquiries' },
+    { label: 'Projects', icon: FileText, path: '/admin/projects' },
+    { label: 'Invoices', icon: DollarSign, path: '/admin/invoices' },
+    { label: 'Support', icon: MessageSquare, path: '/admin/support-tickets' },
+    { label: 'Infrastructure', icon: Zap, path: '/admin/infrastructure' },
+  ]
+
+  const isActive = (path) => location.pathname === path
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex" style={{ width: 220, flexShrink: 0, background: 'var(--color-surface)', borderRight: '1px solid var(--color-border-subtle)', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile top bar */}
-      <div className="md:hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border-subtle)', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--color-accent-cyan)', fontWeight: 700 }}>S/ ADMIN</span>
-        <button onClick={() => setMobileOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+    <div style={{
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      width: '250px',
+      height: '100vh',
+      background: 'var(--color-background)',
+      borderRight: '1px solid var(--color-border)',
+      padding: '2rem 1rem',
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 100,
+    }}>
+      {/* Logo */}
+      <div style={{
+        marginBottom: '2rem',
+        paddingBottom: '1.5rem',
+        borderBottom: '1px solid var(--color-border)',
+      }}>
+        <h2 style={{
+          fontSize: '1.2rem',
+          fontWeight: 700,
+          color: 'var(--color-text-heading)',
+        }}>
+          StormGlide Admin
+        </h2>
       </div>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'var(--color-surface)', paddingTop: '60px' }}>
-          <SidebarContent />
-        </div>
-      )}
-    </>
+      {/* Navigation Items */}
+      <nav style={{ flex: 1 }}>
+        {navItems.map((item) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.75rem 1rem',
+              background: isActive(item.path) ? 'var(--bg-soft)' : 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              marginBottom: '0.5rem',
+              color: isActive(item.path) ? 'var(--sg-accent)' : 'var(--color-text-secondary)',
+              fontSize: '0.95rem',
+              fontWeight: isActive(item.path) ? 600 : 500,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive(item.path)) {
+                e.target.style.background = 'color-mix(in srgb, var(--sg-accent) 10%, transparent)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive(item.path)) {
+                e.target.style.background = 'transparent'
+              }
+            }}
+          >
+            <item.icon size={18} />
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <button
+        onClick={handleLogout}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          padding: '0.75rem 1rem',
+          background: 'transparent',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          color: 'var(--color-text-secondary)',
+          fontSize: '0.95rem',
+          fontWeight: 500,
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = 'color-mix(in srgb, #ef4444 10%, transparent)'
+          e.target.style.color = '#ef4444'
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'transparent'
+          e.target.style.color = 'var(--color-text-secondary)'
+        }}
+      >
+        <LogOut size={18} />
+        <span>Logout</span>
+      </button>
+    </div>
   )
 }
