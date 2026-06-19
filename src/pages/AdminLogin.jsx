@@ -2,22 +2,32 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Lock } from 'lucide-react'
-
-const ADMIN_PASSWORD = 'stormglide2025'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../firebase/db'
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState('admin@stormglide.io')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('stormglide_admin_auth', 'true')
-      navigate('/admin')
-    } else {
-      setError('Incorrect password. Try again.')
+    setLoading(true)
+    setError('')
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const uid = userCredential.user.uid
+      sessionStorage.setItem('stormglide_admin_auth', uid)
+      sessionStorage.setItem('stormglide_admin_email', email)
+      navigate('/admin/dashboard')
+    } catch (err) {
+      setError(err.message.includes('user-not-found') ? 'Invalid email or password.' : 'Authentication failed. Try again.')
       setPassword('')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -33,21 +43,30 @@ export default function AdminLogin() {
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--color-accent-cyan)', fontWeight: 700, marginBottom: '0.5rem' }}>S/ Stormglide</div>
         <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem' }}>Admin Portal</h2>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '2rem' }}>Enter your password to continue</p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '2rem' }}>Sign in with your credentials</p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <input
+            className="input"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError('') }}
+            disabled={loading}
+            aria-label="Email address"
+          />
           <input
             className="input"
             type="password"
             placeholder="Password"
             value={password}
             onChange={e => { setPassword(e.target.value); setError('') }}
-            autoFocus
-            aria-label="Admin password"
+            disabled={loading}
+            aria-label="Password"
           />
           {error && <div style={{ color: 'var(--color-danger)', fontSize: '0.8rem', textAlign: 'left' }}>{error}</div>}
-          <button type="submit" className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem' }}>
-            Enter Portal
+          <button type="submit" className="btn-primary" style={{ justifyContent: 'center', padding: '0.875rem' }} disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

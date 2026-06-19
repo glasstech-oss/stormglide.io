@@ -65,8 +65,8 @@ function PageLoader() {
 }
 
 function ProtectedRoute({ children }) {
-  const auth = sessionStorage.getItem('stormglide_admin_auth')
-  if (!auth) return <Navigate to="/admin/login" replace />
+  const uid = sessionStorage.getItem('stormglide_admin_auth')
+  if (!uid) return <Navigate to="/admin/login" replace />
   return children
 }
 
