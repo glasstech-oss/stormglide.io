@@ -32,6 +32,8 @@ const AdminInfrastructure = lazy(() => import('./pages/admin/AdminInfrastructure
 const AdminInvoices = lazy(() => import('./pages/admin/AdminInvoices'))
 const AdminSupportTickets = lazy(() => import('./pages/admin/AdminSupportTickets'))
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'))
+const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'))
+const AdminProjects = lazy(() => import('./pages/admin/AdminProjects'))
 const ClientLogin   = lazy(() => import('./pages/client/ClientLogin'))
 const ClientProject = lazy(() => import('./pages/client/ClientProject'))
 const ClientSupportTickets = lazy(() => import('./pages/client/ClientSupportTickets'))
@@ -120,6 +122,8 @@ function AnimatedRoutes() {
             <Route path="/admin/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
             <Route path="/admin/support-tickets" element={<ProtectedRoute><AdminSupportTickets /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+            <Route path="/admin/inquiries" element={<ProtectedRoute><AdminInquiries /></ProtectedRoute>} />
+            <Route path="/admin/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
             <Route
               path="/admin/*"
               element={
