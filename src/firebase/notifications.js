@@ -1,21 +1,26 @@
 import { functions } from './db'
 import { httpsCallable } from 'firebase/functions'
+import { getWelcomeEmailTemplate, getProjectUpdateEmailTemplate } from '../services/emailTemplates'
 
 /**
- * Send project welcome email to client
+ * Send branded project welcome email to client
  */
 export const sendWelcomeEmail = async (project) => {
   try {
-    const sendEmail = httpsCallable(functions, 'sendWelcomeEmail')
+    const clientData = {
+      contactPerson: project.contactPerson,
+      contactEmail: project.contactEmail,
+      contactPhone: project.contactPhone,
+    }
+
+    const emailTemplate = getWelcomeEmailTemplate(clientData, project)
+
+    const sendEmail = httpsCallable(functions, 'sendBrandedEmail')
     const result = await sendEmail({
       to: project.contactEmail,
-      clientName: project.contactPerson,
-      projectName: project.name,
-      domain: project.domain,
-      packageName: project.packageName,
-      monthlyPrice: project.clientPaymentMonthly,
-      annualPrice: project.clientPaymentAnnual,
-      startDate: new Date(project.billingStartDate).toLocaleDateString(),
+      subject: emailTemplate.subject,
+      html: emailTemplate.html,
+      text: emailTemplate.text,
     })
     return result.data
   } catch (error) {

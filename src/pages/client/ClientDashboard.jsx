@@ -99,6 +99,10 @@ export default function ClientDashboard() {
     ? (parseFloat(project?.clientPaymentAnnual) / 12).toFixed(2)
     : parseFloat(project?.clientPaymentMonthly).toFixed(2)
 
+  const completedDeliverables = project?.deliverables?.filter(d => d.status === 'completed').length || 0
+  const totalDeliverables = project?.deliverables?.length || 0
+  const completionPercentage = totalDeliverables > 0 ? Math.round((completedDeliverables / totalDeliverables) * 100) : 0
+
   if (loading) {
     return (
       <PageLayout>
@@ -231,6 +235,12 @@ export default function ClientDashboard() {
                     icon: expiringStacks.length === 0 ? CheckCircle2 : AlertTriangle,
                     color: expiringStacks.length === 0 ? '#10b981' : '#f59e0b',
                   },
+                  {
+                    label: 'Project Progress',
+                    value: `${completionPercentage}%`,
+                    icon: TrendingUp,
+                    color: completionPercentage === 100 ? '#10b981' : 'var(--sg-accent)',
+                  },
                 ].map((stat, i) => (
                   <motion.div
                     key={i}
@@ -294,11 +304,93 @@ export default function ClientDashboard() {
                 </motion.div>
               )}
 
+              {/* Project Progress */}
+              {totalDeliverables > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  style={{
+                    padding: '1.5rem',
+                    background: 'var(--color-background)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '12px',
+                  }}
+                >
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
+                    📊 Project Progress
+                  </h2>
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>Completion</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--sg-accent)' }}>
+                        {completionPercentage}%
+                      </p>
+                    </div>
+                    <div style={{
+                      height: '12px',
+                      background: '#e2e8f0',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${completionPercentage}%`,
+                        background: 'linear-gradient(90deg, var(--sg-accent), #06b6d4)',
+                        transition: 'width 0.3s',
+                      }} />
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                      {completedDeliverables} of {totalDeliverables} deliverables completed
+                    </p>
+                  </div>
+
+                  {/* Deliverables */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {project.deliverables?.map(deliverable => (
+                      <div key={deliverable.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: deliverable.status === 'completed' ? '#10b981' : deliverable.status === 'in-progress' ? 'var(--sg-accent)' : '#cbd5e1',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                        }}>
+                          {deliverable.status === 'completed' ? '✓' : deliverable.status === 'in-progress' ? '⏳' : '○'}
+                        </div>
+                        <span style={{
+                          flex: 1,
+                          fontWeight: 500,
+                          color: 'var(--color-text-heading)',
+                          textDecoration: deliverable.status === 'completed' ? 'line-through' : 'none',
+                          opacity: deliverable.status === 'completed' ? 0.6 : 1,
+                        }}>
+                          {deliverable.name}
+                        </span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: deliverable.status === 'completed' ? '#10b981' : deliverable.status === 'in-progress' ? 'var(--sg-accent)' : '#94a3b8',
+                          textTransform: 'capitalize',
+                        }}>
+                          {deliverable.status === 'pending' ? 'Upcoming' : deliverable.status === 'in-progress' ? 'In Progress' : 'Done'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
               {/* Contact Information */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.3 }}
                 style={{
                   padding: '1.5rem',
                   background: 'var(--color-background)',

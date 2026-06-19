@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { addProject } from '../../firebase/collections'
 import { createBillingInvoice } from '../../firebase/billing'
+import { sendWelcomeEmail } from '../../firebase/notifications'
 
 const STACKS = [
   { name: 'Firebase', type: 'backend', costTypes: ['monthly', 'pay-as-you-go'] },
@@ -40,6 +41,7 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
 
     // Infrastructure Stacks
     stacks: [],
+    deliverables: [],
 
     // Additional
     description: '',
@@ -52,6 +54,10 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
     costPerYear: 0,
     billingCycle: 'monthly',
     renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  })
+
+  const [newDeliverable, setNewDeliverable] = useState({
+    name: '',
   })
 
   const addStack = () => {
@@ -74,6 +80,27 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
     setFormData({
       ...formData,
       stacks: formData.stacks.filter(s => s.id !== id),
+    })
+  }
+
+  const addDeliverable = () => {
+    if (newDeliverable.name.trim()) {
+      setFormData({
+        ...formData,
+        deliverables: [...formData.deliverables, {
+          id: Date.now(),
+          name: newDeliverable.name,
+          status: 'pending',
+        }],
+      })
+      setNewDeliverable({ name: '' })
+    }
+  }
+
+  const removeDeliverable = (id) => {
+    setFormData({
+      ...formData,
+      deliverables: formData.deliverables.filter(d => d.id !== id),
     })
   }
 
@@ -112,6 +139,13 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
         await createBillingInvoice({ ...projectData, id: newProject })
       } catch (err) {
         console.error('Warning: Could not create billing invoice:', err)
+      }
+
+      // Send branded welcome email to client
+      try {
+        await sendWelcomeEmail({ ...projectData, id: newProject })
+      } catch (err) {
+        console.error('Warning: Could not send welcome email:', err)
       }
 
       onSubmit()
@@ -420,6 +454,89 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                   </div>
                 </div>
               </div>
+
+              {/* Deliverables */}
+              <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
+                  Project Deliverables/Tasks
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+                  Add deliverables or milestones. Clients will see progress tracking.
+                </p>
+
+                {/* Add Deliverable */}
+                <div style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  marginBottom: '1rem',
+                }}>
+                  <input
+                    type="text"
+                    placeholder="Add deliverable (e.g., Homepage Design, Database Setup)"
+                    value={newDeliverable.name}
+                    onChange={(e) => setNewDeliverable({ ...newDeliverable, name: e.target.value })}
+                    className="input"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addDeliverable}
+                    style={{
+                      padding: '0.65rem 1.5rem',
+                      background: 'var(--sg-accent)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <Plus size={16} /> Add
+                  </button>
+                </div>
+
+                {/* Deliverables List */}
+                {formData.deliverables.length > 0 && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    {formData.deliverables.map(deliverable => (
+                      <div
+                        key={deliverable.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '0.75rem',
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: '6px',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <p style={{ fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                          {deliverable.name}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeDeliverable(deliverable.id)}
+                          style={{
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '0.5rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -504,6 +621,24 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                     <div key={stack.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
                       <p style={{ fontWeight: 500, color: 'var(--color-text-heading)' }}>{stack.name}</p>
                       <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>GHS {parseFloat(stack.costPerMonth).toFixed(2)}/mo</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {formData.deliverables.length > 0 && (
+                <div style={{
+                  background: 'var(--bg-soft)',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border)',
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
+                    Deliverables ({formData.deliverables.length} tasks)
+                  </h3>
+                  {formData.deliverables.map((del, i) => (
+                    <div key={del.id} style={{ padding: '0.75rem 0', borderBottom: i < formData.deliverables.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                      <p style={{ fontWeight: 500, color: 'var(--color-text-heading)', margin: 0 }}>○ {del.name}</p>
                     </div>
                   ))}
                 </div>
