@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async'
 import PageLayout from '../components/layout/PageLayout'
 import { useTheme } from '../context/ThemeContext'
 import { useAdmin } from '../context/AdminContext'
+import { addInquiry } from '../firebase/collections'
 
 const TYPES = ['New System', 'Product Demo', 'Tech Consulting', 'Partnership', 'Other']
 
@@ -31,7 +32,7 @@ export default function ContactPage() {
   const { theme } = useTheme()
   const { addInquiry } = useAdmin()
 
-  const [form, setForm]           = useState({ name: '', company: '', email: '', type: '', message: '' })
+  const [form, setForm]           = useState({ name: '', company: '', email: '', phone: '', type: '', message: '', budget: '', timeline: '' })
   const [status, setStatus]       = useState('idle')   // idle | loading | success | error
   const [errorMsg, setErrorMsg]   = useState('')
 
@@ -40,11 +41,21 @@ export default function ContactPage() {
     setStatus('loading')
     setErrorMsg('')
 
-    // Always log to admin panel
-    addInquiry(form)
-
-    // Send email via Web3Forms
     try {
+      // Save to Firebase Firestore
+      await addInquiry({
+        clientName: form.name,
+        clientEmail: form.email,
+        clientPhone: form.phone || '',
+        company: form.company,
+        serviceType: form.type,
+        message: form.message,
+        budget: form.budget || '',
+        timeline: form.timeline || '',
+        source: 'contact_form',
+      })
+
+      // Also send email via Web3Forms if available
       if (WEB3FORMS_KEY && WEB3FORMS_KEY !== 'YOUR_WEB3FORMS_ACCESS_KEY') {
         const payload = {
           access_key: WEB3FORMS_KEY,
@@ -56,19 +67,18 @@ export default function ContactPage() {
           message:    form.message,
           from_name:  'Stormglide Contact Form',
         }
-        const res = await fetch('https://api.web3forms.com/submit', {
+        await fetch('https://api.web3forms.com/submit', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body:    JSON.stringify(payload),
         })
-        const data = await res.json()
-        if (!data.success) throw new Error(data.message || 'Submission failed')
       }
       setStatus('success')
+      setForm({ name: '', company: '', email: '', phone: '', type: '', message: '', budget: '', timeline: '' })
     } catch (err) {
-      // Even if email fails, the inquiry is logged in admin panel
-      console.error('Web3Forms error:', err)
-      setStatus('success')   // show success anyway — admin has the data
+      console.error('Submission error:', err)
+      setErrorMsg(err.message || 'Failed to submit. Please try again.')
+      setStatus('error')
     }
   }
 

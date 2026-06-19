@@ -27,6 +27,10 @@ const WorkPage      = lazy(() => import('./pages/WorkPage'))
 const PricingPage   = lazy(() => import('./pages/PricingPage'))
 const AdminLogin    = lazy(() => import('./pages/AdminLogin'))
 const AdminPortal   = lazy(() => import('./pages/AdminPortal'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminInfrastructure = lazy(() => import('./pages/admin/AdminInfrastructure'))
+const ClientLogin   = lazy(() => import('./pages/client/ClientLogin'))
+const ClientProject = lazy(() => import('./pages/client/ClientProject'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
 
 /* ── Page loading skeleton ── */
@@ -107,6 +111,8 @@ function AnimatedRoutes() {
             <Route path="/work"           element={<WorkPage />} />
             <Route path="/pricing"        element={<PricingPage />} />
             <Route path="/admin/login"    element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/infrastructure" element={<ProtectedRoute><AdminInfrastructure /></ProtectedRoute>} />
             <Route
               path="/admin/*"
               element={
@@ -115,6 +121,8 @@ function AnimatedRoutes() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/client/project" element={<ClientProject />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
