@@ -36,6 +36,7 @@ const AdminInsights = lazy(() => import('./pages/admin/AdminInsights'))
 const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'))
 const AdminProjects = lazy(() => import('./pages/admin/AdminProjects'))
 const ClientLogin   = lazy(() => import('./pages/client/ClientLogin'))
+const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'))
 const ClientProject = lazy(() => import('./pages/client/ClientProject'))
 const ClientInvoices = lazy(() => import('./pages/client/ClientInvoices'))
 const ClientSupportTickets = lazy(() => import('./pages/client/ClientSupportTickets'))
@@ -136,6 +137,7 @@ function AnimatedRoutes() {
               }
             />
             <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
             <Route path="/client/project" element={<ClientProject />} />
             <Route path="/client/invoices" element={<ClientInvoices />} />
             <Route path="/client/support-tickets" element={<ClientSupportTickets />} />
