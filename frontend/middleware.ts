@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // ----------------------------------------------------------------
-    // 1. SITE-WIDE ACCESS PROTECTION (HT PASSWORD REPLACEMENT)
+    // 1. SITE-WIDE ACCESS PROTECTION
     // ----------------------------------------------------------------
     const publicPaths = ['/access', '/_next', '/api', '/static', '/favicon.ico', '/manifest.json'];
     const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
@@ -22,11 +22,19 @@ export function middleware(request: NextRequest) {
     // ----------------------------------------------------------------
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
         const adminToken = request.cookies.get('admin_token');
-
         if (!adminToken) {
             return NextResponse.redirect(new URL('/admin/login', request.url));
         }
     }
+
+    // ----------------------------------------------------------------
+    // 3. CLIENT PORTAL PROTECTION
+    //    /portal/login and /auth/verify are public (magic link flows)
+    //    /portal itself checks for client_token in localStorage — done
+    //    client-side because cookies.get() here checks httpOnly cookies,
+    //    but client_token is in localStorage. The portal page handles
+    //    the redirect to /portal/login itself.
+    // ----------------------------------------------------------------
 
     return NextResponse.next();
 }

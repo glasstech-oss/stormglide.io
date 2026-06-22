@@ -18,6 +18,9 @@ const config: Config = {
             fontFamily: {
                 sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
                 mono: ['var(--font-mono)', 'monospace'],
+                grotesk: ['var(--font-space-grotesk)', 'sans-serif'],
+                spmono: ['var(--font-space-mono)', 'monospace'],
+                manrope: ['var(--font-manrope)', 'sans-serif'],
             },
             backdropBlur: {
                 xs: '2px',

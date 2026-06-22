@@ -24,6 +24,15 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { useAdminStore } from "@/store/adminStore";
+import CRMModule from "@/components/admin/modules/CRMModule";
+import KanbanModule from "@/components/admin/modules/KanbanModule";
+import BillingModule from "@/components/admin/modules/BillingModule";
+import AuditModule from "@/components/admin/modules/AuditModule";
+import InfrastructureModule from "@/components/admin/modules/InfrastructureModule";
+import SubscriptionsModule from "@/components/admin/modules/SubscriptionsModule";
+import AlertsModule from "@/components/admin/modules/AlertsModule";
+import ContractVaultModule from "@/components/admin/modules/ContractVaultModule";
+import ForecastModule from "@/components/admin/modules/ForecastModule";
 
 // Mock data for the MRR Chart
 const mrrData = [
@@ -52,24 +61,31 @@ const servers = [
 
 import SettingsPage from "../settings/page";
 
+const TAB_META: Record<string, { title: string; description: string }> = {
+    dashboard: { title: "Admin Overview", description: "View and manage your business performance and logs." },
+    crm: { title: "Client Entities", description: "Manage your client roster, contacts, and onboard new projects." },
+    contracts: { title: "Contract Vault", description: "Store, manage, and track all client agreements and documents." },
+    kanban: { title: "Operations Board", description: "Track active tasks and project delivery across all clients." },
+    infra: { title: "Infrastructure Health", description: "Monitor domains, SSL, uptime, databases, and Firebase costs across all projects." },
+    alerts: { title: "Alert Center", description: "Priority inbox for domain expirations, SSL warnings, overdue invoices, and system events." },
+    billing: { title: "Billing Ledger", description: "Review invoices, payment status, and revenue records." },
+    subscriptions: { title: "Subscriptions & Costs", description: "Track all third-party services, renewal dates, and monthly costs per project." },
+    forecast: { title: "Financial Forecasting", description: "MRR projections, 60-day cash flow, and project profitability analysis." },
+    settings: { title: "Site Orchestration", description: "Update your website theme, branding, and core content." },
+    logs: { title: "Audit Protocol", description: "Full system event log — security, deployments, and changes." },
+};
+
 export default function DashboardPage() {
     const { activeTab } = useAdminStore();
+    const meta = TAB_META[activeTab] ?? { title: activeTab, description: "" };
 
     return (
         <div className="space-y-8 pb-20">
             {/* Welcome Section */}
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">
-                        {activeTab === 'dashboard' ? 'Admin Overview' :
-                            activeTab === 'settings' ? 'Site Orchestration' :
-                                'Access restricted'}
-                    </h1>
-                    <p className="text-gray-400">
-                        {activeTab === 'dashboard' ? 'View and manage your business performance and logs.' :
-                            activeTab === 'settings' ? 'Update your website name, colors, and content easily.' :
-                                'You do not have permission to see this page.'}
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">{meta.title}</h1>
+                    <p className="text-gray-400">{meta.description}</p>
                 </div>
                 <div className="flex gap-3">
                     <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-sm">
@@ -229,25 +245,16 @@ export default function DashboardPage() {
                 </>
             )}
 
-            {activeTab === 'dashboard' && (
-                <>
-                    {/* ... existing dashboard content ... */}
-                </>
-            )}
-
             {activeTab === 'settings' && <SettingsPage />}
-
-            {(activeTab !== 'dashboard' && activeTab !== 'settings') && (
-                <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
-                    <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-4xl">
-                        🛠️
-                    </div>
-                    <div>
-                        <h3 className="text-2xl font-bold mb-2">Module Under Construction</h3>
-                        <p className="text-gray-400 max-w-md">Commander, this secure module is currently being calibrated for your high-performance operations.</p>
-                    </div>
-                </div>
-            )}
+            {activeTab === 'crm' && <CRMModule />}
+            {activeTab === 'contracts' && <ContractVaultModule />}
+            {activeTab === 'kanban' && <KanbanModule />}
+            {activeTab === 'infra' && <InfrastructureModule />}
+            {activeTab === 'alerts' && <AlertsModule />}
+            {activeTab === 'billing' && <BillingModule />}
+            {activeTab === 'subscriptions' && <SubscriptionsModule />}
+            {activeTab === 'forecast' && <ForecastModule />}
+            {activeTab === 'logs' && <AuditModule />}
         </div>
     );
 }

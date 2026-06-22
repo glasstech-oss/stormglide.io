@@ -100,6 +100,9 @@ model ClientProfile {
   invoices         Invoice[]
   subscriptions    Subscription[]
   stagingFeedback  StagingFeedback[]
+  infraSnapshots   InfraSnapshot[]
+  alertRecords     AlertRecord[]
+  documents        Document[]
 }
 
 // ==========================================
@@ -127,6 +130,7 @@ model Project {
   feedback         StagingFeedback[]
   invoices         Invoice[]          // Link specific invoices to a project build
   kanbanTasks      KanbanTask[]
+  infraSnapshots   InfraSnapshot[]
 }
 
 model ProjectMilestone {
@@ -303,4 +307,62 @@ model Lead {
   status          String   @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, ARCHIVED
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// INFRASTRUCTURE MONITORING: SNAPSHOTS
+// ==========================================
+
+model InfraSnapshot {
+  id          String   @id @default(uuid())
+  clientId    String
+  projectId   String?
+  checkType   String   // DOMAIN, SSL, UPTIME, DB_HEALTH, FIREBASE
+  target      String   // The domain, URL, or resource being checked
+  status      String   // HEALTHY, WARNING, CRITICAL, UNKNOWN
+  details     Json     // Full check result { expiresIn, latency, statusCode, etc }
+  checkedAt   DateTime @default(now())
+
+  client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project     Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// ALERT SYSTEM: DB-BACKED ALERT RECORDS
+// ==========================================
+
+model AlertRecord {
+  id          String    @id @default(uuid())
+  type        String    // DOMAIN, SSL, FIREBASE, INVOICE, BACKUP, UPTIME, SECURITY
+  severity    String    // CRITICAL, HIGH, MEDIUM, LOW
+  title       String
+  description String
+  clientId    String?
+  clientName  String?
+  resolved    Boolean   @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  client      ClientProfile? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// CONTRACT VAULT: DOCUMENTS & AGREEMENTS
+// ==========================================
+
+model Document {
+  id          String   @id @default(uuid())
+  clientId    String
+  type        String   @default("CONTRACT") // CONTRACT, NDA, PROPOSAL, BRIEF, ASSET
+  title       String
+  status      String   @default("DRAFT") // DRAFT, SENT, SIGNED, ACTIVE
+  fileUrl     String?
+  fileSize    String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }

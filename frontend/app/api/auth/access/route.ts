@@ -11,8 +11,8 @@ export async function POST(request: Request) {
         const VALID_CODE = process.env.SITE_ACCESS_CODE || 'stormglide-2026';
 
         if (code === VALID_CODE) {
-            // Set a cookie that middleware will check
-            cookies().set('site_access_token', 'granted', {
+            const cookieStore = await cookies();
+            cookieStore.set('site_access_token', 'granted', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 60 * 60 * 24 * 7, // 1 week

@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { randomBytes } from 'crypto';
 
 export interface MagicLinkPayload {
@@ -15,6 +16,7 @@ export class AuthService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService,
+        private readonly notifications: NotificationsService,
     ) { }
 
     /**
@@ -60,9 +62,9 @@ export class AuthService {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
             const magicLinkUrl = `${frontendUrl}/auth/verify?token=${jwtToken}`;
 
-            // TODO: Integrate actual email service (SendGrid/AWS SES/Postmark) here.
-            // For now, we simulate the email dispatch.
-            this.logger.log(`[SIMULATED EMAIL DISPATCH] Magic Link sent to ${email}. URL: ${magicLinkUrl}`);
+            // Send real magic link email via Resend
+            await this.notifications.sendMagicLink(email, magicLinkUrl);
+            this.logger.log(`Magic link dispatched to ${email}`);
 
             return {
                 message: 'If an account matches that email, a secure login link has been sent.',

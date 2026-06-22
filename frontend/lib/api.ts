@@ -1,184 +1,284 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { auth } from './firebase';
 
-// ==========================================
-// 1. AXIOS INSTANCE CONFIGURATION
-// ==========================================
-// In production, ensure NEXT_PUBLIC_API_URL is set in your .env.local file
-// Example: NEXT_PUBLIC_API_URL=https://api.stormglide.io
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
+    'https://us-central1-stormglideio.cloudfunctions.net/api';
 
 export const apiClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 15000, // 15-second timeout for heavy AI generation requests
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
     },
 });
 
-// ==========================================
-// 2. REQUEST & RESPONSE INTERCEPTORS
-// ==========================================
+async function getToken(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+    try {
+        const user = auth.currentUser;
+        if (user) return await user.getIdToken();
+    } catch { /* fall through */ }
+    return null;
+}
+
 apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        // Retrieve the secure session token. 
-        // In a Next.js App Router setup, if this is called on the client side, we use localStorage.
-        // (For Server Components, you would extract this from next/headers cookies)
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('stormglide_session_token');
-            if (token && config.headers) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+    async (config: InternalAxiosRequestConfig) => {
+        const token = await getToken();
+        if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error: AxiosError) => {
-        return Promise.reject(error);
-    }
+    (error: AxiosError) => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-    (response: AxiosResponse) => {
-        // Pass through successful responses smoothly
-        return response;
-    },
+    (response: AxiosResponse) => response,
     (error: AxiosError) => {
-        // Global Error Handling: Catch 401 Unauthorized (Expired JWT)
         if (error.response?.status === 401) {
             if (typeof window !== 'undefined') {
-                console.warn('Session expired or invalid. Redirecting to authentication portal.');
-                localStorage.removeItem('stormglide_session_token');
-                // Force redirect to login to protect the system
-                window.location.href = '/portal/login';
+                localStorage.removeItem('client_token');
+                if (window.location.pathname.startsWith('/portal')) {
+                    window.location.href = '/portal/login';
+                }
             }
         }
-        // Global Error Handling: Log server errors for the Command Center
         if (error.response?.status === 500) {
-            console.error('NestJS Core Backend Error:', error.response.data);
+            console.error('Backend error:', error.response.data);
         }
         return Promise.reject(error);
     }
 );
 
 // ==========================================
-// 3. AUTHENTICATION MODULE
+// AUTH MODULE
 // ==========================================
 export const AuthAPI = {
-    /**
-     * Request a secure JWT Magic Link sent via email
-     */
     requestMagicLink: async (email: string) => {
-        const response = await apiClient.post('/v1/auth/request-magic-link', { email });
-        return response.data;
+        const { data } = await apiClient.post('/v1/auth/magic-link', { email });
+        return data;
     },
-
-    /**
-     * Verify the token from the email URL and return the long-term session token
-     */
-    verifyMagicLink: async (token: string) => {
-        const response = await apiClient.get(`/v1/auth/verify?token=${token}`);
-        // Save token immediately upon successful verification
-        if (response.data.accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('stormglide_session_token', response.data.accessToken);
-        }
-        return response.data;
+    adminLogin: async (accessKey: string) => {
+        // Returns a Firebase custom token — caller must signInWithCustomToken(auth, token)
+        const { data } = await apiClient.post('/v1/auth/admin', { key: accessKey });
+        return data;
     },
-
-    /**
-     * Purge local session data to securely log out
-     */
-    logout: () => {
+    syncUser: async () => {
+        // Registers / updates user doc in Firestore after Firebase sign-in
+        const { data } = await apiClient.post('/v1/auth/sync-user', {});
+        return data;
+    },
+    logout: async () => {
         if (typeof window !== 'undefined') {
-            localStorage.removeItem('stormglide_session_token');
+            try { await auth.signOut(); } catch { /* ignore */ }
             window.location.href = '/';
         }
-    }
+    },
 };
 
 // ==========================================
-// 4. CRM & PROJECT TRACKING MODULE
+// CRM MODULE
 // ==========================================
 export const CrmAPI = {
-    /**
-     * Create a new client profile
-     */
-    createClient: async (data: { userId: string; companyName: string; contactName: string; whatsappNumber?: string; region?: string }) => {
-        const response = await apiClient.post('/v1/crm/client', data);
-        return response.data;
+    getClients: async (search?: string) => {
+        const { data } = await apiClient.get('/v1/crm/clients', { params: search ? { search } : {} });
+        return data;
     },
-
-    /**
-     * Initialize a new project and generate a Job ID
-     */
-    initializeProject: async (clientId: string, data: { projectName: string; description?: string; estimatedEnd?: Date }) => {
-        const response = await apiClient.post(`/v1/crm/project/${clientId}`, data);
-        return response.data;
+    getClient: async (id: string) => {
+        const { data } = await apiClient.get(`/v1/crm/clients/${id}`);
+        return data;
     },
-
-    /**
-     * Advance the project phase (Moves the progress bar on the Client Portal)
-     */
+    getProjects: async () => {
+        const { data } = await apiClient.get('/v1/crm/projects');
+        return data;
+    },
+    getProject: async (id: string) => {
+        const { data } = await apiClient.get(`/v1/crm/project/${id}`);
+        return data;
+    },
+    getLeads: async (status?: string) => {
+        const { data } = await apiClient.get('/v1/crm/leads', { params: status ? { status } : {} });
+        return data;
+    },
+    getDashboardStats: async () => {
+        const { data } = await apiClient.get('/v1/crm/stats');
+        return data;
+    },
+    createClient: async (body: { userId: string; companyName: string; contactName: string; whatsappNumber?: string; region?: string }) => {
+        const { data } = await apiClient.post('/v1/crm/client', body);
+        return data;
+    },
+    initializeProject: async (clientId: string, body: { projectName: string; description?: string; estimatedEnd?: Date }) => {
+        const { data } = await apiClient.post(`/v1/crm/project/${clientId}`, body);
+        return data;
+    },
     updateProjectPhase: async (projectId: string, newPhase: string) => {
-        const response = await apiClient.put(`/v1/crm/project/${projectId}/phase`, { newPhase });
-        return response.data;
+        const { data } = await apiClient.put(`/v1/crm/project/${projectId}/phase`, { newPhase });
+        return data;
     },
-
-    /**
-     * Submit live visual feedback from the staging sandbox
-     */
-    submitStagingFeedback: async (projectId: string, data: { clientId: string; componentIdentifier: string; comment: string; screenX?: number; screenY?: number }) => {
-        const response = await apiClient.post(`/v1/crm/project/${projectId}/feedback`, data);
-        return response.data;
+    updateLeadStatus: async (leadId: string, status: string) => {
+        const { data } = await apiClient.put(`/v1/crm/lead/${leadId}/status`, { status });
+        return data;
     },
-
-    /**
-     * Fetch full active project context for the Client Dashboard
-     */
-    getClientDashboardData: async (clientId: string) => {
-        // Assumes an endpoint exists in NestJS to aggregate client data
-        const response = await apiClient.get(`/v1/crm/dashboard/${clientId}`);
-        return response.data;
-    }
+    submitStagingFeedback: async (projectId: string, body: { clientId: string; componentIdentifier: string; comment: string; screenX?: number; screenY?: number }) => {
+        const { data } = await apiClient.post(`/v1/crm/project/${projectId}/feedback`, body);
+        return data;
+    },
+    createLead: async (body: { name: string; email: string; organization?: string; missionScope: string; details: string }) => {
+        const { data } = await apiClient.post('/v1/crm/lead', body);
+        return data;
+    },
+    sendPortalAccess: async (clientId: string) => {
+        const { data } = await apiClient.post(`/v1/crm/clients/${clientId}/portal-access`);
+        return data;
+    },
 };
 
 // ==========================================
-// 5. BILLING & INVOICING MODULE
+// BILLING MODULE
 // ==========================================
 export const BillingAPI = {
-    /**
-     * Generate an invoice and automatically route to Stripe or Paystack based on currency
-     */
-    generateInvoice: async (clientId: string, data: { amount: number; currency: string; projectId?: string; dueDate: Date }) => {
-        const response = await apiClient.post(`/v1/billing/invoice/${clientId}`, data);
-        return response.data;
+    getInvoices: async (status?: string, clientId?: string) => {
+        const { data } = await apiClient.get('/v1/billing/invoices', { params: { ...(status && { status }), ...(clientId && { clientId }) } });
+        return data;
     },
-
-    /**
-     * Fetch invoice history for a client
-     */
     getClientInvoices: async (clientId: string) => {
-        const response = await apiClient.get(`/v1/billing/invoices/${clientId}`);
-        return response.data;
-    }
+        const { data } = await apiClient.get(`/v1/billing/invoices/${clientId}`);
+        return data;
+    },
+    getSubscriptions: async (clientId?: string) => {
+        const { data } = await apiClient.get('/v1/billing/subscriptions', { params: clientId ? { clientId } : {} });
+        return data;
+    },
+    getBillingStats: async () => {
+        const { data } = await apiClient.get('/v1/billing/stats');
+        return data;
+    },
+    generateInvoice: async (clientId: string, body: { amount: number; currency: string; projectId?: string; dueDate: Date }) => {
+        const { data } = await apiClient.post(`/v1/billing/invoice/${clientId}`, body);
+        return data;
+    },
+    updateInvoiceStatus: async (invoiceId: string, status: string) => {
+        const { data } = await apiClient.put(`/v1/billing/invoice/${invoiceId}/status`, { status });
+        return data;
+    },
 };
 
 // ==========================================
-// 6. AI BRAINSTORMING LAB MODULE
+// KANBAN MODULE
+// ==========================================
+export const KanbanAPI = {
+    getTasks: async (projectId?: string, status?: string) => {
+        const { data } = await apiClient.get('/v1/kanban/tasks', { params: { ...(projectId && { projectId }), ...(status && { status }) } });
+        return data;
+    },
+    getBoard: async (projectId?: string) => {
+        const { data } = await apiClient.get('/v1/kanban/board', { params: projectId ? { projectId } : {} });
+        return data;
+    },
+    createTask: async (body: { title: string; description?: string; status?: string; priority?: string; projectId?: string }) => {
+        const { data } = await apiClient.post('/v1/kanban/tasks', body);
+        return data;
+    },
+    updateTask: async (taskId: string, body: { title?: string; description?: string; status?: string; priority?: string }) => {
+        const { data } = await apiClient.put(`/v1/kanban/tasks/${taskId}`, body);
+        return data;
+    },
+    deleteTask: async (taskId: string) => {
+        const { data } = await apiClient.delete(`/v1/kanban/tasks/${taskId}`);
+        return data;
+    },
+};
+
+// ==========================================
+// MONITORING MODULE
+// ==========================================
+export const MonitoringAPI = {
+    getSnapshots: async (clientId?: string) => {
+        const { data } = await apiClient.get('/v1/monitoring/infra', {
+            params: clientId ? { clientId } : {},
+        });
+        return data;
+    },
+    getInfraSummary: async () => {
+        const { data } = await apiClient.get('/v1/monitoring/infra/summary');
+        return data;
+    },
+    getAlerts: async (resolved?: boolean) => {
+        const { data } = await apiClient.get('/v1/monitoring/alerts', {
+            params: resolved !== undefined ? { resolved: String(resolved) } : {},
+        });
+        return data;
+    },
+    getAlertStats: async () => {
+        const { data } = await apiClient.get('/v1/monitoring/alerts/stats');
+        return data;
+    },
+    resolveAlert: async (alertId: string) => {
+        const { data } = await apiClient.put(`/v1/monitoring/alerts/${alertId}/resolve`, {});
+        return data;
+    },
+    reopenAlert: async (alertId: string) => {
+        const { data } = await apiClient.put(`/v1/monitoring/alerts/${alertId}/reopen`, {});
+        return data;
+    },
+    createAlert: async (body: { type: string; severity: string; title: string; description: string; clientId?: string; clientName?: string }) => {
+        const { data } = await apiClient.post('/v1/monitoring/alerts', body);
+        return data;
+    },
+    getDocuments: async (clientId?: string, type?: string) => {
+        const { data } = await apiClient.get('/v1/monitoring/documents', {
+            params: { ...(clientId && { clientId }), ...(type && { type }) },
+        });
+        return data;
+    },
+    createDocument: async (body: { clientId: string; type: string; title: string; status: string; fileUrl?: string; fileSize?: string }) => {
+        const { data } = await apiClient.post('/v1/monitoring/documents', body);
+        return data;
+    },
+    updateDocumentStatus: async (docId: string, status: string) => {
+        const { data } = await apiClient.put(`/v1/monitoring/documents/${docId}/status`, { status });
+        return data;
+    },
+};
+
+// ==========================================
+// AUDIT MODULE
+// ==========================================
+export const AuditAPI = {
+    getLogs: async (page = 1, limit = 50, entityType?: string) => {
+        const { data } = await apiClient.get('/v1/audit/logs', {
+            params: { page, limit, ...(entityType && { entityType }) },
+        });
+        return data;
+    },
+};
+
+// ==========================================
+// CLIENT PORTAL MODULE
+// ==========================================
+export const PortalAPI = {
+    getMyData: async () => {
+        const { data } = await apiClient.get('/v1/portal/me');
+        return data;
+    },
+    submitFeedback: async (projectId: string, body: { componentIdentifier: string; comment: string; screenX?: number; screenY?: number }) => {
+        const { data } = await apiClient.post(`/v1/portal/feedback/${projectId}`, body);
+        return data;
+    },
+};
+
+// ==========================================
+// AI LAB MODULE
 // ==========================================
 export const LabAPI = {
-    /**
-     * Send a raw client prompt to the NestJS engine to generate a Prisma schema blueprint
-     */
-    generateBlueprint: async (data: { authorId: string; title: string; rawPrompt: string }) => {
-        const response = await apiClient.post('/v1/lab/blueprint', data);
-        return response.data;
+    generateBlueprint: async (body: { authorId: string; title: string; rawPrompt: string }) => {
+        const { data } = await apiClient.post('/v1/lab/blueprint', body);
+        return data;
     },
-
-    /**
-     * Fetch all previously generated AI blueprints for the Lab Sidebar
-     */
     getBlueprintHistory: async (authorId: string) => {
-        const response = await apiClient.get(`/v1/lab/blueprints/${authorId}`);
-        return response.data;
-    }
+        const { data } = await apiClient.get(`/v1/lab/blueprints/${authorId}`);
+        return data;
+    },
 };

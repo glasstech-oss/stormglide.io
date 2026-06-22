@@ -50,8 +50,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* ========================================= */}
             {!isAdminRoute && (
                 <header
-                    className={`fixed top-0 w-full z-50 transition-all duration-300 hidden md:block ${isScrolled
-                        ? "bg-[#0B0F19]/70 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-cyan-900/10"
+                    className={`fixed top-0 w-full z-50 transition-all duration-500 hidden md:block ${isScrolled
+                        ? "bg-[#060709]/80 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/30"
                         : "bg-transparent border-b border-transparent"
                         }`}
                 >
@@ -76,15 +76,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                     <Link
                                         key={link.name}
                                         href={link.path}
-                                        className="relative px-1 py-2 text-sm font-medium tracking-wide transition-colors hover:text-cyan-400"
+                                        className="relative px-1 py-2 text-sm font-medium tracking-wide transition-colors hover:text-[#5ad1ff]"
                                     >
-                                        <span className={isActive ? "text-cyan-400" : "text-gray-400"}>
+                                        <span className={isActive ? "text-[#5ad1ff]" : "text-white/50"}>
                                             {link.name}
                                         </span>
                                         {isActive && (
                                             <motion.div
                                                 layoutId="desktop-active-indicator"
-                                                className="absolute left-0 bottom-0 w-full h-[2px] bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+                                                className="absolute left-0 bottom-0 w-full h-[2px] bg-[#5ad1ff] rounded-full shadow-[0_0_10px_rgba(90,209,255,0.5)]"
                                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                             />
                                         )}
@@ -95,19 +95,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
                         {/* Live Pulse & CTA */}
                         <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-                                <span className="relative flex h-2.5 w-2.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08]">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#5ad1ff] opacity-60"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#5ad1ff] shadow-[0_0_8px_rgba(90,209,255,0.7)]"></span>
                                 </span>
-                                <span className="text-xs font-mono text-emerald-400 tracking-wider">ALL SYSTEMS WORKING</span>
+                                <span className="text-[11px] font-mono text-[#5ad1ff]/80 tracking-wider">SYSTEMS ONLINE</span>
                             </div>
 
                             <Link
                                 href="/contact"
-                                className="px-6 py-2.5 rounded-lg bg-white text-[#0B0F19] font-semibold text-sm hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all duration-300 transform hover:-translate-y-0.5"
+                                className="px-6 py-2.5 rounded-full bg-[#5ad1ff] text-[#04181f] font-semibold text-sm hover:shadow-[0_0_0_6px_rgba(90,209,255,0.16)] transition-all duration-300"
                             >
-                                Start Your Project
+                                Start a project
                             </Link>
                         </div>
                     </div>
@@ -139,7 +139,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* ========================================= */}
             {!isAdminRoute && (
                 <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-2">
-                    <div className="relative flex items-center justify-around w-full bg-[#111827]/80 backdrop-blur-xl border border-white/10 rounded-2xl py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+                    <div className="relative flex items-center justify-around w-full bg-[#0d1117]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl py-3 shadow-[0_-20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(90,209,255,0.04)]">
                         {NAV_LINKS.map((link) => {
                             const isActive = pathname === link.path;
                             const Icon = link.icon;
@@ -156,12 +156,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                         }
                                     }}
                                 >
-                                    <div className={`relative z-10 transition-colors duration-300 ${isActive ? "text-cyan-400" : "text-gray-500"}`}>
-                                        <Icon strokeWidth={isActive ? 2.5 : 2} size={22} />
+                                    <div className={`relative z-10 transition-colors duration-300 ${isActive ? "text-[#5ad1ff]" : "text-white/30"}`}>
+                                        <Icon strokeWidth={isActive ? 2.5 : 1.8} size={22} />
                                     </div>
 
                                     {/* Text indicator for mobile */}
-                                    <span className={`text-[10px] mt-1 font-medium transition-all duration-300 ${isActive ? "text-cyan-400 opacity-100" : "text-gray-500 opacity-0 h-0"}`}>
+                                    <span className={`text-[10px] mt-1 font-medium transition-all duration-300 ${isActive ? "text-[#5ad1ff] opacity-100" : "text-white/30 opacity-0 h-0"}`}>
                                         {link.name.split(" ")[0]}
                                     </span>
 
@@ -169,7 +169,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                     {isActive && (
                                         <motion.div
                                             layoutId="mobile-active-indicator"
-                                            className="absolute inset-0 bg-cyan-500/10 rounded-xl border border-cyan-500/20"
+                                            className="absolute inset-0 bg-[#5ad1ff]/10 rounded-xl border border-[#5ad1ff]/20"
                                             transition={{ type: "spring", stiffness: 400, damping: 35 }}
                                         />
                                     )}

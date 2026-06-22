@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fira_Code } from "next/font/google";
+import { Inter, Fira_Code, Space_Grotesk, Space_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 
-// We use Inter for main UI and Fira Code for the Developer Terminal/Code blocks
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const firaCode = Fira_Code({ subsets: ["latin"], variable: "--font-mono" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", weight: ["400","500","600","700"] });
+const spaceMono = Space_Mono({ subsets: ["latin"], variable: "--font-space-mono", weight: ["400","700"] });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", weight: ["300","400","500","600","700"] });
 
 export const metadata: Metadata = {
     title: "Stormglide.io | Enterprise Systems Architecture",
@@ -34,7 +36,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${inter.variable} ${firaCode.variable} bg-[#0B0F19]`}>
+        <html lang="en" className={`${inter.variable} ${firaCode.variable} ${spaceGrotesk.variable} ${spaceMono.variable} ${manrope.variable} bg-[#0B0F19]`}>
             <body className="antialiased bg-[#0B0F19] text-white">
                 <SiteSettingsProvider>
                     <AppShell>
