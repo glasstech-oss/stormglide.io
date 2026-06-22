@@ -19,6 +19,12 @@ function VerifyContent() {
         const run = async () => {
             if (typeof window === "undefined") return;
 
+            if (!auth) {
+                setState("error");
+                setErrorMsg("Firebase is not configured. Please contact support.");
+                return;
+            }
+
             if (!isSignInWithEmailLink(auth, window.location.href)) {
                 setState("error");
                 setErrorMsg("This URL is not a valid sign-in link. Please request a new magic link.");
@@ -37,7 +43,7 @@ function VerifyContent() {
             }
 
             try {
-                await signInWithEmailLink(auth, email, window.location.href);
+                await signInWithEmailLink(auth!, email, window.location.href);
                 localStorage.removeItem("emailForSignIn");
                 // Register/update user record in Firestore
                 try { await AuthAPI.syncUser(); } catch { /* non-fatal */ }

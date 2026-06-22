@@ -21,6 +21,7 @@ export default function AdminLoginPage() {
 
         try {
             const { accessToken } = await AuthAPI.adminLogin(password);
+            if (!auth) throw new Error('Firebase not initialized — check environment variables.');
             await signInWithCustomToken(auth, accessToken);
             router.push("/admin/dashboard");
         } catch (err: any) {

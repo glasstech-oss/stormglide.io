@@ -14,7 +14,7 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 async function getToken(): Promise<string | null> {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined' || !auth) return null;
     try {
         const user = auth.currentUser;
         if (user) return await user.getIdToken();
@@ -71,7 +71,7 @@ export const AuthAPI = {
     },
     logout: async () => {
         if (typeof window !== 'undefined') {
-            try { await auth.signOut(); } catch { /* ignore */ }
+            try { if (auth) await auth.signOut(); } catch { /* ignore */ }
             window.location.href = '/';
         }
     },
