@@ -254,7 +254,7 @@ export default function Footer() {
           <p style={{ color: 'var(--ink-300)', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
             © 2025 Stormglide Technologies Ltd. · Built in Accra, Ghana
           </p>
-          <Link to="/admin/login" style={{
+          <a href="https://admin.stormglide.io/admin/login" style={{
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             color: 'var(--ink-300)', fontSize: '0.72rem', textDecoration: 'none',
             transition: 'color 0.15s',
@@ -263,7 +263,7 @@ export default function Footer() {
             onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-300)'}
           >
             Admin <ArrowUpRight size={10} />
-          </Link>
+          </a>
         </div>
       </div>
 
