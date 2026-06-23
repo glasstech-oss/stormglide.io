@@ -217,102 +217,289 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); setStep(step + 1) }}>
           {/* Step 1: Project Details */}
           {step === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Project Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="input"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Package Name (e.g., Starter, Professional, Enterprise)"
-                value={formData.packageName}
-                onChange={(e) => setFormData({ ...formData, packageName: e.target.value })}
-                className="input"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Person Name"
-                value={formData.contactPerson}
-                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                className="input"
-                required
-              />
-              <input
-                type="email"
-                placeholder="Contact Email"
-                value={formData.contactEmail}
-                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                className="input"
-                required
-              />
-              <input
-                type="tel"
-                placeholder="Contact Phone"
-                value={formData.contactPhone}
-                onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                className="input"
-              />
-              <input
-                type="text"
-                placeholder="Domain (e.g., example.com)"
-                value={formData.domain}
-                onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                className="input"
-              />
-              <textarea
-                placeholder="Project Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="input"
-                style={{ minHeight: '80px' }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Project Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Acme Logistics Portal, TechStart Dashboard"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="input"
+                  required
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  What is the project/business name? (Client will see this)
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Package Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Starter, Professional, Enterprise, Basic SaaS"
+                  value={formData.packageName}
+                  onChange={(e) => setFormData({ ...formData, packageName: e.target.value })}
+                  className="input"
+                  required
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  Tier/plan name for this project (e.g., which level of service)
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Contact Person Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., John Mensah, Ama Osei"
+                  value={formData.contactPerson}
+                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                  className="input"
+                  required
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  Primary client contact person
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Contact Email *
+                </label>
+                <input
+                  type="email"
+                  placeholder="john@example.com"
+                  value={formData.contactEmail}
+                  onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                  className="input"
+                  required
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  Client will receive invoices & updates here
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Contact Phone
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+233 XX XXX XXXX or 024 XXX XXXX"
+                  value={formData.contactPhone}
+                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                  className="input"
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  Client phone number (Ghana format or international)
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Domain
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., acme.com, app.techstart.io"
+                  value={formData.domain}
+                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                  className="input"
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  If applicable. Leave blank if no domain yet
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                  Project Description
+                </label>
+                <textarea
+                  placeholder="What does this project do? What problem does it solve? e.g., Logistics management platform for tracking shipments..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="input"
+                  style={{ minHeight: '80px' }}
+                />
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                  Brief overview of project scope (internal notes only)
+                </p>
+              </div>
             </div>
           )}
 
-          {/* Step 2: Pricing & Infrastructure */}
+          {/* Step 2: Financial Model */}
           {step === 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Pricing Section */}
-              <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
-                  Client Pricing
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Financial Overview - Upfront + Recurring + Expenses */}
+              <div style={{
+                background: 'linear-gradient(135deg, var(--bg-soft) 0%, var(--color-surface) 100%)',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '2px solid var(--sg-accent)',
+              }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--color-text-heading)' }}>
+                  💰 Client Payments & Your Expenses
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+
+                {/* Three-column financial summary */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                  {/* One-Time Fee */}
+                  {parseFloat(formData.clientPaymentMonthly || 0) > 0 && (
+                    <div style={{
+                      background: 'var(--color-background)',
+                      padding: '1.25rem',
+                      borderRadius: '10px',
+                      border: '2px solid #8b5cf6',
+                    }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8b5cf6', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                        One-Time (Setup)
+                      </p>
+                      <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#8b5cf6', margin: 0 }}>
+                        GHS {parseFloat(formData.clientPaymentMonthly || 0).toFixed(2)}
+                      </p>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                        paid upfront
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Recurring Fee */}
+                  <div style={{
+                    background: 'var(--color-background)',
+                    padding: '1.25rem',
+                    borderRadius: '10px',
+                    border: '2px solid #0891b2',
+                  }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0891b2', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                      Recurring
+                    </p>
+                    <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0891b2', margin: 0 }}>
+                      GHS {parseFloat(formData.clientPaymentAnnual || 0).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                      {formData.paymentCycle === 'annual' ? 'per year' : 'per month'}
+                    </p>
+                  </div>
+
+                  {/* Your Monthly Expenses */}
+                  <div style={{
+                    background: 'var(--color-background)',
+                    padding: '1.25rem',
+                    borderRadius: '10px',
+                    border: '2px solid #ef4444',
+                  }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                      Your Expenses
+                    </p>
+                    <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ef4444', margin: 0 }}>
+                      GHS {formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth || 0), 0).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                      per month
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 1: Client Pricing - Upfront + Recurring */}
+              <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                  Step 1: How much does the CLIENT pay?
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+                  Set your revenue. Include one-time fees (development) and recurring fees (maintenance/hosting).
+                </p>
+
+                {/* One-Time Setup/Development Fee */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)', marginBottom: '0.75rem' }}>
+                    💰 One-Time Fee (Setup/Development)
+                  </h4>
                   <input
                     type="number"
-                    placeholder="Monthly Price (GHS)"
+                    placeholder="e.g., 10000, 50000, 100000 (or 0 if no upfront fee)"
                     value={formData.clientPaymentMonthly}
                     onChange={(e) => setFormData({ ...formData, clientPaymentMonthly: e.target.value })}
                     className="input"
+                    style={{ fontSize: '1.1rem', fontWeight: 600, padding: '0.75rem' }}
                   />
-                  <input
-                    type="number"
-                    placeholder="Annual Price (GHS)"
-                    value={formData.clientPaymentAnnual}
-                    onChange={(e) => setFormData({ ...formData, clientPaymentAnnual: e.target.value })}
-                    className="input"
-                  />
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.35rem' }}>
+                    Large upfront payment (e.g., website development). Leave at 0 if none.
+                  </p>
                 </div>
-                <select
-                  value={formData.paymentCycle}
-                  onChange={(e) => setFormData({ ...formData, paymentCycle: e.target.value })}
-                  className="input"
-                >
-                  <option value="monthly">Monthly Billing</option>
-                  <option value="annual">Annual Billing</option>
-                </select>
+
+                {/* Recurring Monthly/Annual Fee */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-heading)', marginBottom: '0.75rem' }}>
+                    🔄 Recurring Fee (Maintenance/Hosting/Support)
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                        Monthly
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 500, 1500, 5000"
+                        value={formData.clientPaymentAnnual}
+                        onChange={(e) => setFormData({ ...formData, clientPaymentAnnual: e.target.value })}
+                        className="input"
+                        style={{ fontSize: '1rem', fontWeight: 600, padding: '0.75rem' }}
+                      />
+                      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+                        Monthly hosting/domain/email/SMS fees
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                        Annual (if paying yearly)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 5000, 18000, 60000 (optional)"
+                        value={formData.paymentCycle === 'annual' ? formData.clientPaymentMonthly : 0}
+                        onChange={(e) => {}}
+                        className="input"
+                        disabled
+                        style={{ fontSize: '1rem', fontWeight: 600, padding: '0.75rem', opacity: 0.6 }}
+                      />
+                      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+                        Auto-calculated (12x monthly)
+                      </p>
+                    </div>
+                  </div>
+
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-heading)' }}>
+                    How often do they pay recurring fees?
+                  </label>
+                  <select
+                    value={formData.paymentCycle}
+                    onChange={(e) => setFormData({ ...formData, paymentCycle: e.target.value })}
+                    className="input"
+                  >
+                    <option value="monthly">Monthly (invoice every month)</option>
+                    <option value="annual">Annual (invoice once per year)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Infrastructure Stacks */}
               <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
-                  Infrastructure Stacks & Costs
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                  Step 2: What are YOUR monthly EXPENSES?
                 </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+                  List every service you pay for to keep this project running. This is YOUR COST, not what client pays. (Firebase, Render, MongoDB, domain, etc.)
+                </p>
 
                 {/* Add Stack Form */}
                 <div style={{
@@ -323,65 +510,106 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                   border: '1px dashed var(--color-border)',
                 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <select
-                      value={newStack.name}
-                      onChange={(e) => setNewStack({ ...newStack, name: e.target.value })}
-                      className="input"
-                    >
-                      <option value="">Select Stack</option>
-                      {STACKS.map(stack => (
-                        <option key={stack.name} value={stack.name}>{stack.name}</option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      placeholder="Monthly Cost"
-                      value={newStack.costPerMonth}
-                      onChange={(e) => setNewStack({ ...newStack, costPerMonth: e.target.value })}
-                      className="input"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Annual Cost"
-                      value={newStack.costPerYear}
-                      onChange={(e) => setNewStack({ ...newStack, costPerYear: e.target.value })}
-                      className="input"
-                    />
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Service/Stack
+                      </label>
+                      <select
+                        value={newStack.name}
+                        onChange={(e) => setNewStack({ ...newStack, name: e.target.value })}
+                        className="input"
+                      >
+                        <option value="">Select a service</option>
+                        {STACKS.map(stack => (
+                          <option key={stack.name} value={stack.name}>{stack.name}</option>
+                        ))}
+                      </select>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                        Which service? (Firebase, Render, etc.)
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Monthly Cost (GHS)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 10, 50, 200"
+                        value={newStack.costPerMonth}
+                        onChange={(e) => setNewStack({ ...newStack, costPerMonth: e.target.value })}
+                        className="input"
+                      />
+                      <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                        What you pay per month
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Annual Cost (GHS)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 100, 600, 2400"
+                        value={newStack.costPerYear}
+                        onChange={(e) => setNewStack({ ...newStack, costPerYear: e.target.value })}
+                        className="input"
+                      />
+                      <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                        What you pay per year
+                      </p>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.75rem' }}>
-                    <select
-                      value={newStack.billingCycle}
-                      onChange={(e) => setNewStack({ ...newStack, billingCycle: e.target.value })}
-                      className="input"
-                    >
-                      <option value="monthly">Monthly</option>
-                      <option value="annual">Annual</option>
-                      <option value="pay-as-you-go">Pay-as-you-go</option>
-                    </select>
-                    <input
-                      type="date"
-                      value={newStack.renewalDate}
-                      onChange={(e) => setNewStack({ ...newStack, renewalDate: e.target.value })}
-                      className="input"
-                    />
-                    <button
-                      type="button"
-                      onClick={addStack}
-                      style={{
-                        padding: '0.65rem 1.5rem',
-                        background: 'var(--sg-accent)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      <Plus size={16} /> Add
-                    </button>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Billing Cycle
+                      </label>
+                      <select
+                        value={newStack.billingCycle}
+                        onChange={(e) => setNewStack({ ...newStack, billingCycle: e.target.value })}
+                        className="input"
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="annual">Annual</option>
+                        <option value="pay-as-you-go">Pay-as-you-go</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Renewal Date
+                      </label>
+                      <input
+                        type="date"
+                        value={newStack.renewalDate}
+                        onChange={(e) => setNewStack({ ...newStack, renewalDate: e.target.value })}
+                        className="input"
+                      />
+                      <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                        When does subscription renew?
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={addStack}
+                        style={{
+                          padding: '0.65rem 1.5rem',
+                          background: 'var(--sg-accent)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          width: '100%',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Plus size={16} /> Add Service
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -457,11 +685,11 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
 
               {/* Deliverables */}
               <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
-                  Project Deliverables/Tasks
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>
+                  Step 3: What will you DELIVER to the client?
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-                  Add deliverables or milestones. Clients will see progress tracking.
+                  List all features/milestones you'll deliver. Client sees this list and can track progress. (Optional but recommended for transparency)
                 </p>
 
                 {/* Add Deliverable */}
@@ -472,7 +700,7 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                 }}>
                   <input
                     type="text"
-                    placeholder="Add deliverable (e.g., Homepage Design, Database Setup)"
+                    placeholder="e.g., Homepage Design, Backend API Setup, Database Schema, Testing, Deployment"
                     value={newDeliverable.name}
                     onChange={(e) => setNewDeliverable({ ...newDeliverable, name: e.target.value })}
                     className="input"
@@ -492,9 +720,10 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    <Plus size={16} /> Add
+                    <Plus size={16} /> Add Task
                   </button>
                 </div>
 
@@ -572,36 +801,56 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                 </div>
               </div>
 
+              {/* FINANCIAL SUMMARY - CLIENT PAYMENTS & EXPENSES */}
               <div style={{
-                background: 'var(--bg-soft)',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border)',
+                background: 'linear-gradient(135deg, var(--bg-soft) 0%, var(--color-surface) 100%)',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '2px solid var(--sg-accent)',
               }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
-                  Pricing & Costs
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--color-text-heading)' }}>
+                  💰 Client Payments & Your Operating Costs
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>Client Pays (Monthly)</p>
-                    <p style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--sg-accent)' }}>
-                      GHS {parseFloat(formData.clientPaymentMonthly).toFixed(2)}
+
+                <div style={{ display: 'grid', gridTemplateColumns: parseFloat(formData.clientPaymentMonthly || 0) > 0 ? '1fr 1fr 1fr' : '1fr 1fr', gap: '1.5rem' }}>
+                  {/* One-Time Setup Fee */}
+                  {parseFloat(formData.clientPaymentMonthly || 0) > 0 && (
+                    <div style={{ textAlign: 'center', padding: '1.5rem', background: 'var(--color-background)', borderRadius: '10px', border: '2px solid #8b5cf6' }}>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#8b5cf6', margin: '0 0 0.75rem 0', textTransform: 'uppercase' }}>
+                        One-Time Setup Fee
+                      </p>
+                      <p style={{ fontSize: '2rem', fontWeight: 900, color: '#8b5cf6', margin: 0 }}>
+                        GHS {parseFloat(formData.clientPaymentMonthly || 0).toFixed(2)}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                        paid upfront (development/setup)
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Recurring Fee */}
+                  <div style={{ textAlign: 'center', padding: '1.5rem', background: 'var(--color-background)', borderRadius: '10px', border: '2px solid #0891b2' }}>
+                    <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0891b2', margin: '0 0 0.75rem 0', textTransform: 'uppercase' }}>
+                      Recurring Fee
+                    </p>
+                    <p style={{ fontSize: '2rem', fontWeight: 900, color: '#0891b2', margin: 0 }}>
+                      GHS {parseFloat(formData.clientPaymentAnnual || 0).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                      {formData.paymentCycle === 'annual' ? 'annually' : 'monthly'} (hosting/maintenance/support)
                     </p>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>Infrastructure Cost</p>
-                    <p style={{ fontSize: '1.3rem', fontWeight: 700, color: '#ef4444' }}>
-                      GHS {formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth), 0).toFixed(2)}
+
+                  {/* Your Monthly Operating Costs */}
+                  <div style={{ textAlign: 'center', padding: '1.5rem', background: 'var(--color-background)', borderRadius: '10px', border: '2px solid #ef4444' }}>
+                    <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ef4444', margin: '0 0 0.75rem 0', textTransform: 'uppercase' }}>
+                      Your Monthly Costs
                     </p>
-                  </div>
-                  <div style={{ gridColumn: '1 / -1', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>Your Profit Margin</p>
-                    <p style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      color: parseFloat(formData.clientPaymentMonthly) - formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth), 0) > 0 ? '#10b981' : '#ef4444'
-                    }}>
-                      GHS {(parseFloat(formData.clientPaymentMonthly) - formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth), 0)).toFixed(2)}/month
+                    <p style={{ fontSize: '2rem', fontWeight: 900, color: '#ef4444', margin: 0 }}>
+                      GHS {formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth || 0), 0).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                      infrastructure/services
                     </p>
                   </div>
                 </div>
@@ -612,17 +861,26 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                   background: 'var(--bg-soft)',
                   padding: '1.5rem',
                   borderRadius: '8px',
-                  border: '1px solid var(--color-border)',
+                  border: '2px solid #ef4444',
                 }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>
-                    Infrastructure ({formData.stacks.length} stacks)
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: '#ef4444' }}>
+                    💸 Your Monthly Expenses ({formData.stacks.length} service{formData.stacks.length !== 1 ? 's' : ''})
                   </h3>
-                  {formData.stacks.map(stack => (
-                    <div key={stack.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--color-border)' }}>
-                      <p style={{ fontWeight: 500, color: 'var(--color-text-heading)' }}>{stack.name}</p>
-                      <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>GHS {parseFloat(stack.costPerMonth).toFixed(2)}/mo</p>
+                  {formData.stacks.map((stack, idx) => (
+                    <div key={stack.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: idx < formData.stacks.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                      <div>
+                        <p style={{ fontWeight: 600, color: 'var(--color-text-heading)', margin: 0 }}>{stack.name}</p>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', margin: '0.25rem 0 0 0' }}>{stack.billingCycle === 'annual' ? 'Annual' : stack.billingCycle === 'monthly' ? 'Monthly' : 'Pay-as-you-go'}</p>
+                      </div>
+                      <p style={{ fontWeight: 700, color: '#ef4444', fontSize: '1.1rem' }}>GHS {parseFloat(stack.costPerMonth).toFixed(2)}/mo</p>
                     </div>
                   ))}
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #ef4444' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ fontWeight: 700, color: 'var(--color-text-heading)', fontSize: '1rem' }}>TOTAL MONTHLY:</p>
+                      <p style={{ fontWeight: 900, color: '#ef4444', fontSize: '1.3rem' }}>GHS {formData.stacks.reduce((sum, s) => sum + parseFloat(s.costPerMonth), 0).toFixed(2)}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 

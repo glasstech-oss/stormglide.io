@@ -10,17 +10,21 @@ export const createBillingInvoice = async (project) => {
       ? parseFloat(project.clientPaymentAnnual)
       : parseFloat(project.clientPaymentMonthly)
 
+    const invoiceNumber = `INV-${Date.now()}`
+
     const invoiceData = {
       projectId: project.id,
       clientId: project.contactEmail,
       clientName: project.contactPerson,
+      clientEmail: project.contactEmail,
       email: project.contactEmail,
       phone: project.contactPhone,
       amount: amount,
       currency: 'GHS',
       description: `${project.packageName} - ${project.name}${project.domain ? ` (${project.domain})` : ''}`,
-      status: 'draft',
-      invoiceNumber: `INV-${Date.now()}`,
+      status: 'pending',
+      invoiceNumber: invoiceNumber,
+      paystackReference: invoiceNumber, // Used for webhook tracking
       itemizedBreakdown: project.stacks.map(stack => ({
         item: stack.name,
         rate: project.paymentCycle === 'annual' ? stack.costPerYear : stack.costPerMonth,
@@ -33,7 +37,9 @@ export const createBillingInvoice = async (project) => {
         contactPerson: project.contactPerson,
         billingCycle: project.paymentCycle,
         nextRenewalDate: new Date(new Date(project.billingEndDate).getTime() + 24 * 60 * 60 * 1000),
-      }
+      },
+      createdAt: new Date(),
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
     }
 
     const result = await addInvoice(invoiceData)

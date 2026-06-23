@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { HelmetProvider } from 'react-helmet-async'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState, lazy, Suspense } from 'react'
-import { ThemeProvider } from './context/ThemeContext'
+import { ThemeProvider, getThemeVariables, useTheme } from './context/ThemeContext'
 import { AdminProvider } from './context/AdminContext'
 import VariantSwitcher from './components/common/VariantSwitcher'
 import SpotlightCursor from './components/common/SpotlightCursor'
@@ -149,6 +149,107 @@ function AnimatedRoutes() {
   )
 }
 
+/* ── The main interactive layout ── */
+function SiteContent() {
+  return (
+    <>
+      <ScrollProgress />
+      <VariantSwitcher />
+      <SpotlightCursor />
+      <AnimatedRoutes />
+    </>
+  )
+}
+
+/* ── Warm Light Reveal Layer ── */
+function ThemeRevealLayer() {
+  const { theme, activeVariant, visualVariants } = useTheme()
+  const [reduceMotion, setReduceMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduceMotion(mq.matches)
+    const listener = e => setReduceMotion(e.matches)
+    mq.addEventListener('change', listener)
+    return () => mq.removeEventListener('change', listener)
+  }, [])
+
+  useEffect(() => {
+    if (activeVariant.id !== 'aurora' || reduceMotion) {
+      document.documentElement.style.setProperty('--cursor-page-x', '-999px')
+      document.documentElement.style.setProperty('--cursor-page-y', '-999px')
+      return
+    }
+
+    const onPointerMove = (e) => {
+      document.documentElement.style.setProperty('--cursor-page-x', `${e.pageX}px`)
+      document.documentElement.style.setProperty('--cursor-page-y', `${e.pageY}px`)
+    }
+
+    const onTouchMove = (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0]
+        document.documentElement.style.setProperty('--cursor-page-x', `${touch.pageX}px`)
+        document.documentElement.style.setProperty('--cursor-page-y', `${touch.pageY}px`)
+      }
+    }
+
+    const onPointerLeave = () => {
+      document.documentElement.style.setProperty('--cursor-page-x', '-999px')
+      document.documentElement.style.setProperty('--cursor-page-y', '-999px')
+    }
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    document.body.addEventListener('pointerleave', onPointerLeave)
+    window.addEventListener('touchend', onPointerLeave, { passive: true })
+    window.addEventListener('touchcancel', onPointerLeave, { passive: true })
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('touchmove', onTouchMove)
+      document.body.removeEventListener('pointerleave', onPointerLeave)
+      window.removeEventListener('touchend', onPointerLeave)
+      window.removeEventListener('touchcancel', onPointerLeave)
+      document.documentElement.style.setProperty('--cursor-page-x', '-999px')
+      document.documentElement.style.setProperty('--cursor-page-y', '-999px')
+    }
+  }, [activeVariant.id, reduceMotion])
+
+  if (activeVariant.id !== 'aurora' || reduceMotion) {
+    return null
+  }
+
+  const editorialVariant = visualVariants['editorial'] || visualVariants['aurora']
+  const revealVars = getThemeVariables(theme, editorialVariant, true)
+
+  return (
+    <div
+      className="sg-theme-reveal-layer"
+      aria-hidden="true"
+      style={{
+        ...revealVars,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        pointerEvents: 'none',
+        zIndex: 1798,
+        background: 'var(--color-background)',
+        color: 'var(--color-text-primary)',
+        /* Even smaller warm light reveal - real-time on all devices */
+        maskImage: 'radial-gradient(circle 160px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), black 0%, black 25%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.01) 90%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(circle 160px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), black 0%, black 25%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.01) 90%, transparent 100%)',
+        willChange: 'mask-image, -webkit-mask-image',
+        filter: 'drop-shadow(0 0 70px rgba(255, 180, 80, 0.3))',
+        transition: 'filter 0.15s ease-out'
+      }}
+    >
+      <SiteContent />
+    </div>
+  )
+}
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
 
@@ -161,10 +262,12 @@ export default function App() {
               {showSplash && <SplashScreen key="splash" onComplete={() => setShowSplash(false)} />}
             </AnimatePresence>
 
-            <ScrollProgress />
-            <VariantSwitcher />
-            <SpotlightCursor />
-            <AnimatedRoutes />
+            {/* Main Interactive App Layer */}
+            <SiteContent />
+
+            {/* Warm Light Reveal Layer */}
+            <ThemeRevealLayer />
+
           </BrowserRouter>
         </AdminProvider>
       </ThemeProvider>

@@ -1,168 +1,171 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { useReducedMotion } from 'framer-motion'
+
+const TRAIL_DURATION = 900  // ms each trail point lives before fully fading
+const TRAIL_INTERVAL = 18   // ms between trail point captures
+const TRAIL_RADIUS   = 300  // px — glow size of each trail point
+const LEAD_RADIUS    = 220  // px — glow size of the live cursor head
 
 export default function SpotlightCursor() {
+  const location    = useLocation()
   const { activeVariant } = useTheme()
-  const location = useLocation()
-  const layerRef = useRef(null)
-  const revealRef = useRef(null)
-  const pointRef = useRef({ x: -999, y: -999 })
-  const angleRef = useRef(0)
+  const reduceMotion = useReducedMotion()
+  const canvasRef   = useRef(null)
+  const rafRef      = useRef(null)
+
+  // Trail history: array of { x, y, t }
+  const trail       = useRef([])
+  const lastTrailT  = useRef(0)
+
+  // Smoothed lead position (lags slightly behind raw input)
+  const leadPos     = useRef({ x: -9999, y: -9999 })
+  // Raw input position
+  const targetPos   = useRef({ x: -9999, y: -9999 })
+  const active      = useRef(false)
+
+  const enabled =
+    activeVariant.id === 'aurora' &&
+    !reduceMotion &&
+    !location.pathname.startsWith('/admin') &&
+    !location.pathname.startsWith('/client')
 
   useEffect(() => {
-    const layer = layerRef.current
-    const reveal = revealRef.current
-    if (!layer || !reveal) return undefined
+    const canvas = canvasRef.current
+    if (!canvas || !enabled) return
 
-    const isMobile = window.matchMedia('(pointer: coarse)').matches
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    // Realistic torchlight only looks good on dark themes (Aurora)
-    const enabled = activeVariant.id === 'aurora' && !reduceMotion && !location.pathname.startsWith('/admin')
+    const ctx = canvas.getContext('2d')
 
-    if (!enabled) {
-      layer.style.opacity = '0'
-      reveal.style.opacity = '0'
-      return undefined
+    // Match canvas to viewport size
+    const resize = () => {
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
     }
+    resize()
+    window.addEventListener('resize', resize, { passive: true })
 
-    // On desktop, show immediately. On mobile, show only when touching.
-    let isVisible = !isMobile
-    layer.style.opacity = isVisible ? '1' : '0'
-    reveal.style.opacity = isVisible ? '1' : '0'
+    // ── Main render loop ──────────────────────────────────────
+    const loop = (now) => {
+      const { width: W, height: H } = canvas
+      ctx.clearRect(0, 0, W, H)
 
-    let rafId;
-    const paint = () => {
-      // Slow rotation for the light rays
-      angleRef.current = (angleRef.current + 0.08) % 360
-      
-      layer.style.setProperty('--cursor-x', `${pointRef.current.x}px`)
-      layer.style.setProperty('--cursor-y', `${pointRef.current.y}px`)
-      layer.style.setProperty('--ray-angle', `${angleRef.current}deg`)
-      
-      reveal.style.setProperty('--cursor-x', `${pointRef.current.x}px`)
-      reveal.style.setProperty('--cursor-y', `${pointRef.current.y}px`)
-      
-      rafId = requestAnimationFrame(paint)
-    }
-    
-    rafId = requestAnimationFrame(paint)
+      // Smooth lead toward target (eased follow)
+      leadPos.current.x += (targetPos.current.x - leadPos.current.x) * 0.14
+      leadPos.current.y += (targetPos.current.y - leadPos.current.y) * 0.14
 
-    const onPointerMove = event => {
-      pointRef.current = { x: event.clientX, y: event.clientY }
-    }
-
-    const onTouchStart = event => {
-      if (event.touches.length > 0) {
-        pointRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }
-        isVisible = true
-        layer.style.opacity = '1'
-        reveal.style.opacity = '1'
+      // Capture a new trail point
+      if (active.current && now - lastTrailT.current > TRAIL_INTERVAL) {
+        trail.current.push({ x: leadPos.current.x, y: leadPos.current.y, t: now })
+        lastTrailT.current = now
       }
-    }
 
-    const onTouchMove = event => {
-      if (event.touches.length > 0) {
-        pointRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+      // Purge fully expired points
+      trail.current = trail.current.filter(p => now - p.t < TRAIL_DURATION)
+
+      // ── Draw trail (oldest → newest, so newest paints on top)
+      trail.current.forEach(p => {
+        const age     = (now - p.t) / TRAIL_DURATION   // 0 = fresh, 1 = dead
+        const eased   = 1 - Math.pow(age, 1.6)         // slightly accelerated fade
+        const alpha   = eased * 0.28
+        const radius  = TRAIL_RADIUS * (0.6 + eased * 0.4)
+
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius)
+        g.addColorStop(0,   `rgba(90,209,255,${(alpha * 1.0).toFixed(3)})`)
+        g.addColorStop(0.3, `rgba(90,209,255,${(alpha * 0.6).toFixed(3)})`)
+        g.addColorStop(0.6, `rgba(150,120,255,${(alpha * 0.25).toFixed(3)})`)
+        g.addColorStop(1,   'rgba(0,0,0,0)')
+
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      // ── Draw live cursor head (always on top, brightest point)
+      if (active.current) {
+        const lx = leadPos.current.x
+        const ly = leadPos.current.y
+
+        // Outer ambient halo
+        const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, LEAD_RADIUS * 2)
+        halo.addColorStop(0,   'rgba(90,209,255,0.26)')
+        halo.addColorStop(0.35,'rgba(90,209,255,0.14)')
+        halo.addColorStop(0.65,'rgba(150,120,255,0.07)')
+        halo.addColorStop(1,   'rgba(0,0,0,0)')
+        ctx.fillStyle = halo
+        ctx.beginPath()
+        ctx.arc(lx, ly, LEAD_RADIUS * 2, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Bright inner core
+        const core = ctx.createRadialGradient(lx, ly, 0, lx, ly, LEAD_RADIUS * 0.45)
+        core.addColorStop(0,  'rgba(210,245,255,0.55)')
+        core.addColorStop(0.4,'rgba(90,209,255,0.30)')
+        core.addColorStop(1,  'rgba(0,0,0,0)')
+        ctx.fillStyle = core
+        ctx.beginPath()
+        ctx.arc(lx, ly, LEAD_RADIUS * 0.45, 0, Math.PI * 2)
+        ctx.fill()
       }
+
+      rafRef.current = requestAnimationFrame(loop)
     }
 
-    const onTouchEnd = () => {
-      isVisible = false
-      layer.style.opacity = '0'
-      reveal.style.opacity = '0'
+    rafRef.current = requestAnimationFrame(loop)
+
+    // ── Input handlers ────────────────────────────────────────
+    const show = () => { active.current = true }
+    const hide = () => {
+      active.current = false
+      targetPos.current = { x: -9999, y: -9999 }
     }
 
-    if (isMobile) {
-      window.addEventListener('touchstart', onTouchStart, { passive: true, capture: true })
-      window.addEventListener('touchmove', onTouchMove, { passive: true, capture: true })
-      window.addEventListener('touchend', onTouchEnd, { passive: true, capture: true })
-      window.addEventListener('touchcancel', onTouchEnd, { passive: true, capture: true })
-    } else {
-      window.addEventListener('pointermove', onPointerMove, { passive: true })
+    // Pointer (desktop mouse / stylus)
+    const onPointerMove = (e) => {
+      targetPos.current = { x: e.clientX, y: e.clientY }
+      show()
     }
+    const onPointerLeave = () => hide()
+
+    // Touch (mobile)
+    const onTouchMove = (e) => {
+      const t = e.touches[0]
+      targetPos.current = { x: t.clientX, y: t.clientY }
+      show()
+    }
+    const onTouchEnd = () => hide()
+
+    window.addEventListener('pointermove',  onPointerMove,  { passive: true })
+    document.body.addEventListener('pointerleave', onPointerLeave)
+    window.addEventListener('touchmove',    onTouchMove,    { passive: true })
+    window.addEventListener('touchend',     onTouchEnd,     { passive: true })
+    window.addEventListener('touchcancel',  onTouchEnd,     { passive: true })
 
     return () => {
-      window.removeEventListener('pointermove', onPointerMove)
-      window.removeEventListener('touchstart', onTouchStart, { capture: true })
-      window.removeEventListener('touchmove', onTouchMove, { capture: true })
-      window.removeEventListener('touchend', onTouchEnd, { capture: true })
-      window.removeEventListener('touchcancel', onTouchEnd, { capture: true })
-      cancelAnimationFrame(rafId)
+      cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('resize',       resize)
+      window.removeEventListener('pointermove',  onPointerMove)
+      document.body.removeEventListener('pointerleave', onPointerLeave)
+      window.removeEventListener('touchmove',    onTouchMove)
+      window.removeEventListener('touchend',     onTouchEnd)
+      window.removeEventListener('touchcancel',  onTouchEnd)
     }
-  }, [activeVariant.id, location.pathname])
+  }, [enabled])
+
+  if (!enabled) return null
 
   return (
-    <>
-      {/* Layer 1: Physically brightens and enhances contrast of the DOM behind it */}
-      <div ref={revealRef} className="sg-spotlight-reveal" aria-hidden />
-      
-      {/* Layer 2: The actual light beam, rays, and hotspot overlay */}
-      <div ref={layerRef} className="sg-spotlight-beam" aria-hidden />
-
-      <style>{`
-        .sg-spotlight-reveal {
-          --cursor-x: -999px;
-          --cursor-y: -999px;
-          position: fixed;
-          inset: 0;
-          z-index: 1799;
-          pointer-events: none;
-          
-          /* The magic: Inverts the colors to reveal a 'light theme' X-ray effect */
-          backdrop-filter: invert(1) hue-rotate(180deg) brightness(1.2);
-          -webkit-backdrop-filter: invert(1) hue-rotate(180deg) brightness(1.2);
-          
-          /* Mask out the reveal effect to just a circle around the cursor */
-          mask-image: radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
-          -webkit-mask-image: radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), black 20%, transparent 100%);
-          
-          transition: opacity 300ms ease;
-          will-change: mask-image, -webkit-mask-image;
-        }
-
-        .sg-spotlight-beam {
-          --cursor-x: -999px;
-          --cursor-y: -999px;
-          --ray-angle: 0deg;
-          position: fixed;
-          inset: 0;
-          z-index: 1800;
-          pointer-events: none;
-          mix-blend-mode: screen;
-          
-          background: 
-            /* The inner intense bulb glow - solid white */
-            radial-gradient(circle 60px at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.5) 0%, transparent 100%),
-            /* The outer ambient color glow - pure white fade */
-            radial-gradient(circle 400px at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.1) 0%, transparent 100%),
-            /* The textured light rays / caustics - bright white */
-            repeating-conic-gradient(from var(--ray-angle) at var(--cursor-x) var(--cursor-y), 
-              transparent 0deg, 
-              rgba(255, 255, 255, 0.08) 3deg, 
-              transparent 6deg,
-              transparent 22deg,
-              rgba(255, 255, 255, 0.05) 26deg,
-              transparent 30deg,
-              transparent 45deg,
-              rgba(255, 255, 255, 0.03) 47deg,
-              transparent 49deg
-            );
-            
-          /* Mask the rays so they fade out organically */
-          mask-image: radial-gradient(circle 500px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
-          -webkit-mask-image: radial-gradient(circle 500px at var(--cursor-x) var(--cursor-y), black 0%, transparent 100%);
-          
-          transition: opacity 300ms ease;
-          will-change: background, mask-image, -webkit-mask-image;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .sg-spotlight-reveal, .sg-spotlight-beam {
-            display: none !important;
-          }
-        }
-      `}</style>
-    </>
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1800,
+        pointerEvents: 'none',
+        mixBlendMode: 'screen',
+      }}
+    />
   )
 }

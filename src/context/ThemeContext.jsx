@@ -5,36 +5,33 @@ import { defaultVisualVariantId, getVisualVariant, visualVariants } from '../dat
 
 const ThemeContext = createContext(null)
 
-function setVars(root, vars) {
-  Object.entries(vars).forEach(([key, value]) => {
-    root.style.setProperty(key, value)
-  })
-}
-
-function applyThemeToDOM(theme, variant) {
-  const root = document.documentElement
+export function getThemeVariables(theme, variant, preserveFonts = false) {
+  const vars = {}
+  
+  // Custom theme properties from DB
   Object.entries(theme).forEach(([key, value]) => {
     if (
       typeof value === 'string' &&
       (key.startsWith('color') ||
-        key.startsWith('font') ||
+        (!preserveFonts && key.startsWith('font')) ||
         key.startsWith('border') ||
         key.startsWith('section'))
     ) {
       const cssVar = '--' + key.replace(/([A-Z])/g, '-$1').toLowerCase()
-      root.style.setProperty(cssVar, value)
+      vars[cssVar] = value
     }
   })
 
-  root.dataset.sgVariant = variant.id
-  root.style.setProperty('--font-display', variant.fonts.display)
-  root.style.setProperty('--font-body', variant.fonts.body)
-  root.style.setProperty('--font-mono', variant.fonts.mono)
+  if (!preserveFonts) {
+    vars['--font-display'] = variant.fonts.display
+    vars['--font-body'] = variant.fonts.body
+    vars['--font-mono'] = variant.fonts.mono
+  }
 
   const c = variant.colors
   const r = variant.radii
 
-  setVars(root, {
+  Object.assign(vars, {
     '--color-background': c.background,
     '--color-surface': c.surface,
     '--color-surface-alt': c.surfaceAlt,
@@ -96,6 +93,22 @@ function applyThemeToDOM(theme, variant) {
     '--sg-spotlight-color': c.heroGlow,
     '--sg-spotlight-flash': c.accent,
   })
+
+  return vars
+}
+
+function setVars(root, vars) {
+  Object.entries(vars).forEach(([key, value]) => {
+    root.style.setProperty(key, value)
+  })
+}
+
+function applyThemeToDOM(theme, variant) {
+  const root = document.documentElement
+  root.dataset.sgVariant = variant.id
+  
+  const vars = getThemeVariables(theme, variant)
+  setVars(root, vars)
 }
 
 export function ThemeProvider({ children }) {

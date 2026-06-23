@@ -5,12 +5,12 @@ import WhatsAppFloat from '../components/layout/WhatsAppFloat'
 
 // Homepage sections
 import Hero from '../components/home/Hero'
-import ProblemRecognition from '../components/home/ProblemRecognition'
+import VisualProblems from '../components/home/VisualProblems'
 import SolutionSection from '../components/home/SolutionSection'
-import Services from '../components/home/Services'
+import VisualServices from '../components/home/VisualServices'
 import FeaturedWork from '../components/home/FeaturedWork'
 import Industries from '../components/home/Industries'
-import Process from '../components/home/Process'
+import VisualProcess from '../components/home/VisualProcess'
 import TechStack from '../components/home/TechStack'
 import FinalCTA from '../components/home/FinalCTA'
 
@@ -71,17 +71,17 @@ export default function Home() {
 
       <Hero />
 
-      <ProblemRecognition />
+      <VisualProblems />
 
       <SolutionSection />
 
-      <Services />
+      <VisualServices />
 
       <FeaturedWork />
 
       <Industries />
 
-      <Process />
+      <VisualProcess />
 
       <TechStack />
 
