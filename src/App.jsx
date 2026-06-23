@@ -237,9 +237,9 @@ function ThemeRevealLayer() {
         zIndex: 1798,
         background: 'var(--color-background)',
         color: 'var(--color-text-primary)',
-        /* Even smaller warm light reveal - real-time on all devices */
-        maskImage: 'radial-gradient(circle 160px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), black 0%, black 25%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.01) 90%, transparent 100%)',
-        WebkitMaskImage: 'radial-gradient(circle 160px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), black 0%, black 25%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.01) 90%, transparent 100%)',
+        /* Subtle warm light reveal - doesn't block text */
+        maskImage: 'radial-gradient(circle 120px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.02) 80%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(circle 120px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.02) 80%, transparent 100%)',
         willChange: 'mask-image, -webkit-mask-image',
         filter: 'drop-shadow(0 0 70px rgba(255, 180, 80, 0.3))',
         transition: 'filter 0.15s ease-out'

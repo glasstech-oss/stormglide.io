@@ -7,6 +7,14 @@ export const services = [
     subtitle: 'Production-ready software serving 100+ customers',
     icon: 'Rocket',
     description: 'We own and operate enterprise software products. These solve real operational problems across HR, logistics, healthcare, and manufacturing.',
+    features: [
+      'Nexus HRM — HR & Payroll Management',
+      'CargoScan — Freight & Logistics',
+      'SANO Health — AI Health Monitoring',
+      'Nexus MFG — Production Management',
+      '100+ customers across Africa',
+      'Proven, production-grade platforms',
+    ],
     products: [
       { name: 'Nexus HRM', tagline: 'HR & Payroll Management', badge: 'LIVE' },
       { name: 'CargoScan', tagline: 'Freight & Logistics', badge: 'LIVE' },
