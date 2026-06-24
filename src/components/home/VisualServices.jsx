@@ -81,7 +81,7 @@ export default function VisualServices() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '2.5rem',
+          gap: 'clamp(1.75rem, 4vw, 2.5rem)',
           marginBottom: '4rem'
         }}>
           {services.map((service, idx) => {
@@ -172,19 +172,22 @@ export default function VisualServices() {
             fontSize: '0.95rem',
             textDecoration: 'none',
             transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            boxShadow: '0 8px 20px -6px color-mix(in srgb, var(--sg-accent) 0%, transparent)'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.borderColor = `color-mix(in srgb, var(--sg-accent) 60%, transparent)`
-            e.currentTarget.style.background = 'var(--color-surface)'
+            e.currentTarget.style.background = 'color-mix(in srgb, var(--color-surface) 95%, var(--sg-accent) 5%)'
             e.currentTarget.style.color = 'var(--sg-accent)'
             e.currentTarget.style.transform = 'translateY(-3px)'
+            e.currentTarget.style.boxShadow = '0 16px 40px -6px color-mix(in srgb, var(--sg-accent) 20%, transparent)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = `color-mix(in srgb, var(--sg-accent) 30%, transparent)`
             e.currentTarget.style.background = 'var(--color-surface)'
             e.currentTarget.style.color = 'var(--color-text-heading)'
             e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 8px 20px -6px color-mix(in srgb, var(--sg-accent) 0%, transparent)'
           }}>
             Explore all services <Icons.ArrowRight size={18} />
           </Link>

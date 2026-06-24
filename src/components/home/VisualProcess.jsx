@@ -247,16 +247,16 @@ export default function VisualProcess() {
             fontSize: '0.95rem',
             textDecoration: 'none',
             transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            boxShadow: '0 12px 32px -6px color-mix(in srgb, var(--sg-accent) 35%, transparent)',
+            boxShadow: '0 12px 32px -6px color-mix(in srgb, var(--sg-accent) 35%, transparent), inset 0 1px 0 rgba(255,255,255,0.2)',
             cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-3px)'
-            e.currentTarget.style.boxShadow = '0 18px 48px -8px color-mix(in srgb, var(--sg-accent) 45%, transparent)'
+            e.currentTarget.style.transform = 'translateY(-4px)'
+            e.currentTarget.style.boxShadow = '0 24px 56px -8px color-mix(in srgb, var(--sg-accent) 50%, transparent), inset 0 1px 0 rgba(255,255,255,0.3)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = '0 12px 32px -6px color-mix(in srgb, var(--sg-accent) 35%, transparent)'
+            e.currentTarget.style.boxShadow = '0 12px 32px -6px color-mix(in srgb, var(--sg-accent) 35%, transparent), inset 0 1px 0 rgba(255,255,255,0.2)'
           }}>
             Start your project <Icons.ArrowRight size={18} />
           </a>
