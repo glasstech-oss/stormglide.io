@@ -258,7 +258,7 @@ export default function VisualProcess() {
             e.currentTarget.style.transform = 'translateY(0)'
             e.currentTarget.style.boxShadow = '0 12px 32px -6px color-mix(in srgb, var(--sg-accent) 35%, transparent), inset 0 1px 0 rgba(255,255,255,0.2)'
           }}>
-            Start your project <Icons.ArrowRight size={18} />
+            Start Building Today <Icons.ArrowRight size={18} />
           </a>
         </motion.div>
       </div>

@@ -189,7 +189,7 @@ export default function VisualServices() {
             e.currentTarget.style.transform = 'translateY(0)'
             e.currentTarget.style.boxShadow = '0 8px 20px -6px color-mix(in srgb, var(--sg-accent) 0%, transparent)'
           }}>
-            Explore all services <Icons.ArrowRight size={18} />
+            View Our Services <Icons.ArrowRight size={18} />
           </Link>
         </motion.div>
       </div>
