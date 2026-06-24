@@ -72,7 +72,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <Link to="/contact" className="sg-nav-cta">
+        <Link to="/contact" className="sg-nav-cta" data-cta="true">
           Let's build <ArrowRight size={14} />
         </Link>
 

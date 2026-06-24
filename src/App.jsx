@@ -161,10 +161,12 @@ function SiteContent() {
   )
 }
 
-/* ── Warm Light Reveal Layer ── */
+/* ── Context-Aware Cursor Layer ── */
 function ThemeRevealLayer() {
   const { theme, activeVariant, visualVariants } = useTheme()
   const [reduceMotion, setReduceMotion] = useState(false)
+  const [isDarkSection, setIsDarkSection] = useState(true)
+  const [isOverCTA, setIsOverCTA] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -182,6 +184,26 @@ function ThemeRevealLayer() {
     }
 
     const onPointerMove = (e) => {
+      const element = document.elementFromPoint(e.clientX, e.clientY)
+
+      // Detect if cursor is over a CTA button
+      const isOverButton = element?.closest('a[href="/contact"], a[href="/solutions"], a[href="/services"]') ||
+                          element?.closest('[class*="btn"], [class*="CTA"]') ||
+                          element?.getAttribute('data-cta') === 'true'
+      setIsOverCTA(!!isOverButton)
+
+      // Detect section background darkness
+      const section = element?.closest('section')
+      if (section) {
+        const bgColor = window.getComputedStyle(section).backgroundColor
+        // Check if background is dark (luminance < 128)
+        const rgb = bgColor.match(/\d+/g)
+        if (rgb && rgb.length >= 3) {
+          const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
+          setIsDarkSection(luminance < 0.5)
+        }
+      }
+
       document.documentElement.style.setProperty('--cursor-page-x', `${e.pageX}px`)
       document.documentElement.style.setProperty('--cursor-page-y', `${e.pageY}px`)
     }
@@ -197,6 +219,7 @@ function ThemeRevealLayer() {
     const onPointerLeave = () => {
       document.documentElement.style.setProperty('--cursor-page-x', '-999px')
       document.documentElement.style.setProperty('--cursor-page-y', '-999px')
+      setIsOverCTA(false)
     }
 
     window.addEventListener('pointermove', onPointerMove, { passive: true })
@@ -216,12 +239,17 @@ function ThemeRevealLayer() {
     }
   }, [activeVariant.id, reduceMotion])
 
-  if (activeVariant.id !== 'aurora' || reduceMotion) {
+  if (activeVariant.id !== 'aurora' || reduceMotion || !isDarkSection) {
     return null
   }
 
   const editorialVariant = visualVariants['editorial'] || visualVariants['aurora']
   const revealVars = getThemeVariables(theme, editorialVariant, true)
+
+  // Enhanced glow when over CTA, subtle otherwise
+  const circleSize = isOverCTA ? '140px' : '120px'
+  const glowIntensity = isOverCTA ? 0.5 : 0.3
+  const maskGradient = `radial-gradient(circle ${circleSize} at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), rgba(0,0,0,${isOverCTA ? '0.45' : '0.35'}) 0%, rgba(0,0,0,${isOverCTA ? '0.35' : '0.25'}) 35%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.02) 80%, transparent 100%)`
 
   return (
     <div
@@ -237,12 +265,12 @@ function ThemeRevealLayer() {
         zIndex: 1798,
         background: 'var(--color-background)',
         color: 'var(--color-text-primary)',
-        /* Subtle warm light reveal - doesn't block text */
-        maskImage: 'radial-gradient(circle 120px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.02) 80%, transparent 100%)',
-        WebkitMaskImage: 'radial-gradient(circle 120px at var(--cursor-page-x, -999px) var(--cursor-page-y, -999px), rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0.02) 80%, transparent 100%)',
+        /* Context-aware warm light: subtle on sections, enhanced on CTAs */
+        maskImage: maskGradient,
+        WebkitMaskImage: maskGradient,
         willChange: 'mask-image, -webkit-mask-image',
-        filter: 'drop-shadow(0 0 70px rgba(255, 180, 80, 0.3))',
-        transition: 'filter 0.15s ease-out'
+        filter: `drop-shadow(0 0 ${isOverCTA ? '90px' : '70px'} rgba(255, 180, 80, ${glowIntensity}))`,
+        transition: 'filter 0.25s ease-out, mask-image 0.25s ease-out'
       }}
     >
       <SiteContent />
