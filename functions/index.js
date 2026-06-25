@@ -215,8 +215,8 @@ app.post('/v1/auth/request-magic-link', handleMagicLink);
 
 const handleAdminLogin = async (req, res) => {
   const key = req.body.key || req.body.accessKey;
-  const expected = process.env.ADMIN_ACCESS_KEY || 'stormglide-2026';
-  if (key !== expected) return res.status(401).json({ message: 'Invalid Commander Authorization Key.' });
+  const expected = process.env.ADMIN_ACCESS_KEY;
+  if (!key || !expected || key !== expected) return res.status(401).json({ message: 'Invalid Commander Authorization Key.' });
 
   try {
     const uid = 'stormglide-admin-omega';

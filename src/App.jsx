@@ -119,23 +119,7 @@ function AnimatedRoutes() {
             <Route path="/contact"        element={<ContactPage />} />
             <Route path="/work"           element={<WorkPage />} />
             <Route path="/pricing"        element={<PricingPage />} />
-            <Route path="/admin/login"    element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/infrastructure" element={<ProtectedRoute><AdminInfrastructure /></ProtectedRoute>} />
-            <Route path="/admin/invoices" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
-            <Route path="/admin/support-tickets" element={<ProtectedRoute><AdminSupportTickets /></ProtectedRoute>} />
-            <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-            <Route path="/admin/insights" element={<ProtectedRoute><AdminInsights /></ProtectedRoute>} />
-            <Route path="/admin/inquiries" element={<ProtectedRoute><AdminInquiries /></ProtectedRoute>} />
-            <Route path="/admin/projects" element={<ProtectedRoute><AdminProjects /></ProtectedRoute>} />
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute>
-                  <AdminPortal />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin/*" element={<AdminDeprecatedRedirect />} />
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
             <Route path="/client/project" element={<ClientProject />} />
@@ -276,6 +260,24 @@ function ThemeRevealLayer() {
       <SiteContent />
     </div>
   )
+}
+
+function AdminDeprecatedRedirect() {
+  useEffect(() => {
+    window.location.href = 'https://admin.stormglide.io/admin/dashboard';
+  }, []);
+  
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050608', color: '#fff', fontFamily: 'sans-serif' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Admin Portal Moved</h1>
+        <p style={{ color: '#888' }}>Redirecting you to the new Stormglide Mission Control...</p>
+        <a href="https://admin.stormglide.io/admin/dashboard" style={{ color: '#5AD1FF', marginTop: '24px', display: 'inline-block', textDecoration: 'none' }}>
+          Click here if not redirected
+        </a>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {

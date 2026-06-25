@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import GenesisEngine from "@/components/GenesisEngine";
+import GlowyWaves from "@/components/GlowyWaves";
 
 const SERVICES = [
   {
@@ -38,8 +39,6 @@ const reveal = (delay: number) => ({
 });
 
 export default function Home() {
-  const cursorRing = useRef<HTMLDivElement>(null);
-  const cursorDot = useRef<HTMLDivElement>(null);
   const parallaxBrowser = useRef<HTMLDivElement>(null);
   const parallaxOps = useRef<HTMLDivElement>(null);
   const parallaxPhone = useRef<HTMLDivElement>(null);
@@ -50,7 +49,6 @@ export default function Home() {
   useEffect(() => {
     let mx = window.innerWidth / 2;
     let my = window.innerHeight / 2;
-    let cx = mx, cy = my;
     let raf: number;
     const startT = performance.now();
 
@@ -62,31 +60,15 @@ export default function Home() {
 
     const isMobile = () => window.innerWidth < 768;
 
-    let hasMoved = false;
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
       my = e.clientY;
-      if (!hasMoved) {
-        hasMoved = true;
-        if (cursorRing.current) cursorRing.current.style.display = "block";
-        if (cursorDot.current) cursorDot.current.style.display = "block";
-      }
     };
     window.addEventListener("mousemove", onMove);
 
     const loop = (now: number) => {
       const hw = window.innerWidth / 2;
       const hh = window.innerHeight / 2;
-
-      // Custom cursor (desktop only)
-      cx += (mx - cx) * 0.1;
-      cy += (my - cy) * 0.1;
-      if (cursorRing.current) {
-        cursorRing.current.style.transform = `translate(${cx}px,${cy}px) translate(-50%,-50%)`;
-      }
-      if (cursorDot.current) {
-        cursorDot.current.style.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
-      }
 
       // Parallax (desktop only)
       if (!isMobile()) {
@@ -134,61 +116,13 @@ export default function Home() {
 
   return (
     <div className="aurora-page bg-[#060709] text-[#f3f5f8]">
-
-      {/* Custom cursor — shows after first mouse move on desktop */}
-      <div
-        ref={cursorRing}
-        className="fixed top-0 left-0 w-9 h-9 rounded-full border border-[#5ad1ff]/80 pointer-events-none z-[90] mix-blend-difference"
-        style={{ display: "none" }}
-      />
-      <div
-        ref={cursorDot}
-        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full bg-[#5ad1ff] pointer-events-none z-[91]"
-        style={{ display: "none" }}
-      />
-
       {/* ════════════════════════════════════════
           HERO
       ════════════════════════════════════════ */}
-      <section
-        className="relative min-h-[100svh] overflow-hidden"
-        style={{ background: "radial-gradient(120% 120% at 74% 6%, #0c1018 0%, #060709 62%)" }}
-      >
-        {/* Ambient orbs */}
-        <div
-          className="absolute pointer-events-none rounded-full"
-          style={{
-            width: 640,
-            height: 640,
-            left: "48%",
-            top: -200,
-            background: "radial-gradient(circle, rgba(90,209,255,0.42), transparent 62%)",
-            filter: "blur(48px)",
-          }}
-        />
-        <div
-          className="absolute pointer-events-none rounded-full"
-          style={{
-            width: 520,
-            height: 520,
-            left: "64%",
-            top: 180,
-            background: "radial-gradient(circle, rgba(150,120,255,0.30), transparent 64%)",
-            filter: "blur(54px)",
-          }}
-        />
-        {/* Mobile orb (bottom-left, rich colour) */}
-        <div
-          className="md:hidden absolute pointer-events-none rounded-full"
-          style={{
-            width: 380,
-            height: 380,
-            left: "-80px",
-            bottom: 60,
-            background: "radial-gradient(circle, rgba(90,209,255,0.28), transparent 65%)",
-            filter: "blur(52px)",
-          }}
-        />
+      <section className="relative min-h-[100svh] overflow-hidden">
+        
+        {/* Interactive Wave Canvas Background */}
+        <GlowyWaves />
 
         {/* Content grid */}
         <div className="relative z-10 grid md:grid-cols-2 items-center min-h-[100svh] px-6 sm:px-10 md:px-16 pt-28 md:pt-24 pb-32 md:pb-16 gap-10 md:gap-12">

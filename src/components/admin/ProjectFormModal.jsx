@@ -129,7 +129,6 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
           currency: 'GHS',
         },
         team: [],
-        deliverables: [],
       }
 
       const newProject = await addProject(projectData)
