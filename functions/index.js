@@ -44,6 +44,32 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
+const DEFAULT_SITE_SETTINGS = {
+  companyName: 'Stormglide Technologies',
+  logoUrl: '/logo.png',
+  faviconUrl: '/icon.png',
+  primaryColor: '#22D3EE',
+  secondaryColor: '#1688FF',
+  accentColor: '#F472B6',
+  backgroundColor: '#0B0F19',
+  foregroundColor: '#FFFFFF',
+  heroHeadline: 'Software systems built for serious growth.',
+  heroSubtext: 'Web platforms, mobile products, and business systems designed and engineered in Accra.',
+  contactEmail: 'hello@stormglide.io',
+  contactPhone: '',
+  twitterUrl: '',
+  linkedinUrl: 'https://www.linkedin.com/company/stormglide-io/',
+  githubUrl: '',
+};
+
+const SITE_SETTING_FIELDS = new Set(Object.keys(DEFAULT_SITE_SETTINGS));
+
+const sanitizeSiteSettings = (value) => Object.fromEntries(
+  Object.entries(value || {})
+    .filter(([key, setting]) => SITE_SETTING_FIELDS.has(key) && typeof setting === 'string')
+    .map(([key, setting]) => [key, setting.trim().slice(0, 1000)])
+);
+
 // ── Email via Resend ──────────────────────────────────────────────────────────
 const sendEmail = (to, subject, html) => {
   const key = process.env.RESEND_API_KEY;
@@ -234,6 +260,53 @@ const handleAdminLogin = async (req, res) => {
 app.post('/v1/auth/admin', handleAdminLogin);
 app.post('/v1/auth/admin-login', handleAdminLogin);
 
+const getAllowedAdminEmails = () => (
+  process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || ''
+)
+  .split(',')
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+// Promote a verified, explicitly allowlisted Google account to an admin role.
+app.post('/v1/auth/admin/google', verifyToken, async (req, res) => {
+  const email = String(req.user.email || '').trim().toLowerCase();
+  const allowedEmails = getAllowedAdminEmails();
+
+  if (!req.user.email_verified || !email || !allowedEmails.includes(email)) {
+    return res.status(403).json({ message: 'This Google account is not authorized for admin access.' });
+  }
+
+  try {
+    const user = await fbAuth.getUser(req.user.uid);
+    await fbAuth.setCustomUserClaims(req.user.uid, {
+      ...(user.customClaims || {}),
+      role: 'OMEGA',
+    });
+
+    await db.collection('users').doc(req.user.uid).set({
+      email,
+      role: 'OMEGA',
+      lastLoginAt: now(),
+    }, { merge: true });
+
+    return res.json({ authorized: true, email, role: 'OMEGA' });
+  } catch (err) {
+    console.error('Google admin authorization error:', err);
+    return res.status(500).json({ message: 'Unable to authorize this admin account.' });
+  }
+});
+
+// Used by the Next.js app to exchange a verified Firebase ID token for its
+// signed, HTTP-only admin session cookie.
+app.post('/v1/auth/admin/session', verifyToken, adminOnly, (req, res) => {
+  return res.json({
+    authorized: true,
+    uid: req.user.uid,
+    email: req.user.email || null,
+    role: req.user.role,
+  });
+});
+
 // POST /v1/auth/sync-user — called after Firebase email-link sign-in succeeds on the client
 app.post('/v1/auth/sync-user', verifyToken, async (req, res) => {
   const { uid, email } = req.user;
@@ -247,6 +320,47 @@ app.post('/v1/auth/sync-user', verifyToken, async (req, res) => {
   const profileSnap = await db.collection('clientProfiles').where('userId', '==', uid).limit(1).get();
   const profile = profileSnap.empty ? null : { id: profileSnap.docs[0].id, ...profileSnap.docs[0].data() };
   return res.json({ user: { id: uid, ...snap.data(), email }, clientProfile: profile });
+});
+
+// =============================================================================
+// PUBLIC SITE SETTINGS
+// =============================================================================
+
+app.get('/v1/settings', async (req, res) => {
+  try {
+    const snap = await db.collection('settings').doc('site').get();
+    return res.json({
+      ...DEFAULT_SITE_SETTINGS,
+      ...(snap.exists ? sanitizeSiteSettings(snap.data()) : {}),
+    });
+  } catch (err) {
+    console.error('Site settings read error:', err);
+    return res.status(500).json({ message: 'Unable to load site settings.' });
+  }
+});
+
+app.put('/v1/settings', verifyToken, adminOnly, async (req, res) => {
+  try {
+    const updates = sanitizeSiteSettings(req.body);
+    if (!Object.keys(updates).length) {
+      return res.status(400).json({ message: 'No valid site settings were provided.' });
+    }
+
+    await db.collection('settings').doc('site').set({
+      ...updates,
+      updatedAt: now(),
+      updatedBy: req.user.email || req.user.uid,
+    }, { merge: true });
+
+    const snap = await db.collection('settings').doc('site').get();
+    return res.json({
+      ...DEFAULT_SITE_SETTINGS,
+      ...sanitizeSiteSettings(snap.data()),
+    });
+  } catch (err) {
+    console.error('Site settings update error:', err);
+    return res.status(500).json({ message: 'Unable to update site settings.' });
+  }
 });
 
 // =============================================================================
@@ -809,6 +923,490 @@ app.post('/v1/audit/logs', verifyToken, adminOnly, async (req, res) => {
     adminId: req.user.uid, details: details || null, createdAt: now(),
   });
   return res.json({ id: ref.id, action, entityType });
+});
+
+// =============================================================================
+// ADMIN PORTAL: PROJECTS
+// =============================================================================
+
+app.get('/v1/projects', verifyToken, adminOnly, async (req, res) => {
+  const { clientId, phase, status } = req.query;
+  let query = db.collection('projects');
+  if (clientId) query = query.where('clientId', '==', clientId);
+  if (phase) query = query.where('currentPhase', '==', phase);
+  if (status) query = query.where('completionStatus', '==', status);
+  const snap = await query.orderBy('createdAt', 'desc').get();
+  const projects = toDocs(snap).map(p => ({
+    ...p,
+    clientName: p.clientName || 'Unknown',
+    completionPercentage: p.completionPercentage || 0,
+    currentPhase: p.currentPhase || 'DISCOVERY',
+  }));
+  return res.json(projects);
+});
+
+app.get('/v1/projects/:id', verifyToken, adminOnly, async (req, res) => {
+  const proj = await db.collection('projects').doc(req.params.id).get();
+  if (!proj.exists) return res.status(404).json({ error: 'Project not found' });
+  const data = proj.data();
+  const completion = await db.collection('projectCompletion').doc(req.params.id).get();
+  const stack = await db.collection('projectStack').doc(req.params.id).get();
+  const domains = await db.collection('domainManagement').where('projectId', '==', req.params.id).get();
+  const subscriptions = await db.collection('projectSubscription').where('projectId', '==', req.params.id).get();
+  const milestones = await db.collection('milestones').where('projectId', '==', req.params.id).get();
+  return res.json({
+    ...data, id: proj.id,
+    completion: completion.exists ? completion.data() : null,
+    stack: stack.exists ? stack.data() : null,
+    domains: toDocs(domains),
+    subscriptions: toDocs(subscriptions),
+    milestones: toDocs(milestones),
+  });
+});
+
+app.post('/v1/projects', verifyToken, adminOnly, async (req, res) => {
+  const { clientId, projectName, description, estimatedEnd } = req.body;
+  if (!clientId || !projectName) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('projects').doc();
+  await ref.set({
+    clientId, projectName, description: description || null,
+    estimatedEnd: estimatedEnd || null, currentPhase: 'DISCOVERY',
+    completionStatus: 'ON_TRACK', completionPercentage: 0,
+    createdAt: now(), updatedAt: now(),
+  });
+  await db.collection('projectCompletion').doc(ref.id).set({
+    projectId: ref.id, overallCompletionPercentage: 0, currentPhase: 'DISCOVERY',
+    status: 'ON_TRACK', riskFactors: [], estimatedCompletionDate: null,
+    actualCompletionDate: null, healthScore: 5, lastAssessedAt: now(),
+  });
+  await db.collection('projectStack').doc(ref.id).set({
+    projectId: ref.id, frontend: {}, backend: {}, database: {},
+    hosting: {}, devops: {}, versionControl: {}, cicd: {}, monitoring: {},
+  });
+  return res.json({ id: ref.id, projectName, message: 'Project created' });
+});
+
+app.put('/v1/projects/:id', verifyToken, adminOnly, async (req, res) => {
+  const { projectName, description, estimatedEnd, clientId } = req.body;
+  await db.collection('projects').doc(req.params.id).update({
+    ...(projectName && { projectName }),
+    ...(description && { description }),
+    ...(estimatedEnd && { estimatedEnd }),
+    ...(clientId && { clientId }),
+    updatedAt: now(),
+  });
+  return res.json({ id: req.params.id, message: 'Project updated' });
+});
+
+app.delete('/v1/projects/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('projects').doc(req.params.id).delete();
+  await db.collection('projectCompletion').doc(req.params.id).delete();
+  await db.collection('projectStack').doc(req.params.id).delete();
+  return res.json({ message: 'Project deleted' });
+});
+
+app.put('/v1/projects/:id/phase', verifyToken, adminOnly, async (req, res) => {
+  const phases = ['DISCOVERY', 'UI_UX_DESIGN', 'BACKEND_ARCHITECTURE', 'STAGING', 'PRODUCTION', 'MAINTENANCE'];
+  const current = await db.collection('projects').doc(req.params.id).get();
+  const data = current.data();
+  const idx = phases.indexOf(data.currentPhase);
+  if (idx < phases.length - 1) {
+    const nextPhase = phases[idx + 1];
+    await db.collection('projects').doc(req.params.id).update({ currentPhase: nextPhase, updatedAt: now() });
+    await db.collection('projectCompletion').doc(req.params.id).update({ currentPhase: nextPhase });
+  }
+  return res.json({ newPhase: data.currentPhase });
+});
+
+app.get('/v1/projects/:id/completion', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('projectCompletion').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ error: 'Project completion not found' });
+  return res.json(doc.data());
+});
+
+app.put('/v1/projects/:id/completion', verifyToken, adminOnly, async (req, res) => {
+  const { overallCompletionPercentage, status, riskFactors, healthScore, estimatedCompletionDate } = req.body;
+  await db.collection('projectCompletion').doc(req.params.id).update({
+    ...(overallCompletionPercentage !== undefined && { overallCompletionPercentage }),
+    ...(status && { status }),
+    ...(riskFactors && { riskFactors }),
+    ...(healthScore !== undefined && { healthScore }),
+    ...(estimatedCompletionDate && { estimatedCompletionDate }),
+    lastAssessedAt: now(),
+  });
+  await db.collection('projects').doc(req.params.id).update({ completionStatus: status || 'ON_TRACK', completionPercentage: overallCompletionPercentage || 0 });
+  return res.json({ message: 'Completion updated' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: TECH STACK
+// =============================================================================
+
+app.get('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('projectStack').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ error: 'Tech stack not found' });
+  return res.json(doc.data());
+});
+
+app.put('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) => {
+  const { frontend, backend, database, hosting, devops, versionControl, cicd, monitoring } = req.body;
+  await db.collection('projectStack').doc(req.params.id).update({
+    ...(frontend && { frontend }),
+    ...(backend && { backend }),
+    ...(database && { database }),
+    ...(hosting && { hosting }),
+    ...(devops && { devops }),
+    ...(versionControl && { versionControl }),
+    ...(cicd && { cicd }),
+    ...(monitoring && { monitoring }),
+  });
+  return res.json({ message: 'Tech stack updated' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: DOMAINS
+// =============================================================================
+
+app.get('/v1/domains', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, status } = req.query;
+  let query = db.collection('domainManagement');
+  if (projectId) query = query.where('projectId', '==', projectId);
+  if (status) query = query.where('status', '==', status);
+  const snap = await query.orderBy('expirationDate', 'asc').get();
+  return res.json(toDocs(snap));
+});
+
+app.get('/v1/domains/expiring', verifyToken, adminOnly, async (req, res) => {
+  const { days = 30 } = req.query;
+  const thirtyDaysAhead = admin.firestore.Timestamp.fromDate(new Date(Date.now() + days * 86400000));
+  const snap = await db.collection('domainManagement')
+    .where('expirationDate', '<=', thirtyDaysAhead)
+    .where('status', '!=', 'EXPIRED')
+    .orderBy('status')
+    .orderBy('expirationDate', 'asc')
+    .get();
+  return res.json(toDocs(snap));
+});
+
+app.get('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('domainManagement').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ error: 'Domain not found' });
+  return res.json(doc.data());
+});
+
+app.post('/v1/domains', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, domainName, registrar, expirationDate, sslProvider, sslExpirationDate, cost } = req.body;
+  if (!projectId || !domainName) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('domainManagement').doc();
+  await ref.set({
+    projectId, domainName, registrar: registrar || 'GoDaddy',
+    expirationDate: admin.firestore.Timestamp.fromDate(new Date(expirationDate)),
+    sslProvider: sslProvider || 'Let\'s Encrypt',
+    sslExpirationDate: sslExpirationDate ? admin.firestore.Timestamp.fromDate(new Date(sslExpirationDate)) : null,
+    cost: cost || 0, autoRenew: true, status: 'ACTIVE',
+    renewalAlertSentAt: null, createdAt: now(),
+  });
+  return res.json({ id: ref.id, domainName, message: 'Domain added' });
+});
+
+app.put('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
+  const { registrar, expirationDate, sslProvider, sslExpirationDate, autoRenew, cost } = req.body;
+  await db.collection('domainManagement').doc(req.params.id).update({
+    ...(registrar && { registrar }),
+    ...(expirationDate && { expirationDate: admin.firestore.Timestamp.fromDate(new Date(expirationDate)) }),
+    ...(sslProvider && { sslProvider }),
+    ...(sslExpirationDate && { sslExpirationDate: admin.firestore.Timestamp.fromDate(new Date(sslExpirationDate)) }),
+    ...(autoRenew !== undefined && { autoRenew }),
+    ...(cost !== undefined && { cost }),
+  });
+  return res.json({ message: 'Domain updated' });
+});
+
+app.put('/v1/domains/:id/renew', verifyToken, adminOnly, async (req, res) => {
+  const oneYearAhead = new Date(Date.now() + 365 * 86400000);
+  await db.collection('domainManagement').doc(req.params.id).update({
+    expirationDate: admin.firestore.Timestamp.fromDate(oneYearAhead),
+    status: 'ACTIVE',
+    renewalAlertSentAt: null,
+  });
+  return res.json({ message: 'Domain renewed' });
+});
+
+app.delete('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('domainManagement').doc(req.params.id).delete();
+  return res.json({ message: 'Domain deleted' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: PROJECT SUBSCRIPTIONS
+// =============================================================================
+
+app.get('/v1/project-subscriptions', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, status } = req.query;
+  let query = db.collection('projectSubscription');
+  if (projectId) query = query.where('projectId', '==', projectId);
+  if (status) query = query.where('status', '==', status);
+  const snap = await query.orderBy('renewalDate', 'asc').get();
+  return res.json(toDocs(snap));
+});
+
+app.get('/v1/project-subscriptions/renewing', verifyToken, adminOnly, async (req, res) => {
+  const { days = 7 } = req.query;
+  const sevenDaysAhead = admin.firestore.Timestamp.fromDate(new Date(Date.now() + days * 86400000));
+  const snap = await db.collection('projectSubscription')
+    .where('renewalDate', '<=', sevenDaysAhead)
+    .where('status', '==', 'ACTIVE')
+    .orderBy('renewalDate', 'asc')
+    .get();
+  return res.json(toDocs(snap));
+});
+
+app.get('/v1/project-subscriptions/:projectId/total-cost', verifyToken, adminOnly, async (req, res) => {
+  const snap = await db.collection('projectSubscription')
+    .where('projectId', '==', req.params.projectId)
+    .where('billingFrequency', '==', 'MONTHLY')
+    .where('status', '==', 'ACTIVE')
+    .get();
+  const total = toDocs(snap).reduce((sum, s) => sum + (s.monthlyCost || 0), 0);
+  return res.json({ projectId: req.params.projectId, monthlyCost: total });
+});
+
+app.post('/v1/project-subscriptions', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, serviceName, monthlyCost, billingFrequency, renewalDate, notes } = req.body;
+  if (!projectId || !serviceName) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('projectSubscription').doc();
+  await ref.set({
+    projectId, serviceName, monthlyCost: monthlyCost || 0,
+    billingFrequency: billingFrequency || 'MONTHLY',
+    renewalDate: admin.firestore.Timestamp.fromDate(new Date(renewalDate || Date.now())),
+    autoRenew: true, status: 'ACTIVE', alertSentAt: null,
+    notes: notes || null, createdAt: now(),
+  });
+  return res.json({ id: ref.id, serviceName, message: 'Subscription added' });
+});
+
+app.put('/v1/project-subscriptions/:id', verifyToken, adminOnly, async (req, res) => {
+  const { serviceName, monthlyCost, billingFrequency, renewalDate, autoRenew, status, notes } = req.body;
+  await db.collection('projectSubscription').doc(req.params.id).update({
+    ...(serviceName && { serviceName }),
+    ...(monthlyCost !== undefined && { monthlyCost }),
+    ...(billingFrequency && { billingFrequency }),
+    ...(renewalDate && { renewalDate: admin.firestore.Timestamp.fromDate(new Date(renewalDate)) }),
+    ...(autoRenew !== undefined && { autoRenew }),
+    ...(status && { status }),
+    ...(notes && { notes }),
+  });
+  return res.json({ message: 'Subscription updated' });
+});
+
+app.delete('/v1/project-subscriptions/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('projectSubscription').doc(req.params.id).delete();
+  return res.json({ message: 'Subscription deleted' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: MILESTONES
+// =============================================================================
+
+app.get('/v1/projects/:projectId/milestones', verifyToken, adminOnly, async (req, res) => {
+  const snap = await db.collection('milestones')
+    .where('projectId', '==', req.params.projectId)
+    .orderBy('dueDate', 'asc')
+    .get();
+  return res.json(toDocs(snap));
+});
+
+app.post('/v1/projects/:projectId/milestones', verifyToken, adminOnly, async (req, res) => {
+  const { milestoneTitle, description, phase, dueDate, completionPercentage } = req.body;
+  if (!milestoneTitle || !phase) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('milestones').doc();
+  await ref.set({
+    projectId: req.params.projectId, milestoneTitle, description: description || null,
+    phase, dueDate: admin.firestore.Timestamp.fromDate(new Date(dueDate || Date.now())),
+    completionPercentage: completionPercentage || 0, status: 'NOT_STARTED',
+    completionDate: null, assignedTo: [], blockers: [], createdAt: now(),
+  });
+  return res.json({ id: ref.id, milestoneTitle, message: 'Milestone created' });
+});
+
+app.put('/v1/projects/:projectId/milestones/:id', verifyToken, adminOnly, async (req, res) => {
+  const { milestoneTitle, description, phase, dueDate, completionPercentage, status } = req.body;
+  await db.collection('milestones').doc(req.params.id).update({
+    ...(milestoneTitle && { milestoneTitle }),
+    ...(description && { description }),
+    ...(phase && { phase }),
+    ...(dueDate && { dueDate: admin.firestore.Timestamp.fromDate(new Date(dueDate)) }),
+    ...(completionPercentage !== undefined && { completionPercentage }),
+    ...(status && { status }),
+  });
+  return res.json({ message: 'Milestone updated' });
+});
+
+app.delete('/v1/projects/:projectId/milestones/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('milestones').doc(req.params.id).delete();
+  return res.json({ message: 'Milestone deleted' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: TEAM MANAGEMENT
+// =============================================================================
+
+app.get('/v1/projects/:projectId/team', verifyToken, adminOnly, async (req, res) => {
+  const snap = await db.collection('teamMembers')
+    .where('projectId', '==', req.params.projectId)
+    .get();
+  return res.json(toDocs(snap));
+});
+
+app.post('/v1/projects/:projectId/team', verifyToken, adminOnly, async (req, res) => {
+  const { memberName, role, email, capacityPercentage } = req.body;
+  if (!memberName || !role) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('teamMembers').doc();
+  await ref.set({
+    projectId: req.params.projectId, memberName, role, email: email || null,
+    capacityPercentage: capacityPercentage || 100, assignedPhases: [],
+    createdAt: now(),
+  });
+  return res.json({ id: ref.id, memberName, message: 'Team member added' });
+});
+
+app.put('/v1/projects/:projectId/team/:memberId', verifyToken, adminOnly, async (req, res) => {
+  const { memberName, role, capacityPercentage } = req.body;
+  await db.collection('teamMembers').doc(req.params.memberId).update({
+    ...(memberName && { memberName }),
+    ...(role && { role }),
+    ...(capacityPercentage !== undefined && { capacityPercentage }),
+  });
+  return res.json({ message: 'Team member updated' });
+});
+
+app.delete('/v1/projects/:projectId/team/:memberId', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('teamMembers').doc(req.params.memberId).delete();
+  return res.json({ message: 'Team member removed' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: INFRASTRUCTURE
+// =============================================================================
+
+app.get('/v1/infrastructure/hosting/:projectId', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('infrastructure').doc(req.params.projectId).get();
+  if (!doc.exists) return res.status(404).json({ error: 'Infrastructure not found' });
+  return res.json(doc.data());
+});
+
+app.post('/v1/infrastructure/hosting', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, provider, uptimePercentage, latencyMs, lighthouseScore } = req.body;
+  if (!projectId) return res.status(400).json({ error: 'Missing projectId' });
+  await db.collection('infrastructure').doc(projectId).set({
+    projectId, provider: provider || 'Vercel',
+    uptimePercentage: uptimePercentage || 99.9,
+    latencyMs: latencyMs || 0,
+    lighthouseScore: lighthouseScore || 90,
+    updatedAt: now(),
+  }, { merge: true });
+  return res.json({ message: 'Hosting info updated' });
+});
+
+app.get('/v1/infrastructure/credentials/:projectId', verifyToken, adminOnly, async (req, res) => {
+  const snap = await db.collection('credentials')
+    .where('projectId', '==', req.params.projectId)
+    .get();
+  const creds = toDocs(snap).map(c => ({
+    ...c,
+    value: '••••••••' // Mask sensitive data
+  }));
+  return res.json(creds);
+});
+
+app.post('/v1/infrastructure/credentials', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, label, type, value } = req.body;
+  if (!projectId || !label || !value) return res.status(400).json({ error: 'Missing required fields' });
+  const ref = db.collection('credentials').doc();
+  await ref.set({
+    projectId, label, type: type || 'OTHER',
+    value, // In production, encrypt this
+    lastAccessedAt: null, createdAt: now(),
+  });
+  return res.json({ id: ref.id, label, message: 'Credential added' });
+});
+
+app.delete('/v1/infrastructure/credentials/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('credentials').doc(req.params.id).delete();
+  return res.json({ message: 'Credential deleted' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: ALERTS
+// =============================================================================
+
+app.get('/v1/alerts/summary', verifyToken, adminOnly, async (req, res) => {
+  const thirtyDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 86400000));
+  const sevenDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 86400000));
+
+  const domainSnap = await db.collection('domainManagement')
+    .where('expirationDate', '<=', thirtyDays)
+    .where('status', '!=', 'EXPIRED')
+    .get();
+
+  const subSnap = await db.collection('projectSubscription')
+    .where('renewalDate', '<=', sevenDays)
+    .where('status', '==', 'ACTIVE')
+    .get();
+
+  return res.json({
+    domainRenewals: toDocs(domainSnap).length,
+    subscriptionRenewals: toDocs(subSnap).length,
+    invoiceOverdue: 0,
+    projectsBehindSchedule: 0,
+  });
+});
+
+app.get('/v1/alerts/domain-renewal', verifyToken, adminOnly, async (req, res) => {
+  const thirtyDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 86400000));
+  const snap = await db.collection('domainManagement')
+    .where('expirationDate', '<=', thirtyDays)
+    .where('status', '!=', 'EXPIRED')
+    .orderBy('status')
+    .orderBy('expirationDate', 'asc')
+    .get();
+  const domains = toDocs(snap);
+  const alerts = domains.map(d => {
+    const daysLeft = Math.floor((d.expirationDate.toDate().getTime() - Date.now()) / 86400000);
+    return {
+      id: d.id,
+      type: 'DOMAIN_RENEWAL',
+      severity: daysLeft <= 7 ? 'CRITICAL' : daysLeft <= 14 ? 'WARNING' : 'INFO',
+      title: `Domain expires in ${daysLeft} days`,
+      description: d.domainName,
+      projectId: d.projectId,
+      daysLeft,
+    };
+  });
+  return res.json(alerts);
+});
+
+app.get('/v1/alerts/subscription-renewal', verifyToken, adminOnly, async (req, res) => {
+  const sevenDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 86400000));
+  const snap = await db.collection('projectSubscription')
+    .where('renewalDate', '<=', sevenDays)
+    .where('status', '==', 'ACTIVE')
+    .orderBy('renewalDate', 'asc')
+    .get();
+  const subs = toDocs(snap);
+  const alerts = subs.map(s => {
+    const daysLeft = Math.floor((s.renewalDate.toDate().getTime() - Date.now()) / 86400000);
+    return {
+      id: s.id,
+      type: 'SUBSCRIPTION_RENEWAL',
+      severity: daysLeft <= 2 ? 'CRITICAL' : 'WARNING',
+      title: `${s.serviceName} renews in ${daysLeft} days`,
+      description: `$${s.monthlyCost}/month`,
+      projectId: s.projectId,
+      daysLeft,
+    };
+  });
+  return res.json(alerts);
 });
 
 // Health check
