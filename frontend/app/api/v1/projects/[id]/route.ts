@@ -1,10 +1,11 @@
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const backendUrl = new URL(
-      `/v1/projects/${params.id}`,
+      `/v1/projects/${id}`,
       process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
     );
 
@@ -29,13 +30,14 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
 
     const backendUrl = new URL(
-      `/v1/projects/${params.id}`,
+      `/v1/projects/${id}`,
       process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
     );
 
@@ -61,11 +63,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const backendUrl = new URL(
-      `/v1/projects/${params.id}`,
+      `/v1/projects/${id}`,
       process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
     );
 
