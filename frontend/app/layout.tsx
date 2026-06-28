@@ -12,7 +12,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", weight
 export const metadata: Metadata = {
     title: "Stormglide.io | Enterprise Systems Architecture",
     description: "We don't just write code. We architect high-performance software systems, custom web apps, and enterprise ERPs.",
-    manifest: "/manifest.json", // Essential for the PWA installability
+    manifest: "/manifest.webmanifest",
     appleWebApp: {
         capable: true,
         statusBarStyle: "black-translucent",

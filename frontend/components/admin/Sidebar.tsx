@@ -6,11 +6,13 @@ import { motion } from "framer-motion";
 import {
     LayoutDashboard, Users, Kanban, CreditCard, Settings2,
     ShieldAlert, ChevronLeft, ChevronRight, LogOut, Zap, Cpu,
-    Activity, Server, Package, TrendingUp, Bell, FolderOpen
+    Activity, Server, Package, TrendingUp, Bell, FolderOpen, Briefcase
 } from "lucide-react";
 import { useAdminStore } from "@/store/adminStore";
 import { UNRESOLVED_COUNT } from "@/lib/alertsData";
 import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface MenuItem { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; badge?: number }
 interface MenuGroup { label: string; items: MenuItem[] }
@@ -20,6 +22,7 @@ const MENU_GROUPS: MenuGroup[] = [
         label: "COMMAND",
         items: [
             { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+            { id: "projects", label: "Projects", icon: Briefcase },
         ],
     },
     {
@@ -74,8 +77,12 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
-        try { await fetch("/api/auth/admin-logout", { method: "POST" }); } finally {
-            router.push("/admin/login");
+        try {
+            if (auth) await signOut(auth);
+            await fetch("/api/auth/admin-logout", { method: "POST" });
+        } finally {
+            router.replace("/admin/login");
+            router.refresh();
         }
     };
 
@@ -113,10 +120,17 @@ export default function Sidebar() {
                         <div className="space-y-0.5">
                             {group.items.map((item) => {
                                 const isActive = activeTab === item.id;
+                                const handleClick = () => {
+                                    if (item.id === "projects") {
+                                        router.push("/admin/projects");
+                                    } else {
+                                        setActiveTab(item.id);
+                                    }
+                                };
                                 return (
                                     <button
                                         key={item.id}
-                                        onClick={() => setActiveTab(item.id)}
+                                        onClick={handleClick}
                                         className={cn(
                                             "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group/btn relative overflow-hidden",
                                             isActive ? "bg-cyan-500/5 text-white" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"

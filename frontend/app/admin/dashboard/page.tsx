@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import SiteControl from "@/components/admin/SiteControl";
+import { AlertsWidget } from "@/components/admin/AlertsWidget";
 import {
     TrendingUp,
     Users,
@@ -11,7 +15,8 @@ import {
     ArrowDownRight,
     Clock,
     Activity,
-    Server
+    Server,
+    LogOut
 } from "lucide-react";
 import {
     AreaChart,
@@ -78,6 +83,20 @@ const TAB_META: Record<string, { title: string; description: string }> = {
 export default function DashboardPage() {
     const { activeTab } = useAdminStore();
     const meta = TAB_META[activeTab] ?? { title: activeTab, description: "" };
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            if (auth) {
+                await signOut(auth);
+            }
+            await fetch("/api/auth/admin-logout", { method: "POST" });
+            router.replace("/admin/login");
+            router.refresh();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    };
 
     return (
         <div className="space-y-8 pb-20">
@@ -87,11 +106,19 @@ export default function DashboardPage() {
                     <h1 className="text-3xl font-bold tracking-tight mb-2">{meta.title}</h1>
                     <p className="text-gray-400">{meta.description}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
                     <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-sm">
                         <Clock size={16} className="text-cyan-400" />
                         <span className="font-mono">{new Date().toLocaleTimeString()}</span>
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
+                        title="Sign out from admin portal"
+                    >
+                        <LogOut size={16} />
+                        <span className="font-medium">Logout</span>
+                    </button>
                 </div>
             </div>
 
@@ -210,6 +237,9 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Alerts Widget */}
+                    <AlertsWidget />
 
                     {/* System Pulse / Server Status */}
                     <div className="p-8 rounded-3xl bg-[#111827] border border-white/5">

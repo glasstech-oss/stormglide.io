@@ -42,14 +42,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     const isAdminRoute = pathname.startsWith('/admin');
 
+    // Admin pages own their full viewport. Keeping them inside the animated
+    // public shell creates a zero-height containing block for fixed layouts in Safari.
+    if (isAdminRoute) return <>{children}</>;
+
     return (
         <div className="min-h-screen bg-[#0B0F19] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden flex flex-col pb-24 md:pb-0">
 
             {/* ========================================= */}
             {/* DESKTOP TOP NAVIGATION                    */}
             {/* ========================================= */}
-            {!isAdminRoute && (
-                <header
+            <header
                     className={`fixed top-0 w-full z-50 transition-all duration-500 hidden md:block ${isScrolled
                         ? "bg-[#060709]/80 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/30"
                         : "bg-transparent border-b border-transparent"
@@ -111,8 +114,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                             </Link>
                         </div>
                     </div>
-                </header>
-            )}
+            </header>
 
             {/* ========================================= */}
             {/* MAIN CONTENT AREA WITH ROUTE ANIMATIONS   */}
@@ -132,13 +134,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </AnimatePresence>
             </main>
 
-            {!isAdminRoute && <Footer />}
+            <Footer />
 
             {/* ========================================= */}
             {/* MOBILE BOTTOM NAVIGATION (PWA FEEL)       */}
             {/* ========================================= */}
-            {!isAdminRoute && (
-                <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-2">
+            <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-6 pt-2">
                     <div className="relative flex items-center justify-around w-full bg-[#0d1117]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl py-3 shadow-[0_-20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(90,209,255,0.04)]">
                         {NAV_LINKS.map((link) => {
                             const isActive = pathname === link.path;
@@ -177,8 +178,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                             );
                         })}
                     </div>
-                </nav>
-            )}
+            </nav>
         </div>
     );
 }

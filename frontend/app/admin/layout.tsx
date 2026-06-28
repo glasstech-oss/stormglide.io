@@ -4,12 +4,17 @@ import React from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import Header from "@/components/admin/Header";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const pathname = usePathname();
+
+    if (pathname === "/admin/login") return <>{children}</>;
+
     return (
         <div className="flex h-screen bg-[#020617] text-white overflow-hidden relative font-sans">
 

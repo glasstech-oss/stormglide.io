@@ -14,7 +14,7 @@ import {
     Layout
 } from "lucide-react";
 import { useSiteSettings } from "@/context/SiteSettingsProvider";
-import axios from "axios";
+import { SettingsAPI } from "@/lib/api";
 
 export default function SettingsPage() {
     const { settings, refreshSettings } = useSiteSettings();
@@ -38,16 +38,7 @@ export default function SettingsPage() {
         setIsSaving(true);
         setSaveStatus("idle");
         try {
-            const adminToken = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('admin_token='))
-                ?.split('=')[1];
-
-            await axios.put(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/v1/settings`,
-                formData,
-                { headers: { Authorization: `Bearer ${adminToken}` } }
-            );
+            await SettingsAPI.update(formData);
             await refreshSettings();
             setSaveStatus("success");
             setTimeout(() => setSaveStatus("idle"), 3000);

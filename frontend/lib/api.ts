@@ -64,6 +64,10 @@ export const AuthAPI = {
         const { data } = await apiClient.post('/v1/auth/admin', { key: accessKey });
         return data;
     },
+    authorizeGoogleAdmin: async () => {
+        const { data } = await apiClient.post('/v1/auth/admin/google', {});
+        return data;
+    },
     syncUser: async () => {
         // Registers / updates user doc in Firestore after Firebase sign-in
         const { data } = await apiClient.post('/v1/auth/sync-user', {});
@@ -74,6 +78,20 @@ export const AuthAPI = {
             try { if (auth) await auth.signOut(); } catch { /* ignore */ }
             window.location.href = '/';
         }
+    },
+};
+
+// ==========================================
+// SITE SETTINGS MODULE
+// ==========================================
+export const SettingsAPI = {
+    get: async () => {
+        const { data } = await apiClient.get('/v1/settings');
+        return data;
+    },
+    update: async (settings: Record<string, string>) => {
+        const { data } = await apiClient.put('/v1/settings', settings);
+        return data;
     },
 };
 

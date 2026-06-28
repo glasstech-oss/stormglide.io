@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import axios from 'axios';
+import { SettingsAPI } from '@/lib/api';
 
 interface SiteSettings {
     companyName: string;
@@ -37,9 +37,9 @@ export const SiteSettingsProvider = ({ children }: { children: React.ReactNode }
 
     const fetchSettings = async () => {
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/v1/settings`);
-            setSettings(response.data);
-            applyTheme(response.data);
+            const siteSettings = await SettingsAPI.get();
+            setSettings(siteSettings);
+            applyTheme(siteSettings);
         } catch (error) {
             console.error('Failed to fetch site settings:', error);
         } finally {
