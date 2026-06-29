@@ -3,6 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import VariantSwitcher from '../common/VariantSwitcher'
+import BrandLogo from '../common/BrandLogo'
+import AuroraModeToggle from '../common/AuroraModeToggle'
 
 const NAV_LINKS = [
   { label: 'Services', href: '/services' },
@@ -31,37 +34,7 @@ export default function Navbar() {
     <nav className={`sg-navbar ${overHero ? 'is-over-hero' : 'is-solid'}`} data-variant={activeVariant.id}>
       <div className="sg-navbar-inner">
         <Link to="/" className="sg-logo" aria-label="Stormglide home" style={{ padding: '0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-          <svg viewBox="0 0 16 24" height="24" style={{ display: 'block', color: 'var(--color-text-heading)' }}>
-            <rect x="4" y="0" width="6" height="6" fill="currentColor" />
-            <rect x="12" y="0" width="4" height="7" fill="var(--sg-accent)" />
-            <path d="M0 10 H10 V24 H4 V16 H0 Z" fill="currentColor" />
-            <rect x="12" y="10" width="4" height="7" fill="currentColor" />
-          </svg>
-          <span style={{ 
-            fontFamily: "'Inter', sans-serif", 
-            fontWeight: 800, 
-            fontSize: '24px', 
-            letterSpacing: '-0.04em', 
-            color: 'var(--color-text-heading)',
-            display: 'flex',
-            alignItems: 'baseline'
-          }}>
-            stormglide.
-            <span style={{ position: 'relative', display: 'inline-flex' }}>
-              ı
-              <span style={{ 
-                position: 'absolute', 
-                top: '0.2em', 
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '0.23em', 
-                height: '0.23em', 
-                backgroundColor: 'var(--sg-accent)', 
-                borderRadius: '1.5px' 
-              }}></span>
-            </span>
-            o
-          </span>
+          <BrandLogo className="sg-navbar-brand-logo" />
         </Link>
 
         <div className="sg-nav-links">
@@ -75,6 +48,10 @@ export default function Navbar() {
         <Link to="/contact" className="sg-nav-cta" data-cta="true">
           Let's build <ArrowRight size={14} />
         </Link>
+
+        <VariantSwitcher />
+
+        <AuroraModeToggle />
 
         <button
           type="button"
@@ -155,23 +132,7 @@ export default function Navbar() {
           white-space: nowrap;
         }
 
-        .sg-logo span span {
-          color: var(--sg-accent);
-        }
-
-        .sg-logo-mark {
-          width: 36px;
-          height: 36px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid color-mix(in srgb, var(--sg-accent) 32%, transparent);
-          border-radius: 10px;
-          background: color-mix(in srgb, var(--sg-accent) 12%, transparent);
-          color: var(--sg-accent);
-          box-shadow: 0 0 24px color-mix(in srgb, var(--sg-accent) 14%, transparent);
-          font-size: 0.78rem;
-        }
+        .sg-navbar-brand-logo { width: 178px; }
 
         .sg-nav-links {
           display: flex;
@@ -275,6 +236,15 @@ export default function Navbar() {
             width: min(100% - 32px, 1280px);
             min-height: 66px;
           }
+        }
+
+        @media (max-width: 420px) {
+          .sg-navbar-inner { gap: 0.48rem; }
+          .sg-navbar-brand-logo { width: 148px; }
+        }
+
+        @media (max-width: 350px) {
+          .sg-navbar-brand-logo { width: 132px; }
         }
       `}</style>
     </nav>

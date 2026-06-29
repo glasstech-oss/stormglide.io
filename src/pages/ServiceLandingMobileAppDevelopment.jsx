@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, Smartphone, Zap, Users, Lock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,16 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function ServiceLandingMobileAppDevelopment() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Mobile App Development Ghana | iOS & Android Apps | StormGlide</title>
-        <meta name="description" content="Custom iOS and Android app development for Ghana. Native apps, offline-capable, Paystack integration. Get your app built in 12-20 weeks." />
-        <meta name="keywords" content="mobile app development Ghana, iOS app, Android app, app developer Ghana, native app development" />
-        <meta property="og:title" content="Mobile App Development in Ghana" />
-        <meta property="og:description" content="Native iOS and Android apps built for Ghanaian businesses." />
-        <meta property="og:url" content="https://stormglide.vercel.app/services/mobile-app-development-ghana" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://stormglide.vercel.app/services/mobile-app-development-ghana" />
-      </Helmet>
 
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>

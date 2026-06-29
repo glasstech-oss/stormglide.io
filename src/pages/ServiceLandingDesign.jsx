@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
-import { ArrowRight, CheckCircle, Palette, Eye, Smartphone, Zap } from 'lucide-react'
+import { ArrowRight, Palette, Eye, Smartphone, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
@@ -8,16 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function ServiceLandingDesign() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>UI/UX Design Services Ghana | Brand & App Design | StormGlide</title>
-        <meta name="description" content="Professional UI/UX, app design, logo design for Ghanaian businesses. User-centered design that converts. 2-4 week turnaround." />
-        <meta name="keywords" content="UI design Ghana, UX design, logo design Ghana, app design, graphic design, brand design" />
-        <meta property="og:title" content="UI/UX & Brand Design in Ghana" />
-        <meta property="og:description" content="Beautiful, user-centered design for your brand and apps." />
-        <meta property="og:url" content="https://stormglide.vercel.app/services/design-services-ghana" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://stormglide.vercel.app/services/design-services-ghana" />
-      </Helmet>
 
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>

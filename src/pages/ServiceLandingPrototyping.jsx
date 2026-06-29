@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, Zap, TrendingUp, Users, Lightbulb } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,16 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function ServiceLandingPrototyping() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>MVP & Rapid Prototyping Services Ghana | Product Launch | StormGlide</title>
-        <meta name="description" content="Test your startup idea fast. MVP development in 8-12 weeks. Raise funding with working prototypes. StormGlide rapid prototyping for Ghana startups." />
-        <meta name="keywords" content="MVP development Ghana, rapid prototyping, startup development, product launch, prototype build" />
-        <meta property="og:title" content="MVP & Prototyping for Startups in Ghana" />
-        <meta property="og:description" content="Launch your startup idea fast with affordable MVPs." />
-        <meta property="og:url" content="https://stormglide.vercel.app/services/prototyping-ghana" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://stormglide.vercel.app/services/prototyping-ghana" />
-      </Helmet>
 
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>

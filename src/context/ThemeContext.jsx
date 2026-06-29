@@ -1,10 +1,17 @@
 import { createContext, useContext, useEffect } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { defaultTheme } from '../data/defaultTheme'
-import { defaultVisualVariantId, getVisualVariant, visualVariants } from '../data/visualVariants'
+import {
+  auroraLightColors,
+  defaultVisualVariantId,
+  getVisualVariant,
+  visualVariants,
+} from '../data/visualVariants'
 
 const ThemeContext = createContext(null)
 
+// Theme utilities intentionally share this module with their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export function getThemeVariables(theme, variant, preserveFonts = false) {
   const vars = {}
   
@@ -103,22 +110,34 @@ function setVars(root, vars) {
   })
 }
 
-function applyThemeToDOM(theme, variant) {
+function getAppearanceVariant(variant, auroraAppearance) {
+  if (variant.id !== 'aurora' || auroraAppearance !== 'light') return variant
+  return { ...variant, colors: auroraLightColors }
+}
+
+function applyThemeToDOM(theme, variant, auroraAppearance) {
   const root = document.documentElement
   root.dataset.sgVariant = variant.id
+  if (variant.id === 'aurora') {
+    root.dataset.sgAppearance = auroraAppearance
+  } else {
+    delete root.dataset.sgAppearance
+  }
   
-  const vars = getThemeVariables(theme, variant)
+  const vars = getThemeVariables(theme, getAppearanceVariant(variant, auroraAppearance))
   setVars(root, vars)
 }
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useLocalStorage('theme', defaultTheme)
   const [visualVariant, setStoredVisualVariant] = useLocalStorage('visualVariant', defaultVisualVariantId)
+  const [storedAuroraAppearance, setStoredAuroraAppearance] = useLocalStorage('auroraAppearance', 'dark')
   const activeVariant = getVisualVariant(visualVariant)
+  const auroraAppearance = storedAuroraAppearance === 'light' ? 'light' : 'dark'
 
   useEffect(() => {
-    applyThemeToDOM(theme, activeVariant)
-  }, [theme, activeVariant])
+    applyThemeToDOM(theme, activeVariant, auroraAppearance)
+  }, [theme, activeVariant, auroraAppearance])
 
   function updateTheme(key, value) {
     setTheme(prev => ({ ...prev, [key]: value }))
@@ -132,6 +151,10 @@ export function ThemeProvider({ children }) {
     setStoredVisualVariant(getVisualVariant(id).id)
   }
 
+  function setAuroraAppearance(appearance) {
+    setStoredAuroraAppearance(appearance === 'light' ? 'light' : 'dark')
+  }
+
   return (
     <ThemeContext.Provider value={{
       theme,
@@ -141,12 +164,15 @@ export function ThemeProvider({ children }) {
       activeVariant,
       visualVariants,
       setVisualVariant,
+      auroraAppearance,
+      setAuroraAppearance,
     }}>
       {children}
     </ThemeContext.Provider>
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   return useContext(ThemeContext)
 }

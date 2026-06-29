@@ -38,7 +38,8 @@ export const defaultTheme = {
 
   contactWhatsapp: '+233547738678',
   contactEmail:    'hello@stormglide.io',
-  contactLinkedIn: 'https://linkedin.com/company/stormglide',
+  contactLinkedIn: 'https://www.linkedin.com/company/stormglide-io/',
+  contactTikTok:   'https://www.tiktok.com/@stormglide.io',
 
   trustBarText: 'Trusted by businesses in 🇬🇭 Ghana · 🇬🇳 Guinea · and growing',
   trustStats: [

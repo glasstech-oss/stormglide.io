@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, Truck, BarChart3, Navigation, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,14 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function CargoScanLanding() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>CargoScan: Logistics & Supply Chain Tracking Software</title>
-        <meta name="description" content="CargoScan is a production-grade logistics tracking platform for African supply chains. Real-time cargo tracking, route optimization, and delivery management. Live since 2021." />
-        <meta name="keywords" content="logistics software, supply chain management, cargo tracking, fleet management, delivery tracking, logistics platform" />
-        <meta property="og:title" content="CargoScan - Logistics Platform" />
-        <meta property="og:description" content="Real-time logistics and supply chain tracking for African businesses" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>

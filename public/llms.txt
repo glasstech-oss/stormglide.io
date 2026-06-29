@@ -1,0 +1,32 @@
+# Stormglide Technologies
+
+> Stormglide is a software company based in Accra, Ghana. We design and build websites, web applications, mobile apps, SaaS products, and business systems for organizations in Ghana and across Africa.
+
+## Core services
+
+- [Software development services](https://stormglide.io/services): Custom software, SaaS, web apps, mobile apps, and product design.
+- [Website development in Ghana](https://stormglide.io/services/website-development-ghana): Corporate websites, e-commerce, responsive design, local payments, and search-ready implementation.
+- [Web app development in Ghana](https://stormglide.io/services/web-app-development-ghana): Business systems, workflow automation, ERP, HR, inventory, logistics, CRM, and SaaS platforms.
+- [Mobile app development in Ghana](https://stormglide.io/services/mobile-app-development-ghana): iOS, Android, offline-first products, payments, and backend integrations.
+- [UI and UX design](https://stormglide.io/services/design-services-ghana): Product, interface, and design-system work.
+- [MVP development](https://stormglide.io/services/prototyping-ghana): Focused prototypes and first production releases.
+
+## Products and evidence
+
+- [Products](https://stormglide.io/products): Stormglide software for HR, logistics, health, manufacturing, and commerce.
+- [Nexus HRM](https://stormglide.io/nexus-hrm): HR, payroll, leave, attendance, performance, and compliance workflows.
+- [CargoScan](https://stormglide.io/cargoscan): CBM calculation, freight estimates, cargo workflows, and shipment reports.
+- [SANO Health](https://stormglide.io/sano-health): Digital health and clinic workflow tools for African contexts.
+- [Case studies and live systems](https://stormglide.io/work): Selected products and client software built by Stormglide.
+
+## Company
+
+- Location: Accra, Ghana
+- Service area: Ghana, West Africa, and remote clients across Africa
+- Email: hello@stormglide.io
+- Phone and WhatsApp: +233 54 773 8678
+- [Google Business Profile](https://www.google.com/maps?cid=16771153269117902667)
+- [LinkedIn](https://www.linkedin.com/company/stormglide-io/)
+- [TikTok](https://www.tiktok.com/@stormglide.io)
+- [About](https://stormglide.io/about)
+- [Contact](https://stormglide.io/contact)

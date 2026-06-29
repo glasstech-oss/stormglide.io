@@ -8,7 +8,7 @@ import SANODemo from '../components/demos/SANODemo'
 import CargoScanDemo from '../components/demos/CargoScanDemo'
 import NexusMFGDemo from '../components/demos/NexusMFGDemo'
 import GlasstechDemo from '../components/demos/GlasstechDemo'
-import { Helmet } from 'react-helmet-async'
+import { getProductPath } from '../data/products'
 
 const TABS = [
   { id: 'nexus-hrm', label: 'Nexus HRM',   icon: Users,   color: 'var(--color-accent-blue)', component: NexusHRMDemo,  tagline: 'HR & payroll management' },
@@ -68,40 +68,6 @@ export default function WorkPage() {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Case Studies & Live Demos | StormGlide Software Products</title>
-        <meta name="description" content="See our SaaS products and case studies: Nexus HRM (HR software), CargoScan (logistics), SANO Health, Nexus MFG (manufacturing), and custom client projects built across Africa." />
-        <meta name="keywords" content="case studies, software portfolio, HR software demo, logistics software, SaaS products Africa, custom software examples" />
-        <meta property="og:title" content="Case Studies & Live Product Demos" />
-        <meta property="og:description" content="Real products and client systems we've built. Try them live. See the work." />
-        <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <meta property="og:url" content="https://stormglide.vercel.app/work" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <link rel="canonical" href="https://stormglide.vercel.app/work" />
-
-        {/* BreadcrumbList schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              {
-                "@type": "ListItem",
-                "position": 1,
-                "name": "Home",
-                "item": "https://stormglide.vercel.app"
-              },
-              {
-                "@type": "ListItem",
-                "position": 2,
-                "name": "Case Studies",
-                "item": "https://stormglide.vercel.app/work"
-              }
-            ]
-          })}
-        </script>
-      </Helmet>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--ink-100)', background: 'var(--bg-soft)', padding: '5rem 2rem 3.5rem' }}>
@@ -168,7 +134,7 @@ export default function WorkPage() {
               <p style={{ fontSize: '0.82rem', color: 'var(--ink-400)', lineHeight: 1.65, marginBottom: '0.875rem' }}>
                 Want the full version with your data and branding?
               </p>
-              <Link to={`/products/${activeTab}`} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
+              <Link to={getProductPath(activeTab)} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
                 View {active.label} <ArrowRight size={13} />
               </Link>
             </div>

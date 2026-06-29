@@ -1,15 +1,17 @@
-import { createClient } from '@supabase/supabase-js'
-
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Returns a live Supabase client if env vars are set, otherwise null.
-// The app falls back to localStorage when supabase is null.
-export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+export const isSupabaseEnabled = Boolean(supabaseUrl && supabaseAnonKey)
+let clientPromise
 
-export const isSupabaseEnabled = Boolean(supabase)
+export function getSupabase() {
+  if (!isSupabaseEnabled) return Promise.resolve(null)
+  if (!clientPromise) {
+    clientPromise = import('@supabase/supabase-js')
+      .then(({ createClient }) => createClient(supabaseUrl, supabaseAnonKey))
+  }
+  return clientPromise
+}
 
 /*
   ─── SUPABASE SCHEMA ────────────────────────────────────────────────────────

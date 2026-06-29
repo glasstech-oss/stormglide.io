@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
-import { ArrowRight, CheckCircle, Globe, Zap, ShoppingCart, BarChart3, Smartphone, Lock } from 'lucide-react'
+import { ArrowRight, CheckCircle, Globe, Zap, ShoppingCart, BarChart3, Smartphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
@@ -8,44 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function ServiceLandingWebsiteDevelopment() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Professional Website Development Ghana | StormGlide</title>
-        <meta name="description" content="Custom website design & development for Ghanaian businesses. E-commerce, corporate, portfolios. Fast, SEO-optimized, affordable. Free consultation." />
-        <meta name="keywords" content="website development Ghana, web design Ghana, custom website, e-commerce website, professional website Ghana" />
-        <meta property="og:title" content="Professional Website Development in Ghana" />
-        <meta property="og:description" content="Custom-designed websites that convert visitors to customers. Serving Ghanaian businesses since 2021." />
-        <meta property="og:url" content="https://stormglide.vercel.app/services/website-development-ghana" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://stormglide.vercel.app/services/website-development-ghana" />
-
-        {/* LocalBusiness Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "name": "StormGlide - Website Development Ghana",
-            "description": "Professional website development for Ghanaian businesses",
-            "areaServed": "GH",
-            "address": {
-              "@type": "PostalAddress",
-              "addressCountry": "GH",
-              "addressLocality": "Accra"
-            }
-          })}
-        </script>
-
-        {/* Service Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Service",
-            "name": "Website Development",
-            "description": "Custom website design and development for businesses in Ghana",
-            "areaServed": "GH",
-            "serviceType": "Website Development"
-          })}
-        </script>
-      </Helmet>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>

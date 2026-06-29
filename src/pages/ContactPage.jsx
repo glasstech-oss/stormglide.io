@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Mail, MapPin, Check, ArrowRight, Clock, Loader2, Zap } from 'lucide-react'
-import { Helmet } from 'react-helmet-async'
 import PageLayout from '../components/layout/PageLayout'
 import { useTheme } from '../context/ThemeContext'
 import { useAdmin } from '../context/AdminContext'
-import { addInquiry } from '../firebase/collections'
 
 const TYPES = ['New System', 'Product Demo', 'Tech Consulting', 'Partnership', 'Other']
 
@@ -84,62 +82,6 @@ export default function ContactPage() {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>Contact StormGlide — Discuss Your Software Project</title>
-        <meta name="description" content="Get in touch with StormGlide to discuss your custom software, SaaS development, or automation needs. We respond within 24 hours. Based in Accra, Ghana." />
-        <meta name="keywords" content="contact software developer, software development company Africa, SaaS development inquiry, custom software contact" />
-        <meta property="og:title" content="Contact StormGlide Technologies" />
-        <meta property="og:description" content="Tell us about your project. We respond within 24 hours." />
-        <meta property="og:url" content="https://stormglide.vercel.app/contact" />
-        <meta name="twitter:card" content="summary" />
-        <link rel="canonical" href="https://stormglide.vercel.app/contact" />
-
-        {/* Schema.org ContactPoint markup */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ContactPoint",
-            "contactType": "Customer Service",
-            "email": "hello@stormglide.io",
-            "areaServed": "Africa",
-            "availableLanguage": "en"
-          })}
-        </script>
-
-        {/* FAQ Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "How long does a typical project take?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Most custom systems take 6–16 weeks depending on scope. Simple web apps can be ready in 3–4 weeks. We give you a clear timeline before we start."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Do you work with clients outside Ghana?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Yes. We currently serve clients in Ghana and Guinea, and we work remotely with clients anywhere. We communicate over WhatsApp, email, and video."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "What happens after launch?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "We provide ongoing support and maintenance for everything we build. We don't disappear. Bug fixes are free; new features are quoted separately."
-                }
-              }
-            ]
-          })}
-        </script>
-      </Helmet>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '4rem 2rem 3rem' }}>

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import BrandLogo from '../common/BrandLogo'
+import { getProductPath } from '../../data/products'
 
 const PRODUCTS = [
   { name: 'Nexus HRM',   slug: 'nexus-hrm',  color: 'var(--color-accent-blue)' },
@@ -28,8 +30,17 @@ const linkBase = {
   display: 'block',
 }
 
+const GOOGLE_BUSINESS_URL = 'https://www.google.com/maps?cid=16771153269117902667'
+const LINKEDIN_URL = 'https://www.linkedin.com/company/stormglide-io/'
+const TIKTOK_URL = 'https://www.tiktok.com/@stormglide.io'
+const LEGACY_LINKEDIN_URL = 'https://linkedin.com/company/stormglide'
+
 export default function Footer() {
   const { theme } = useTheme()
+  const linkedInUrl = !theme.contactLinkedIn || theme.contactLinkedIn === LEGACY_LINKEDIN_URL
+    ? LINKEDIN_URL
+    : theme.contactLinkedIn
+  const tikTokUrl = theme.contactTikTok || TIKTOK_URL
 
   return (
     <footer style={{ background: 'var(--color-surface-alt)', position: 'relative', overflow: 'hidden' }}>
@@ -94,37 +105,7 @@ export default function Footer() {
           <div>
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1.5rem', textDecoration: 'none' }}>
-              <svg viewBox="0 0 16 24" height="24" style={{ display: 'block', color: 'var(--color-text-heading)' }}>
-                <rect x="4" y="0" width="6" height="6" fill="currentColor" />
-                <rect x="12" y="0" width="4" height="7" fill="var(--sg-accent)" />
-                <path d="M0 10 H10 V24 H4 V16 H0 Z" fill="currentColor" />
-                <rect x="12" y="10" width="4" height="7" fill="currentColor" />
-              </svg>
-              <span style={{ 
-                fontFamily: "'Inter', sans-serif", 
-                fontWeight: 800, 
-                fontSize: '24px', 
-                letterSpacing: '-0.04em', 
-                color: 'var(--color-text-heading)',
-                display: 'flex',
-                alignItems: 'baseline'
-              }}>
-                stormglide.
-                <span style={{ position: 'relative', display: 'inline-flex' }}>
-                  ı
-                  <span style={{ 
-                    position: 'absolute', 
-                    top: '0.2em', 
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '0.23em', 
-                    height: '0.23em', 
-                    backgroundColor: 'var(--sg-accent)', 
-                    borderRadius: '1.5px' 
-                  }}></span>
-                </span>
-                o
-              </span>
+              <BrandLogo className="sg-footer-brand-logo" />
             </div>
 
             <p style={{ color: 'var(--ink-400)', fontSize: '0.875rem', lineHeight: 1.75, maxWidth: '260px', marginBottom: '1.75rem' }}>
@@ -132,14 +113,17 @@ export default function Footer() {
             </p>
 
             {/* Social links */}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {[
                 { label: 'WhatsApp', href: `https://wa.me/${theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')}` },
-                { label: 'LinkedIn', href: theme.contactLinkedIn },
+                { label: 'Google',   href: GOOGLE_BUSINESS_URL },
+                { label: 'LinkedIn', href: linkedInUrl },
+                { label: 'TikTok',   href: tikTokUrl },
                 { label: 'Email',    href: `mailto:${theme.contactEmail}` },
               ].map(link => (
                 <a key={link.label} href={link.href}
-                  target={link.label !== 'Email' ? '_blank' : undefined} rel="noreferrer"
+                  target={link.label !== 'Email' ? '_blank' : undefined}
+                  rel={link.label !== 'Email' ? 'me noreferrer' : undefined}
                   style={{
                     padding: '0.35rem 0.875rem',
                     background: 'color-mix(in srgb, var(--color-surface) 90%, transparent)',
@@ -184,7 +168,7 @@ export default function Footer() {
             }}>Products</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {PRODUCTS.map(p => (
-                <Link key={p.slug} to={`/products/${p.slug}`} style={{ ...linkBase, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                <Link key={p.slug} to={getProductPath(p.slug)} style={{ ...linkBase, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text-heading)' }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-400)' }}
                 >
@@ -252,9 +236,9 @@ export default function Footer() {
           flexWrap: 'wrap', gap: '0.75rem',
         }}>
           <p style={{ color: 'var(--ink-300)', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
-            © 2025 Stormglide Technologies Ltd. · Built in Accra, Ghana
+            © 2026 Stormglide Technologies Ltd. · Built in Accra, Ghana
           </p>
-          <a href="https://admin.stormglide.io/admin/login" style={{
+          <a href="https://frontend-ten-blush-98.vercel.app/admin/login" style={{
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             color: 'var(--ink-300)', fontSize: '0.72rem', textDecoration: 'none',
             transition: 'color 0.15s',
@@ -262,7 +246,7 @@ export default function Footer() {
             onMouseEnter={e => e.currentTarget.style.color = 'var(--ink-500)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-300)'}
           >
-            Admin <ArrowUpRight size={10} />
+            Admin Portal <ArrowUpRight size={10} />
           </a>
         </div>
       </div>

@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, BarChart3, Users, Zap, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,14 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function NexusHRMLanding() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Nexus HRM: HR & Payroll Management Software for African Businesses</title>
-        <meta name="description" content="Nexus HRM is a production-grade HR and payroll management system serving 50+ African companies. Automate employee records, payroll, leave management, and performance tracking. Live since 2022." />
-        <meta name="keywords" content="HR software, payroll software, human resources management, employee management system, attendance tracking, performance management" />
-        <meta property="og:title" content="Nexus HRM - HR Management Platform" />
-        <meta property="og:description" content="Production-ready HR and payroll platform for African businesses" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>

@@ -1,8 +1,16 @@
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /client/
+
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /client/
+
 User-agent: *
 Allow: /
-
-# Block admin routes from indexing
 Disallow: /admin/
-Disallow: /admin/login
+Disallow: /client/
 
-Sitemap: https://stormglide.vercel.app/sitemap.xml
+Sitemap: https://stormglide.io/sitemap.xml

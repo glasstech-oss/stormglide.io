@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Building2, Layers, Brain, Shield, MapPin, Globe2, Zap, Wrench, Phone, Monitor, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Building2, Layers, Brain, Shield, MapPin, Globe2, Zap, Wrench, Phone, Monitor } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { useTheme } from '../context/ThemeContext'
-import { Helmet } from 'react-helmet-async'
 
 const PILLARS = [
   { icon: Building2, title: 'Built in Africa', desc: "We understand the market, the infrastructure, the constraints, and the opportunity. We don't build for Africa from the outside — we are inside it.", color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--sg-accent) 7%, transparent)', border: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)' },
@@ -25,17 +24,6 @@ export default function AboutPage() {
 
   return (
     <PageLayout>
-      <Helmet>
-        <title>About — Stormglide Technologies</title>
-        <meta name="description" content="Stormglide is a software company built in Accra, Ghana. We build enterprise systems, SaaS products, and AI tools for African businesses." />
-        <meta property="og:title" content="About Stormglide Technologies" />
-        <meta property="og:description" content="Built in Accra, Ghana. We build enterprise systems for African businesses — fast, full-stack, and no excuses." />
-        <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <meta property="og:url" content="https://stormglide.vercel.app/about" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <link rel="canonical" href="https://stormglide.vercel.app/about" />
-      </Helmet>
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '4rem 2rem 3rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
@@ -68,7 +56,7 @@ export default function AboutPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
             {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', overflow: 'hidden', border: '1.5px solid var(--color-border-subtle)', marginBottom: '2rem' }}>
-              {STATS.map((s, i) => (
+              {STATS.map(s => (
                 <div key={s.label} style={{ background: 'var(--color-background)', padding: '1.75rem', textAlign: 'center' }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, background: 'linear-gradient(120deg, var(--color-accent-blue), var(--color-accent-violet))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '0.25rem' }}>{s.value}</div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</div>

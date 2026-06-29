@@ -1,16 +1,12 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Home, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 
 export default function NotFoundPage() {
   return (
     <>
-      <Helmet>
-        <title>404 — Page Not Found · Stormglide Technologies</title>
-      </Helmet>
       <Navbar />
       <main style={{
         minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center',

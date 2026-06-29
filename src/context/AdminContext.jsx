@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import { supabase, isSupabaseEnabled } from '../lib/supabase'
+import { getSupabase, isSupabaseEnabled } from '../lib/supabase'
 
 const AdminContext = createContext(null)
 
@@ -67,6 +67,11 @@ function SupabaseAdmin({ children }) {
 
   const load = useCallback(async () => {
     setLoading(true)
+    const supabase = await getSupabase()
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
     const [{ data: inq }, { data: demo }, { data: proj }] = await Promise.all([
       supabase.from('inquiries').select('*').order('created_at', { ascending: false }),
       supabase.from('demo_requests').select('*').order('created_at', { ascending: false }),
@@ -78,36 +83,45 @@ function SupabaseAdmin({ children }) {
     setLoading(false)
   }, [])
 
+  // The initial request synchronizes this provider with its external data source.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
   async function addInquiry(data) {
+    const supabase = await getSupabase()
     const { data: record } = await supabase.from('inquiries').insert([{ ...data, status: 'new', notes: '' }]).select().single()
     if (record) setInquiries(prev => [record, ...prev])
     return record
   }
   async function updateInquiry(id, changes) {
+    const supabase = await getSupabase()
     await supabase.from('inquiries').update(changes).eq('id', id)
     setInquiries(prev => prev.map(i => i.id === id ? { ...i, ...changes } : i))
   }
   async function addDemoRequest(data) {
+    const supabase = await getSupabase()
     const { data: record } = await supabase.from('demo_requests').insert([{ ...data, status: 'new' }]).select().single()
     if (record) setDemoRequests(prev => [record, ...prev])
     return record
   }
   async function updateDemoRequest(id, changes) {
+    const supabase = await getSupabase()
     await supabase.from('demo_requests').update(changes).eq('id', id)
     setDemoRequests(prev => prev.map(d => d.id === id ? { ...d, ...changes } : d))
   }
   async function addProject(data) {
+    const supabase = await getSupabase()
     const { data: record } = await supabase.from('projects').insert([{ ...data, notes: '' }]).select().single()
     if (record) setProjects(prev => [record, ...prev])
     return record
   }
   async function updateProject(id, changes) {
+    const supabase = await getSupabase()
     await supabase.from('projects').update(changes).eq('id', id)
     setProjects(prev => prev.map(p => p.id === id ? { ...p, ...changes } : p))
   }
   async function deleteProject(id) {
+    const supabase = await getSupabase()
     await supabase.from('projects').delete().eq('id', id)
     setProjects(prev => prev.filter(p => p.id !== id))
   }
@@ -136,6 +150,8 @@ export function AdminProvider({ children }) {
     : <LocalStorageAdmin>{children}</LocalStorageAdmin>
 }
 
+// Context hooks intentionally share this module with their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAdmin() {
   return useContext(AdminContext)
 }

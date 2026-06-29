@@ -28,4 +28,22 @@ export class AuditController {
     async createLog(@Body() body: { adminId: string; action: string; entityType: string; entityId: string; ipAddress?: string }) {
         return this.auditService.createLog(body);
     }
+
+    @Get('project/:projectId')
+    async getProjectHistory(
+        @Query('limit') limit?: string
+    ) {
+        return this.auditService.getProjectHistory(
+            limit ? parseInt(limit) : 50
+        );
+    }
+
+    @Get('entity/:entityType/:entityId')
+    async getEntityHistory(
+        @Query('limit') limit?: string
+    ) {
+        return this.auditService.getEntityHistory(
+            limit ? parseInt(limit) : 50
+        );
+    }
 }

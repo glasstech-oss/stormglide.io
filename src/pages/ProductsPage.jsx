@@ -2,25 +2,13 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Users, Heart, Package, Factory, Layers, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
-import { products } from '../data/products'
-import { Helmet } from 'react-helmet-async'
+import { getProductPath, products } from '../data/products'
 
 const ICONS = { Users, Heart, Package, Factory, Layers }
 
 export default function ProductsPage() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Products — Stormglide Technologies</title>
-        <meta name="description" content="Nexus HRM, CargoScan, Nexus MFG, SANO Health, and Glasstech — production-ready business software built for Africa." />
-        <meta property="og:title" content="Products — Stormglide Technologies" />
-        <meta property="og:description" content="Nexus HRM, CargoScan, Nexus MFG — production-ready business software running across Africa." />
-        <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <meta property="og:url" content="https://stormglide.vercel.app/products" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <link rel="canonical" href="https://stormglide.vercel.app/products" />
-      </Helmet>
       {/* Page header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '4rem 2rem 3rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
@@ -48,7 +36,7 @@ export default function ProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.07 }}
               >
-                <Link to={`/products/${product.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+                <Link to={getProductPath(product.id)} style={{ display: 'block', textDecoration: 'none' }}>
                   <div style={{
                     background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)',
                     borderRadius: 'var(--border-radius-lg)', padding: '2rem', height: '100%',

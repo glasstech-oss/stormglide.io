@@ -6,10 +6,28 @@
   },
   "hosting": {
     "public": "dist",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/products/nexus-hrm",
+        "destination": "/nexus-hrm",
+        "type": 301
+      },
+      {
+        "source": "/products/cargoscan",
+        "destination": "/cargoscan",
+        "type": 301
+      },
+      {
+        "source": "/products/sano",
+        "destination": "/sano-health",
+        "type": 301
+      }
     ],
     "rewrites": [
       {
@@ -33,6 +51,24 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=300, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/admin/**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          }
+        ]
+      },
+      {
+        "source": "/client/**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
           }
         ]
       }

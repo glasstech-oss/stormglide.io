@@ -162,10 +162,11 @@ export default function SiteCustomizer() {
             { key: 'contactWhatsapp', label: 'WhatsApp Number', placeholder: '0530828898' },
             { key: 'contactEmail', label: 'Email Address', placeholder: 'hello@stormglide.io' },
             { key: 'contactLinkedIn', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/...' },
+            { key: 'contactTikTok', label: 'TikTok URL', placeholder: 'https://tiktok.com/@...' },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
               <label style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '0.5rem' }}>{label}</label>
-              <input className="input" value={theme[key]} placeholder={placeholder} onChange={e => updateTheme(key, e.target.value)} />
+              <input className="input" value={theme[key] || ''} placeholder={placeholder} onChange={e => updateTheme(key, e.target.value)} />
             </div>
           ))}
         </div>

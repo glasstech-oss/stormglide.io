@@ -6,7 +6,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "metrics", "tracing"]
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -60,6 +60,32 @@ enum FeedbackStatus {
   IN_REVIEW
   RESOLVED
   REJECTED
+}
+
+enum ProjectCompletionStatus {
+  ON_TRACK
+  AT_RISK
+  BLOCKED
+}
+
+enum AlertType {
+  DOMAIN_RENEWAL
+  SUBSCRIPTION_RENEWAL
+  INVOICE_OVERDUE
+  PROJECT_BEHIND_SCHEDULE
+}
+
+enum AlertChannel {
+  IN_APP
+  EMAIL
+  SLACK
+}
+
+enum PhaseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETE
 }
 
 // ==========================================
@@ -131,6 +157,10 @@ model Project {
   invoices         Invoice[]          // Link specific invoices to a project build
   kanbanTasks      KanbanTask[]
   infraSnapshots   InfraSnapshot[]
+  completion       ProjectCompletion?
+  stack            ProjectStack?
+  domains          DomainManagement[]
+  subscriptions    ProjectSubscription[]
 }
 
 model ProjectMilestone {
@@ -142,7 +172,14 @@ model ProjectMilestone {
   isCompleted      Boolean      @default(false)
   completedAt      DateTime?
   targetDate       DateTime?
+  startDate        DateTime     @default(now())
+  completionPercentage Int      @default(0) // 0-100
+  status           PhaseStatus  @default(NOT_STARTED)
+  deliverables     String[]     @default([]) // JSON array of deliverables
+  blockers         String[]     @default([]) // Current blockers
+  assignedTo       String[]     @default([]) // Team member IDs
   createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   // Relationships
   project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -365,4 +402,99 @@ model Document {
   updatedAt   DateTime @updatedAt
 
   client      ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// PHASE 1: PROJECT COMPLETION TRACKING
+// ==========================================
+
+model ProjectCompletion {
+  id                        String                  @id @default(uuid())
+  projectId                 String                  @unique
+  overallCompletionPercentage Int                   @default(0) // 0-100
+  currentPhase              ProjectPhase
+  status                    ProjectCompletionStatus @default(ON_TRACK)
+  riskFactors               String[]                @default([]) // e.g., ["Behind schedule", "Budget exceeded"]
+  estimatedCompletionDate   DateTime?
+  actualCompletionDate      DateTime?
+  healthScore               Int                     @default(5) // 1-10
+  lastAssessedAt            DateTime                @default(now())
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  // Relationships
+  project                   Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectStack {
+  id                String   @id @default(uuid())
+  projectId         String   @unique
+  frontend          Json?    // { name: "Next.js", version: "15.0.0", notes: "..." }
+  backend           Json?    // { name: "NestJS", version: "11.0.0", notes: "..." }
+  database          Json?    // { name: "PostgreSQL", version: "14.0", notes: "..." }
+  hosting           Json?    // { name: "Vercel", version: "latest", notes: "..." }
+  devops            Json?    // { name: "Docker", version: "latest", notes: "..." }
+  versionControl    Json?    // { name: "Git", version: "latest", notes: "..." }
+  cicd              Json?    // { name: "GitHub Actions", version: "latest", notes: "..." }
+  monitoring        Json?    // { name: "Sentry", version: "latest", notes: "..." }
+  lastUpdatedBy     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relationships
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model DomainManagement {
+  id                String    @id @default(uuid())
+  projectId         String
+  domainName        String
+  registrar         String?   // GoDaddy, Namecheap, etc.
+  expirationDate    DateTime?
+  sslCertProvider   String?   // Let's Encrypt, Digicert, etc.
+  sslExpirationDate DateTime?
+  autoRenew         Boolean   @default(true)
+  renewalAlertSentAt DateTime?
+  status            String    @default("ACTIVE") // ACTIVE, EXPIRING_SOON, EXPIRED
+  cost              Decimal?  @db.Decimal(10, 2)
+  nextRenewalDate   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([expirationDate])
+  @@index([sslExpirationDate])
+}
+
+model ProjectSubscription {
+  id                String    @id @default(uuid())
+  projectId         String
+  serviceName       String    // AWS, DataDog, Sendgrid, etc.
+  monthlyCost       Decimal   @db.Decimal(10, 2)
+  billingFrequency  String    @default("MONTHLY") // MONTHLY, ANNUAL, ONE_TIME
+  renewalDate       DateTime?
+  autoRenew         Boolean   @default(true)
+  alertSentAt       DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([renewalDate])
+  @@index([projectId])
+}
+
+model AlertTrigger {
+  id                String         @id @default(uuid())
+  type              AlertType
+  daysBeforeExpiry  Int            // 30 for domain, 7 for subscription, etc.
+  channels          AlertChannel[] @default([IN_APP, EMAIL])
+  recipients        String[]       // User IDs or emails
+  enabled           Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }

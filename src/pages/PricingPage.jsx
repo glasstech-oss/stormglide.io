@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Factory, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
-import { Helmet } from 'react-helmet-async'
+import { getProductPath } from '../data/products'
 
 const PLANS = [
   {
@@ -203,17 +203,6 @@ function FAQItem({ faq, index }) {
 export default function PricingPage() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Pricing — Stormglide Technologies</title>
-        <meta name="description" content="Simple, transparent pricing for custom software development in Africa. Deploy a product, build something custom, or go enterprise." />
-        <meta property="og:title" content="Pricing — Stormglide Technologies" />
-        <meta property="og:description" content="Fixed price, no surprises. Custom software development in Africa. Scope delivered in 48 hours." />
-        <meta property="og:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <meta property="og:url" content="https://stormglide.vercel.app/pricing" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://stormglide.vercel.app/og-image.svg" />
-        <link rel="canonical" href="https://stormglide.vercel.app/pricing" />
-      </Helmet>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '5rem 2rem 4rem' }}>
@@ -368,7 +357,7 @@ export default function PricingPage() {
               {PRODUCTS_BRIEF.map(p => {
                 const Icon = p.icon
                 return (
-                  <Link key={p.slug} to={`/products/${p.slug}`} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.75rem 1.125rem', background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius)', textDecoration: 'none', transition: 'all 0.2s', flex: '1 1 160px' }}
+                  <Link key={p.slug} to={getProductPath(p.slug)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.75rem 1.125rem', background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius)', textDecoration: 'none', transition: 'all 0.2s', flex: '1 1 160px' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = p.color + '50'; e.currentTarget.style.boxShadow = `0 4px 16px ${p.color}14` }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.boxShadow = 'none' }}
                   >

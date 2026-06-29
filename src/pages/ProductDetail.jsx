@@ -3,7 +3,7 @@ import { ArrowRight, ArrowLeft, CheckCircle2, Users, Heart, Package, Factory, La
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { useState } from 'react'
 import PageLayout from '../components/layout/PageLayout'
-import { products } from '../data/products'
+import { getProductPath, products } from '../data/products'
 import { useAdmin } from '../context/AdminContext'
 import NexusHRMDemo from '../components/demos/NexusHRMDemo'
 import SANODemo from '../components/demos/SANODemo'
@@ -134,7 +134,7 @@ export default function ProductDetail() {
 
             {/* Tech stack */}
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: '3rem', padding: '1.75rem', background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)' }}>
-              <h3 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontSize: '0.68rem' }}>Built with</h3>
+              <h3 style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontSize: '0.68rem' }}>Built with</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {product.tech.map(t => (
                   <span key={t} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', padding: '0.35rem 0.75rem', borderRadius: '8px', background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)', color: 'var(--color-text-primary)', fontWeight: 500 }}>{t}</span>
@@ -180,7 +180,7 @@ export default function ProductDetail() {
                 {products.filter(p => p.id !== product.id).slice(0, 3).map(p => {
                   const OtherIcon = ICONS[p.icon]
                   return (
-                    <Link key={p.id} to={`/products/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.15s' }}
+                    <Link key={p.id} to={getProductPath(p.id)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-alt)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
@@ -208,4 +208,3 @@ export default function ProductDetail() {
     </PageLayout>
   )
 }
-

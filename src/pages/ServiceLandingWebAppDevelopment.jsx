@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, Code, Users, TrendingUp, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,27 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function ServiceLandingWebAppDevelopment() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>Custom Web App Development Ghana | StormGlide</title>
-        <meta name="description" content="Custom web applications & business software for Ghana. HR systems, inventory, logistics, CRM. Affordable, scalable solutions. Free consultation." />
-        <meta name="keywords" content="web app development Ghana, custom software Ghana, business software, SaaS development, inventory management Ghana" />
-        <meta property="og:title" content="Custom Web App Development in Ghana" />
-        <meta property="og:description" content="Build scalable business software that grows with your company." />
-        <meta property="og:url" content="https://stormglide.vercel.app/services/web-app-development-ghana" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://stormglide.vercel.app/services/web-app-development-ghana" />
-
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Service",
-            "name": "Web App Development",
-            "description": "Custom web applications for Ghanaian businesses",
-            "areaServed": "GH",
-            "serviceType": "Software Development"
-          })}
-        </script>
-      </Helmet>
 
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>

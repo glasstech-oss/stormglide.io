@@ -90,3 +90,13 @@ export const products = [
     color: '#E8EDF5',
   },
 ]
+
+const productLandingPaths = {
+  'nexus-hrm': '/nexus-hrm',
+  sano: '/sano-health',
+  cargoscan: '/cargoscan',
+}
+
+export function getProductPath(productId) {
+  return productLandingPaths[productId] || `/products/${productId}`
+}

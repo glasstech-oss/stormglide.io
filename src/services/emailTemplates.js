@@ -218,9 +218,9 @@ export const getWelcomeEmailTemplate = (clientData, projectData) => {
                 📍 Accra, Ghana | 🌐 stormglide.io
               </p>
               <div class="social-links">
-                <a href="https://linkedin.com/company/stormglide" class="social-link" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">LinkedIn</a>
+                <a href="https://www.linkedin.com/company/stormglide-io/" class="social-link" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">LinkedIn</a>
                 •
-                <a href="https://twitter.com/stormglide" class="social-link" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">Twitter</a>
+                <a href="https://www.tiktok.com/@stormglide.io" class="social-link" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">TikTok</a>
               </div>
               <p style="margin: 15px 0 0 0; font-size: 11px; color: #94a3b8;">
                 This is an automated message. Please don't reply to this email.

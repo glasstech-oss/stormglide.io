@@ -13,6 +13,12 @@ import { PortalModule } from './portal/portal.module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { ProjectsModule } from './projects/projects.module';
+import { DomainsModule } from './domains/domains.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { AlertsModule } from './alerts/alerts.module';
+import { MilestonesModule } from './milestones/milestones.module';
+import { TeamModule } from './team/team.module';
 
 @Module({
     imports: [
@@ -30,6 +36,12 @@ import { SchedulerModule } from './scheduler/scheduler.module';
         PortalModule,
         AuditModule,
         SchedulerModule,
+        ProjectsModule,
+        DomainsModule,
+        SubscriptionsModule,
+        AlertsModule,
+        MilestonesModule,
+        TeamModule,
     ],
 })
 export class AppModule { }

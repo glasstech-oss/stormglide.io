@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Helmet } from 'react-helmet-async'
 import { ArrowRight, CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
@@ -8,14 +7,6 @@ import PageLayout from '../components/layout/PageLayout'
 export default function SANOLanding() {
   return (
     <PageLayout>
-      <Helmet>
-        <title>SANO Health: Healthcare & Skincare Management Platform</title>
-        <meta name="description" content="SANO Health is a production-grade platform for dermatology clinics and skincare providers across Africa. Patient management, appointment scheduling, treatment tracking, and outcome analytics. Live since 2023." />
-        <meta name="keywords" content="healthcare software, skincare management, patient management, dermatology software, clinic management, healthcare platform" />
-        <meta property="og:title" content="SANO Health - Healthcare Platform" />
-        <meta property="og:description" content="Modern healthcare and skincare management for African clinics" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
