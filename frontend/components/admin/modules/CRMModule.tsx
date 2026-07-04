@@ -8,7 +8,8 @@ import {
     CheckSquare, FileText, ArrowRight, ArrowLeft, Check,
     ExternalLink, MoreVertical
 } from "lucide-react";
-import { CrmAPI } from "@/lib/api";
+import { CrmAPI, ProjectsAPI } from "@/lib/api";
+import { formatDate } from "@/lib/firestore";
 
 type Phase = "DISCOVERY" | "UI_UX_DESIGN" | "BACKEND_ARCHITECTURE" | "STAGING" | "PRODUCTION" | "COMPLETED";
 
@@ -33,14 +34,6 @@ const PHASE_CONFIG: Record<Phase, { label: string; color: string; bg: string }> 
     PRODUCTION: { label: "Production", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
     COMPLETED: { label: "Completed", color: "text-gray-400", bg: "bg-gray-500/10 border-gray-500/20" },
 };
-
-const INITIAL_CLIENTS: Client[] = [
-    { id: "c1", company: "Apex Logistics Ltd.", contact: "David Mensah", email: "david@apexlogistics.gh", phone: "+233 24 123 4567", project: "Apex Enterprise Core Architecture", phase: "BACKEND_ARCHITECTURE", startDate: "Jan 10, 2026", budget: "GHS 120,000", country: "Ghana" },
-    { id: "c2", company: "Nexus-MFG", contact: "James Owusu", email: "james@nexusmfg.com", phone: "+233 50 987 6543", project: "Nexus Manufacturing Portal", phase: "STAGING", startDate: "Feb 20, 2026", budget: "GHS 85,000", country: "Ghana" },
-    { id: "c3", company: "Coastal Pharma", contact: "Abena Asante", email: "abena@coastalpharma.gh", phone: "+233 27 555 0192", project: "Coastal Distribution System", phase: "DISCOVERY", startDate: "Jun 01, 2026", budget: "GHS 65,000", country: "Ghana" },
-    { id: "c4", company: "BioLink Technologies", contact: "Kwame Osei", email: "kwame@biolink.io", phone: "+233 20 444 8812", project: "BioLink Patient Connect", phase: "COMPLETED", startDate: "Oct 05, 2025", budget: "GHS 140,000", country: "Ghana" },
-    { id: "c5", company: "StarTech Holdings", contact: "Ama Darko", email: "ama@startechgh.com", phone: "+233 54 321 7890", project: "StarTech Operations Suite", phase: "UI_UX_DESIGN", startDate: "Jun 20, 2026", budget: "GHS 55,000", country: "Ghana" },
-];
 
 // ─── Onboarding Form ───────────────────────────────────────────────
 interface FormData {
@@ -129,10 +122,12 @@ function Field({ label, required, children }: { label: string; required?: boolea
 const inputCls = "w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-cyan-500/70 focus:ring-1 focus:ring-cyan-500/20 transition-all";
 const textareaCls = `${inputCls} resize-none min-h-[100px]`;
 
-function OnboardingForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: FormData) => void }) {
+function OnboardingForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: FormData) => Promise<void> }) {
     const [step, setStep] = useState(1);
     const [form, setForm] = useState<FormData>(BLANK_FORM);
     const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [submissionError, setSubmissionError] = useState("");
 
     const set = (key: keyof FormData, val: string | string[]) => setForm(prev => ({ ...prev, [key]: val }));
     const toggleService = (s: string) => {
@@ -141,11 +136,18 @@ function OnboardingForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
             : [...form.services, s]);
     };
 
-    const handleFinalSubmit = () => {
-        setSubmitted(true);
-        setTimeout(() => {
-            onSubmit(form);
-        }, 1800);
+    const handleFinalSubmit = async () => {
+        setSubmitting(true);
+        setSubmissionError("");
+        try {
+            await onSubmit(form);
+            setSubmitted(true);
+            setTimeout(onClose, 1200);
+        } catch {
+            setSubmissionError("The client could not be created. Check the details and try again.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     if (submitted) {
@@ -385,46 +387,46 @@ function OnboardingForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                 ) : (
                     <button
                         onClick={handleFinalSubmit}
-                        disabled={!form.companyName || !form.contactName || !form.projectName || !form.budgetRange}
+                        disabled={submitting || !form.companyName || !form.contactName || !form.projectName || !form.budgetRange}
                         className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 text-[#04181f] text-sm font-bold hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(52,211,153,0.2)] disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        <Check size={15} /> Submit & Create Profile
+                        <Check size={15} /> {submitting ? "Creating..." : "Submit & Create Profile"}
                     </button>
                 )}
             </div>
+            {submissionError && <div className="px-8 pb-5 text-sm text-red-300">{submissionError}</div>}
         </div>
     );
 }
 
 // ─── CRM Main ─────────────────────────────────────────────────────
 export default function CRMModule() {
-    const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+    const [clients, setClients] = useState<Client[]>([]);
     const [search, setSearch] = useState("");
     const [phaseFilter, setPhaseFilter] = useState<Phase | "ALL">("ALL");
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [selected, setSelected] = useState<Client | null>(null);
     const [portalSending, setPortalSending] = useState(false);
     const [portalSent, setPortalSent] = useState(false);
+    const [crmError, setCrmError] = useState("");
 
     useEffect(() => {
         CrmAPI.getClients().then((apiClients: any[]) => {
-            if (!apiClients || apiClients.length === 0) return;
+            if (!apiClients) return;
             const mapped: Client[] = apiClients.map((c: any) => ({
                 id: c.id,
                 company: c.companyName,
                 contact: c.contactName,
-                email: c.user?.email || "",
+                email: c.email || c.user?.email || "",
                 phone: c.whatsappNumber || "",
                 project: c.projects?.[0]?.projectName || "No project yet",
                 phase: (c.projects?.[0]?.currentPhase || "DISCOVERY") as Phase,
-                startDate: c.projects?.[0]?.startDate
-                    ? new Date(c.projects[0].startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                    : "TBD",
+                startDate: formatDate(c.projects?.[0]?.startDate, "TBD"),
                 budget: "—",
                 country: c.region || "Ghana",
             }));
             setClients(mapped);
-        }).catch(() => {}); // silent fallback to mock data
+        }).catch(() => setCrmError("Clients could not be loaded."));
     }, []);
 
     const filtered = clients.filter(c => {
@@ -433,9 +435,23 @@ export default function CRMModule() {
         return matchPhase && matchSearch;
     });
 
-    const handleNewClient = (data: FormData) => {
+    const handleNewClient = async (data: FormData) => {
+        const created = await CrmAPI.createClient({
+            companyName: data.companyName,
+            contactName: data.contactName,
+            email: data.email,
+            whatsappNumber: data.phone,
+            region: data.country,
+            industry: data.projectType,
+        });
+        await ProjectsAPI.create({
+            clientId: created.id,
+            projectName: data.projectName,
+            description: [data.description, data.goals, data.technicalRequirements].filter(Boolean).join("\n\n"),
+            estimatedEnd: data.deadline || undefined,
+        });
         const newClient: Client = {
-            id: `c${clients.length + 1}`,
+            id: created.id,
             company: data.companyName,
             contact: data.contactName,
             email: data.email,
@@ -447,11 +463,11 @@ export default function CRMModule() {
             country: data.country,
         };
         setClients(prev => [newClient, ...prev]);
-        setShowOnboarding(false);
     };
 
     return (
         <div className="relative space-y-6">
+            {crmError && <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{crmError}</div>}
             {/* Controls */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex gap-3 flex-wrap">

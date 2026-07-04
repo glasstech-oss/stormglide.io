@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Users, Heart, Package, Factory, Layers, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Users, Heart, Package, Factory, Layers, CheckCircle2, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { getProductPath, products } from '../data/products'
 
-const ICONS = { Users, Heart, Package, Factory, Layers }
+const ICONS = { Users, Heart, Package, Factory, Layers, Stethoscope }
 
 export default function ProductsPage() {
   return (

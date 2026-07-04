@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, lazy, Suspense } from 'react'
 import { ThemeProvider } from './context/ThemeContext'
 import { AdminProvider } from './context/AdminContext'
@@ -14,6 +14,7 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
 const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
 const SANOLanding   = lazy(() => import('./pages/ProductLandingSANO'))
+const NexusDentalLanding = lazy(() => import('./pages/ProductLandingNexusDental'))
 const ServiceLandingSoftwareDevelopment = lazy(() => import('./pages/ServiceLandingSoftwareDevelopment'))
 const ServiceLandingSaasDevelopment = lazy(() => import('./pages/ServiceLandingSaasDevelopment'))
 const ServiceLandingWebsiteDevelopment = lazy(() => import('./pages/ServiceLandingWebsiteDevelopment'))
@@ -78,18 +79,21 @@ function ScrollProgress() {
 function AnimatedRoutes() {
   const location = useLocation()
   return (
-    <Suspense key={location.pathname} fallback={<PageLoader />}>
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-      >
+    <Suspense fallback={<PageLoader />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.26, ease: [0.32, 0.72, 0, 1] }}
+        >
         <Routes location={location}>
           <Route path="/"               element={<Home />} />
           <Route path="/nexus-hrm"      element={<NexusHRMLanding />} />
           <Route path="/cargoscan"      element={<CargoScanLanding />} />
           <Route path="/sano-health"    element={<SANOLanding />} />
+          <Route path="/nexus-dental"   element={<NexusDentalLanding />} />
           <Route path="/services"       element={<ServicesPage />} />
           <Route path="/services/software-development"           element={<ServiceLandingSoftwareDevelopment />} />
           <Route path="/services/saas-development"               element={<ServiceLandingSaasDevelopment />} />
@@ -107,6 +111,7 @@ function AnimatedRoutes() {
           <Route path="/products/nexus-hrm" element={<Navigate to="/nexus-hrm" replace />} />
           <Route path="/products/cargoscan" element={<Navigate to="/cargoscan" replace />} />
           <Route path="/products/sano" element={<Navigate to="/sano-health" replace />} />
+          <Route path="/products/nexus-dental" element={<Navigate to="/nexus-dental" replace />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/about"          element={<AboutPage />} />
           <Route path="/contact"        element={<ContactPage />} />
@@ -120,7 +125,8 @@ function AnimatedRoutes() {
           <Route path="/client/support-tickets" element={<ClientSupportTickets />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </motion.div>
+        </motion.div>
+      </AnimatePresence>
       <RouteSEO />
     </Suspense>
   )

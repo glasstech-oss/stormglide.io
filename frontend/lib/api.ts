@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { auth } from './firebase';
+import { PUBLIC_SITE_URL } from './navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
     'https://us-central1-stormglideio.cloudfunctions.net/api';
@@ -16,6 +17,7 @@ export const apiClient: AxiosInstance = axios.create({
 async function getToken(): Promise<string | null> {
     if (typeof window === 'undefined' || !auth) return null;
     try {
+        await auth.authStateReady();
         const user = auth.currentUser;
         if (user) return await user.getIdToken();
     } catch { /* fall through */ }
@@ -76,7 +78,7 @@ export const AuthAPI = {
     logout: async () => {
         if (typeof window !== 'undefined') {
             try { if (auth) await auth.signOut(); } catch { /* ignore */ }
-            window.location.href = '/';
+            window.location.href = PUBLIC_SITE_URL;
         }
     },
 };
@@ -123,7 +125,7 @@ export const CrmAPI = {
         const { data } = await apiClient.get('/v1/crm/stats');
         return data;
     },
-    createClient: async (body: { userId: string; companyName: string; contactName: string; whatsappNumber?: string; region?: string }) => {
+    createClient: async (body: { userId?: string; companyName: string; contactName: string; email?: string; whatsappNumber?: string; region?: string; industry?: string }) => {
         const { data } = await apiClient.post('/v1/crm/client', body);
         return data;
     },
@@ -154,8 +156,101 @@ export const CrmAPI = {
 };
 
 // ==========================================
+// PROJECT 360 MODULE
+// ==========================================
+export const ProjectsAPI = {
+    list: async (params?: { clientId?: string; phase?: string; status?: string }) => {
+        const { data } = await apiClient.get('/v1/projects', { params });
+        return data;
+    },
+    get: async (projectId: string) => {
+        const { data } = await apiClient.get(`/v1/projects/${projectId}`);
+        return data;
+    },
+    create: async (body: { clientId: string; projectName: string; description?: string; estimatedEnd?: string }) => {
+        const { data } = await apiClient.post('/v1/projects', body);
+        return data;
+    },
+    updateCompletion: async (projectId: string, body: Record<string, unknown>) => {
+        const { data } = await apiClient.put(`/v1/projects/${projectId}/completion`, body);
+        return data;
+    },
+    getCompletion: async (projectId: string) => {
+        const { data } = await apiClient.get(`/v1/projects/${projectId}/completion`);
+        return data;
+    },
+    getTechStack: async (projectId: string) => {
+        const { data } = await apiClient.get(`/v1/projects/${projectId}/tech-stack`);
+        return data;
+    },
+    updateTechStack: async (projectId: string, body: Record<string, unknown>) => {
+        const { data } = await apiClient.put(`/v1/projects/${projectId}/tech-stack`, body);
+        return data;
+    },
+    getDomains: async (projectId: string) => {
+        const { data } = await apiClient.get('/v1/domains', { params: { projectId } });
+        return data;
+    },
+    addDomain: async (body: Record<string, unknown>) => {
+        const { data } = await apiClient.post('/v1/domains', body);
+        return data;
+    },
+    renewDomain: async (domainId: string) => {
+        const { data } = await apiClient.put(`/v1/domains/${domainId}/renew`, {});
+        return data;
+    },
+    deleteDomain: async (domainId: string) => {
+        const { data } = await apiClient.delete(`/v1/domains/${domainId}`);
+        return data;
+    },
+    getSubscriptions: async (projectId: string) => {
+        const { data } = await apiClient.get('/v1/project-subscriptions', { params: { projectId } });
+        return data;
+    },
+    addSubscription: async (body: Record<string, unknown>) => {
+        const { data } = await apiClient.post('/v1/project-subscriptions', body);
+        return data;
+    },
+    deleteSubscription: async (subscriptionId: string) => {
+        const { data } = await apiClient.delete(`/v1/project-subscriptions/${subscriptionId}`);
+        return data;
+    },
+    getExpenses: async (projectId?: string) => {
+        const { data } = await apiClient.get('/v1/project-expenses', { params: projectId ? { projectId } : {} });
+        return data;
+    },
+    addExpense: async (body: Record<string, unknown>) => {
+        const { data } = await apiClient.post('/v1/project-expenses', body);
+        return data;
+    },
+    deleteExpense: async (expenseId: string) => {
+        const { data } = await apiClient.delete(`/v1/project-expenses/${expenseId}`);
+        return data;
+    },
+};
+
+// ==========================================
 // BILLING MODULE
 // ==========================================
+export interface InvoiceLineItem {
+    type: 'PRODUCT' | 'SERVICE';
+    name: string;
+    description?: string;
+    quantity: number;
+    unitPrice: number;
+}
+
+export interface InvoiceDraft {
+    items: InvoiceLineItem[];
+    currency: string;
+    projectId?: string;
+    dueDate: string;
+    taxPercent?: number;
+    discountPercent?: number;
+    notes?: string;
+    includeWarranty?: boolean;
+}
+
 export const BillingAPI = {
     getInvoices: async (status?: string, clientId?: string) => {
         const { data } = await apiClient.get('/v1/billing/invoices', { params: { ...(status && { status }), ...(clientId && { clientId }) } });
@@ -163,6 +258,10 @@ export const BillingAPI = {
     },
     getClientInvoices: async (clientId: string) => {
         const { data } = await apiClient.get(`/v1/billing/invoices/${clientId}`);
+        return data;
+    },
+    getInvoice: async (invoiceId: string) => {
+        const { data } = await apiClient.get(`/v1/billing/invoice/${invoiceId}`);
         return data;
     },
     getSubscriptions: async (clientId?: string) => {
@@ -173,12 +272,48 @@ export const BillingAPI = {
         const { data } = await apiClient.get('/v1/billing/stats');
         return data;
     },
-    generateInvoice: async (clientId: string, body: { amount: number; currency: string; projectId?: string; dueDate: Date }) => {
+    createInvoice: async (clientId: string, body: InvoiceDraft) => {
         const { data } = await apiClient.post(`/v1/billing/invoice/${clientId}`, body);
+        return data;
+    },
+    updateInvoice: async (invoiceId: string, body: InvoiceDraft) => {
+        const { data } = await apiClient.put(`/v1/billing/invoice/${invoiceId}`, body);
+        return data;
+    },
+    sendInvoice: async (invoiceId: string) => {
+        const { data } = await apiClient.post(`/v1/billing/invoice/${invoiceId}/send`);
         return data;
     },
     updateInvoiceStatus: async (invoiceId: string, status: string) => {
         const { data } = await apiClient.put(`/v1/billing/invoice/${invoiceId}/status`, { status });
+        return data;
+    },
+    // The PDF endpoint requires the admin's auth token, so it can't be a bare
+    // <a href> link — fetch it as a blob (token attached by the request
+    // interceptor) and trigger a save via a temporary object URL.
+    downloadInvoicePdf: async (invoiceId: string, filename: string) => {
+        const { data } = await apiClient.get(`/v1/billing/invoice/${invoiceId}/pdf`, { responseType: 'blob' });
+        const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${filename}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    },
+};
+
+// ==========================================
+// PUBLIC INVOICE (no auth — shareable pay link)
+// ==========================================
+export const PublicInvoiceAPI = {
+    get: async (invoiceId: string) => {
+        const { data } = await apiClient.get(`/v1/public/invoice/${invoiceId}`);
+        return data;
+    },
+    pay: async (invoiceId: string) => {
+        const { data } = await apiClient.post(`/v1/public/invoice/${invoiceId}/pay`);
         return data;
     },
 };

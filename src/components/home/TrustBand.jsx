@@ -1,4 +1,5 @@
 import { ArrowRight, Code2, Handshake, MapPin, Route } from 'lucide-react'
+import WordReveal from '../common/WordReveal'
 import { Link } from 'react-router-dom'
 
 const COMMITMENTS = [
@@ -13,7 +14,7 @@ export default function TrustBand() {
       <div className="sg-home-container sg-trust-layout">
         <div className="sg-trust-intro">
           <span className="sg-home-section-label">Trust through the work</span>
-          <h2>Built close to the problem.</h2>
+          <WordReveal text="Built close to the problem." />
           <p>Stormglide is based in Accra. We build for the infrastructure, payment methods and operational realities our customers use every day.</p>
           <div className="sg-trust-location"><MapPin size={16} /> Accra, Ghana</div>
           <Link to="/about" className="sg-home-text-link">

@@ -1,15 +1,16 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import Link from "next/link";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
     browserSessionPersistence,
     GoogleAuthProvider,
+    getRedirectResult,
     setPersistence,
     signInWithCustomToken,
     signInWithPopup,
+    signInWithRedirect,
     signOut,
     User,
 } from "firebase/auth";
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { AuthAPI } from "@/lib/api";
+import { PUBLIC_SITE_URL } from "@/lib/navigation";
 
 type LoginMethod = "google" | "key" | null;
 
@@ -66,6 +68,12 @@ function readError(error: unknown): string {
     if (candidate.code === "auth/unauthorized-domain") {
         return "This domain is not authorized for Google sign-in.";
     }
+    if (candidate.code === "auth/operation-not-allowed") {
+        return "Google sign-in is not enabled for this portal.";
+    }
+    if (candidate.code === "auth/network-request-failed") {
+        return "The identity service could not be reached. Check your connection and try again.";
+    }
     return candidate.response?.data?.message || candidate.message || "Sign-in could not be completed.";
 }
 
@@ -76,7 +84,7 @@ export default function AdminLoginPage() {
     const [error, setError] = useState("");
     const router = useRouter();
 
-    const establishSession = async (user: User) => {
+    const establishSession = useCallback(async (user: User) => {
         const idToken = await user.getIdToken(true);
         const response = await fetch("/api/auth/admin-session", {
             method: "POST",
@@ -89,7 +97,30 @@ export default function AdminLoginPage() {
 
         router.replace("/admin/dashboard");
         router.refresh();
-    };
+    }, [router]);
+
+    useEffect(() => {
+        if (!auth) return;
+        const firebaseAuth = auth;
+
+        let active = true;
+        setPersistence(firebaseAuth, browserSessionPersistence)
+            .then(() => getRedirectResult(firebaseAuth))
+            .then(async (result) => {
+                if (!active || !result) return;
+                setLoginMethod("google");
+                await AuthAPI.authorizeGoogleAdmin();
+                await establishSession(result.user);
+            })
+            .catch(async (redirectError) => {
+                if (!active) return;
+                if (firebaseAuth.currentUser) await signOut(firebaseAuth).catch(() => undefined);
+                setError(readError(redirectError));
+                setLoginMethod(null);
+            });
+
+        return () => { active = false; };
+    }, [establishSession]);
 
     const handleGoogleSignIn = async () => {
         setLoginMethod("google");
@@ -97,7 +128,6 @@ export default function AdminLoginPage() {
 
         try {
             if (!auth) throw new Error("Firebase authentication is not configured.");
-            await setPersistence(auth, browserSessionPersistence);
 
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({ prompt: "select_account" });
@@ -106,6 +136,19 @@ export default function AdminLoginPage() {
             await AuthAPI.authorizeGoogleAdmin();
             await establishSession(result.user);
         } catch (signInError) {
+            const code = (signInError as { code?: string }).code;
+            if (auth && code === "auth/popup-blocked") {
+                try {
+                    const provider = new GoogleAuthProvider();
+                    provider.setCustomParameters({ prompt: "select_account" });
+                    await signInWithRedirect(auth, provider);
+                    return;
+                } catch (redirectError) {
+                    setError(readError(redirectError));
+                    setLoginMethod(null);
+                    return;
+                }
+            }
             if (auth?.currentUser) await signOut(auth).catch(() => undefined);
             setError(readError(signInError));
             setLoginMethod(null);
@@ -137,13 +180,13 @@ export default function AdminLoginPage() {
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(22,136,255,0.14),transparent_30%),radial-gradient(circle_at_82%_85%,rgba(34,211,238,0.07),transparent_28%)]" />
             <div className="pointer-events-none absolute inset-0 opacity-[0.035] bg-[linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] bg-[size:48px_48px]" />
 
-            <Link
-                href="/"
+            <a
+                href={PUBLIC_SITE_URL}
                 className="absolute left-5 top-5 z-20 inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-4 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white md:left-8 md:top-8"
             >
                 <ArrowLeft size={17} />
                 Public site
-            </Link>
+            </a>
 
             <main className="relative mx-auto grid min-h-full w-full max-w-6xl items-center gap-12 px-5 py-28 lg:grid-cols-[1fr_440px] lg:px-10 lg:py-16">
                 <motion.section

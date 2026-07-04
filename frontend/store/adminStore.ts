@@ -5,8 +5,6 @@ interface AdminState {
     toggleSidebar: () => void;
     activeTab: string;
     setActiveTab: (tab: string) => void;
-    isCommandPaletteOpen: boolean;
-    setCommandPaletteOpen: (open: boolean) => void;
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
@@ -14,6 +12,4 @@ export const useAdminStore = create<AdminState>((set) => ({
     toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
     activeTab: 'dashboard',
     setActiveTab: (tab) => set({ activeTab: tab }),
-    isCommandPaletteOpen: false,
-    setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
 }));

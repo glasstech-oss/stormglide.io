@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Magnetic from '../common/Magnetic'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
@@ -45,9 +46,11 @@ export default function Navbar() {
           ))}
         </div>
 
-        <Link to="/contact" className="sg-nav-cta" data-cta="true">
-          Let's build <ArrowRight size={14} />
-        </Link>
+        <Magnetic strength={0.22}>
+          <Link to="/contact" className="sg-nav-cta" data-cta="true">
+            Let's build <ArrowRight size={14} />
+          </Link>
+        </Magnetic>
 
         <VariantSwitcher />
 

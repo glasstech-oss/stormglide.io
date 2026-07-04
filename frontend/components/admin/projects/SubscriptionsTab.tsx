@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ProjectsAPI } from "@/lib/api";
+import { formatDate, SerializedDate, toDate } from "@/lib/firestore";
 
 interface Subscription {
   id: string;
   serviceName: string;
   monthlyCost: number;
   billingFrequency: "MONTHLY" | "ANNUAL" | "ONE_TIME";
-  renewalDate?: string;
+  renewalDate?: SerializedDate;
   autoRenew: boolean;
   notes?: string;
 }
@@ -34,11 +36,7 @@ export function SubscriptionsTab({ projectId }: { projectId: string }) {
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/v1/project-subscriptions?projectId=${projectId}`,
-        { credentials: "include" }
-      );
-      const data = await response.json();
+      const data = await ProjectsAPI.getSubscriptions(projectId);
       setSubscriptions(Array.isArray(data) ? data : []);
 
       // Calculate total monthly cost
@@ -56,30 +54,15 @@ export function SubscriptionsTab({ projectId }: { projectId: string }) {
   const handleAddSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/v1/project-subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId,
-          ...formData,
-          monthlyCost: parseFloat(formData.monthlyCost),
-          renewalDate: formData.renewalDate ? new Date(formData.renewalDate) : undefined,
-        }),
-        credentials: "include",
+      await ProjectsAPI.addSubscription({
+        projectId,
+        ...formData,
+        monthlyCost: parseFloat(formData.monthlyCost),
+        renewalDate: formData.renewalDate || undefined,
       });
-
-      if (response.ok) {
-        setFormData({
-          serviceName: "",
-          monthlyCost: "",
-          billingFrequency: "MONTHLY",
-          renewalDate: "",
-          autoRenew: true,
-          notes: "",
-        });
-        setShowForm(false);
-        fetchSubscriptions();
-      }
+      setFormData({ serviceName: "", monthlyCost: "", billingFrequency: "MONTHLY", renewalDate: "", autoRenew: true, notes: "" });
+      setShowForm(false);
+      await fetchSubscriptions();
     } catch (error) {
       console.error("Failed to add subscription:", error);
     }
@@ -87,19 +70,17 @@ export function SubscriptionsTab({ projectId }: { projectId: string }) {
 
   const handleDelete = async (subscriptionId: string) => {
     try {
-      await fetch(`/api/v1/project-subscriptions/${subscriptionId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      fetchSubscriptions();
+      await ProjectsAPI.deleteSubscription(subscriptionId);
+      await fetchSubscriptions();
     } catch (error) {
       console.error("Failed to delete subscription:", error);
     }
   };
 
-  const getDaysUntilRenewal = (date: string | undefined) => {
+  const getDaysUntilRenewal = (value: SerializedDate) => {
+    const date = toDate(value);
     if (!date) return null;
-    const days = Math.floor((new Date(date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const days = Math.floor((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return days;
   };
 
@@ -259,7 +240,7 @@ export function SubscriptionsTab({ projectId }: { projectId: string }) {
                           )}
                         </span>
                         <span className="text-sm text-gray-300">
-                          {new Date(sub.renewalDate).toLocaleDateString()}
+                          {formatDate(sub.renewalDate)}
                           {renewalDays !== null && ` (${renewalDays} days)`}
                         </span>
                       </div>

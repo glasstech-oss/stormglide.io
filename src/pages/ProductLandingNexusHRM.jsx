@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle, BarChart3, Users, Zap, Globe } from 'lucide-re
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
+import CountUp from '../components/common/CountUp'
 
 export default function NexusHRMLanding() {
   return (
@@ -71,7 +72,7 @@ export default function NexusHRMLanding() {
               { number: '8 countries', label: 'Operating across Africa' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.5rem' }}>{item.number}</div>
+                <div style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.5rem' }}><CountUp value={item.number} /></div>
                 <div style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>{item.label}</div>
               </motion.div>
             ))}

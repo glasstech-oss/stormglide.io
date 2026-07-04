@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Edit2, Save, X } from "lucide-react";
+import { ProjectsAPI } from "@/lib/api";
 
 interface TechStackItem {
   name?: string;
@@ -44,11 +45,7 @@ export function TechStackTab({ projectId }: { projectId: string }) {
   const fetchStack = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/v1/projects/${projectId}/tech-stack`,
-        { credentials: "include" }
-      );
-      const data = await response.json();
+      const data = await ProjectsAPI.getTechStack(projectId);
       setStack(data || {});
     } catch (error) {
       console.error("Failed to fetch tech stack:", error);
@@ -64,19 +61,9 @@ export function TechStackTab({ projectId }: { projectId: string }) {
 
   const handleSave = async (key: string) => {
     try {
-      const response = await fetch(`/api/v1/projects/${projectId}/tech-stack`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          [key]: formData,
-        }),
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        setStack((prev) => ({ ...prev, [key]: formData }));
-        setEditing(null);
-      }
+      await ProjectsAPI.updateTechStack(projectId, { [key]: formData });
+      setStack((prev) => ({ ...prev, [key]: formData }));
+      setEditing(null);
     } catch (error) {
       console.error("Failed to update tech stack:", error);
     }

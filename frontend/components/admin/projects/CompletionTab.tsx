@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { AlertCircle, TrendingUp, Calendar, Zap } from "lucide-react";
+import { ProjectsAPI } from "@/lib/api";
+import { formatDate, SerializedDate, toDate } from "@/lib/firestore";
 
 interface Completion {
   overallCompletionPercentage: number;
@@ -9,9 +11,9 @@ interface Completion {
   status: "ON_TRACK" | "AT_RISK" | "BLOCKED";
   riskFactors: string[];
   healthScore: number;
-  estimatedCompletionDate?: string;
-  actualCompletionDate?: string;
-  lastAssessedAt: string;
+  estimatedCompletionDate?: SerializedDate;
+  actualCompletionDate?: SerializedDate;
+  lastAssessedAt: SerializedDate;
 }
 
 export function CompletionTab({ projectId }: { projectId: string }) {
@@ -33,19 +35,14 @@ export function CompletionTab({ projectId }: { projectId: string }) {
   const fetchCompletion = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/projects/${projectId}/health`, {
-        credentials: "include",
-      });
-      const data = await response.json();
+      const data = await ProjectsAPI.getCompletion(projectId);
       setCompletion(data);
       setFormData({
         overallCompletionPercentage: data.overallCompletionPercentage,
         status: data.status,
         riskFactors: data.riskFactors?.join("\n") || "",
         healthScore: data.healthScore,
-        estimatedCompletionDate: data.estimatedCompletionDate
-          ? new Date(data.estimatedCompletionDate).toISOString().split("T")[0]
-          : "",
+        estimatedCompletionDate: toDate(data.estimatedCompletionDate)?.toISOString().split("T")[0] || "",
       });
     } catch (error) {
       console.error("Failed to fetch completion:", error);
@@ -56,26 +53,15 @@ export function CompletionTab({ projectId }: { projectId: string }) {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/v1/projects/${projectId}/health`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          overallCompletionPercentage: parseInt(formData.overallCompletionPercentage as any),
-          status: formData.status,
-          riskFactors: formData.riskFactors.split("\n").filter(f => f.trim()),
-          healthScore: parseInt(formData.healthScore as any),
-          estimatedCompletionDate: formData.estimatedCompletionDate
-            ? new Date(formData.estimatedCompletionDate)
-            : undefined,
-        }),
-        credentials: "include",
+      await ProjectsAPI.updateCompletion(projectId, {
+        overallCompletionPercentage: Number(formData.overallCompletionPercentage),
+        status: formData.status,
+        riskFactors: formData.riskFactors.split("\n").filter(f => f.trim()),
+        healthScore: Number(formData.healthScore),
+        estimatedCompletionDate: formData.estimatedCompletionDate || undefined,
       });
-
-      if (response.ok) {
-        const updated = await response.json();
-        setCompletion(updated);
-        setEditing(false);
-      }
+      setEditing(false);
+      await fetchCompletion();
     } catch (error) {
       console.error("Failed to update completion:", error);
     }
@@ -284,7 +270,7 @@ export function CompletionTab({ projectId }: { projectId: string }) {
             />
           ) : completion.estimatedCompletionDate ? (
             <div className="text-lg text-orange-400 font-mono">
-              {new Date(completion.estimatedCompletionDate).toLocaleDateString()}
+              {formatDate(completion.estimatedCompletionDate)}
             </div>
           ) : (
             <div className="text-gray-600">Not set</div>
@@ -299,7 +285,7 @@ export function CompletionTab({ projectId }: { projectId: string }) {
 
           {completion.actualCompletionDate ? (
             <div className="text-lg text-green-400 font-mono">
-              {new Date(completion.actualCompletionDate).toLocaleDateString()}
+              {formatDate(completion.actualCompletionDate)}
             </div>
           ) : (
             <div className="text-gray-600">Not completed yet</div>
@@ -335,7 +321,7 @@ export function CompletionTab({ projectId }: { projectId: string }) {
 
       {/* Last Assessed */}
       <div className="text-xs text-gray-500 text-right">
-        Last assessed: {new Date(completion.lastAssessedAt).toLocaleString()}
+        Last assessed: {toDate(completion.lastAssessedAt)?.toLocaleString() || "Not recorded"}
       </div>
     </div>
   );

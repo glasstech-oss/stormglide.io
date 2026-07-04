@@ -1,290 +1,136 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import SiteControl from "@/components/admin/SiteControl";
-import { AlertsWidget } from "@/components/admin/AlertsWidget";
-import {
-    TrendingUp,
-    Users,
-    Zap,
-    ShieldCheck,
-    ArrowUpRight,
-    ArrowDownRight,
-    Clock,
-    Activity,
-    Server,
-    LogOut
-} from "lucide-react";
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, Globe2, Package, Plus, Users } from "lucide-react";
+import { CrmAPI, ProjectsAPI } from "@/lib/api";
+import { formatDate, SerializedDate } from "@/lib/firestore";
 import { useAdminStore } from "@/store/adminStore";
 import CRMModule from "@/components/admin/modules/CRMModule";
-import KanbanModule from "@/components/admin/modules/KanbanModule";
 import BillingModule from "@/components/admin/modules/BillingModule";
-import AuditModule from "@/components/admin/modules/AuditModule";
-import InfrastructureModule from "@/components/admin/modules/InfrastructureModule";
-import SubscriptionsModule from "@/components/admin/modules/SubscriptionsModule";
-import AlertsModule from "@/components/admin/modules/AlertsModule";
-import ContractVaultModule from "@/components/admin/modules/ContractVaultModule";
-import ForecastModule from "@/components/admin/modules/ForecastModule";
-
-// Mock data for the MRR Chart
-const mrrData = [
-    { month: "Jan", mrr: 12500 },
-    { month: "Feb", mrr: 15800 },
-    { month: "Mar", mrr: 14200 },
-    { month: "Apr", mrr: 19500 },
-    { month: "May", mrr: 21000 },
-    { month: "Jun", mrr: 28400 },
-    { month: "Jul", mrr: 32000 },
-];
-
-const auditLogs = [
-    { id: 1, action: "Invoice INV-001 sent", entity: "Apex Logistics", time: "2 mins ago", status: "success" },
-    { id: 2, action: "Staging feedback received", entity: "Nexus-MFG", time: "15 mins ago", status: "info" },
-    { id: 3, action: "Security scan completed", entity: "System Core", time: "1 hour ago", status: "success" },
-    { id: 4, action: "API Key rotated", entity: "Cloud Infrastructure", time: "3 hours ago", status: "warning" },
-];
-
-const servers = [
-    { name: "Nexus-Sales Production", status: "Online", latency: "12ms", load: "14%" },
-    { name: "Stormglide API Gateway", status: "Online", latency: "8ms", load: "22%" },
-    { name: "PostgreSQL Master", status: "Online", latency: "2ms", load: "31%" },
-    { name: "HRM-Staging", status: "Maintenance", latency: "-", load: "-" },
-];
-
 import SettingsPage from "../settings/page";
 
-const TAB_META: Record<string, { title: string; description: string }> = {
-    dashboard: { title: "Admin Overview", description: "View and manage your business performance and logs." },
-    crm: { title: "Client Entities", description: "Manage your client roster, contacts, and onboard new projects." },
-    contracts: { title: "Contract Vault", description: "Store, manage, and track all client agreements and documents." },
-    kanban: { title: "Operations Board", description: "Track active tasks and project delivery across all clients." },
-    infra: { title: "Infrastructure Health", description: "Monitor domains, SSL, uptime, databases, and Firebase costs across all projects." },
-    alerts: { title: "Alert Center", description: "Priority inbox for domain expirations, SSL warnings, overdue invoices, and system events." },
-    billing: { title: "Billing Ledger", description: "Review invoices, payment status, and revenue records." },
-    subscriptions: { title: "Subscriptions & Costs", description: "Track all third-party services, renewal dates, and monthly costs per project." },
-    forecast: { title: "Financial Forecasting", description: "MRR projections, 60-day cash flow, and project profitability analysis." },
-    settings: { title: "Site Orchestration", description: "Update your website theme, branding, and core content." },
-    logs: { title: "Audit Protocol", description: "Full system event log — security, deployments, and changes." },
+const PAGE_META: Record<string, { title: string; description: string }> = {
+    dashboard: { title: "Overview", description: "A clear view of your clients and active project work." },
+    crm: { title: "Clients", description: "Client contacts and their connected projects." },
+    billing: { title: "Payments", description: "Client invoices and project expenses in one ledger." },
+    settings: { title: "Website settings", description: "Manage public website branding and content." },
 };
+
+interface ProjectSummary {
+    id: string;
+    projectName: string;
+    currentPhase?: string;
+    client?: { companyName?: string };
+    completion?: { overallCompletionPercentage?: number; status?: string };
+    _count?: { domains?: number; subscriptions?: number };
+    createdAt?: SerializedDate;
+}
 
 export default function DashboardPage() {
     const { activeTab } = useAdminStore();
-    const meta = TAB_META[activeTab] ?? { title: activeTab, description: "" };
-    const router = useRouter();
-
-    const handleLogout = async () => {
-        try {
-            if (auth) {
-                await signOut(auth);
-            }
-            await fetch("/api/auth/admin-logout", { method: "POST" });
-            router.replace("/admin/login");
-            router.refresh();
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
-    };
+    const page = PAGE_META[activeTab] || PAGE_META.dashboard;
 
     return (
-        <div className="space-y-8 pb-20">
-            {/* Welcome Section */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">{meta.title}</h1>
-                    <p className="text-gray-400">{meta.description}</p>
-                </div>
-                <div className="flex gap-3 items-center">
-                    <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-sm">
-                        <Clock size={16} className="text-cyan-400" />
-                        <span className="font-mono">{new Date().toLocaleTimeString()}</span>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-all hover:scale-105 active:scale-95"
-                        title="Sign out from admin portal"
-                    >
-                        <LogOut size={16} />
-                        <span className="font-medium">Logout</span>
-                    </button>
-                </div>
+        <div className="mx-auto max-w-7xl space-y-7 pb-12">
+            <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{page.title}</h1>
+                <p className="mt-2 text-sm text-slate-400">{page.description}</p>
             </div>
 
-            {activeTab === 'dashboard' && (
-                <>
-                    {/* KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[
-                            { label: "Monthly Revenue", value: 32000, color: "cyan", icon: TrendingUp, trend: "+12.5%" },
-                            { label: "Active Clients", value: 24, color: "purple", icon: Users, trend: "+2" },
-                            { label: "Project Progress", value: "98.2%", color: "emerald", icon: Zap, trend: "Good" },
-                            { label: "Security", value: "Safe", color: "blue", icon: ShieldCheck, trend: "Active" },
-                        ].map((kpi, i) => (
-                            <div key={i} className="p-6 rounded-3xl bg-[#111827] border border-white/5 relative overflow-hidden group">
-                                <div className={`absolute top-0 right-0 w-24 h-24 bg-${kpi.color}-500/5 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-${kpi.color}-500/10 transition-colors`}></div>
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={`p-3 rounded-xl bg-${kpi.color}-500/10 text-${kpi.color}-400`}>
-                                            <kpi.icon size={20} />
-                                        </div>
-                                        <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">
-                                            {kpi.trend.startsWith('+') ? <ArrowUpRight size={10} /> : <Activity size={10} />}
-                                            {kpi.trend}
-                                        </div>
-                                    </div>
-                                    <div className="text-gray-400 text-sm font-medium mb-1">{kpi.label}</div>
-                                    <div className="text-2xl font-bold text-white">
-                                        {typeof kpi.value === 'number' ? formatCurrency(kpi.value, 'USD') : kpi.value}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+            {activeTab === "crm" && <CRMModule />}
+            {activeTab === "billing" && <BillingModule />}
+            {activeTab === "settings" && <SettingsPage />}
+            {!PAGE_META[activeTab] || activeTab === "dashboard" ? <Overview /> : null}
+        </div>
+    );
+}
+
+function Overview() {
+    const { setActiveTab } = useAdminStore();
+    const [projects, setProjects] = useState<ProjectSummary[]>([]);
+    const [clientCount, setClientCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        Promise.all([ProjectsAPI.list(), CrmAPI.getClients()])
+            .then(([projectData, clientData]) => {
+                setProjects(Array.isArray(projectData) ? projectData : []);
+                const clients = Array.isArray(clientData) ? clientData : clientData?.clients || [];
+                setClientCount(clients.length);
+            })
+            .catch((requestError) => {
+                console.error("Failed to load admin overview:", requestError);
+                setError("The overview could not be loaded. Refresh the page to try again.");
+            })
+            .finally(() => setLoading(false));
+    }, []);
+
+    const domainCount = projects.reduce((total, project) => total + Number(project._count?.domains || 0), 0);
+    const serviceCount = projects.reduce((total, project) => total + Number(project._count?.subscriptions || 0), 0);
+
+    if (loading) return <div className="h-48 animate-pulse rounded-xl border border-white/10 bg-white/[0.03]" />;
+
+    return (
+        <div className="space-y-7">
+            {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {[
+                    { label: "Clients", value: clientCount, icon: Users },
+                    { label: "Projects", value: projects.length, icon: BriefcaseBusiness },
+                    { label: "Domains", value: domainCount, icon: Globe2 },
+                    { label: "Active services", value: serviceCount, icon: Package },
+                ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-white/10 bg-[#101722] p-4 md:p-5">
+                        <item.icon size={18} className="text-blue-400" />
+                        <div className="mt-4 text-2xl font-semibold text-white">{item.value}</div>
+                        <div className="mt-1 text-sm text-slate-500">{item.label}</div>
                     </div>
+                ))}
+            </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* MRR Chart */}
-                        <div className="lg:col-span-2 p-8 rounded-3xl bg-[#111827] border border-white/5">
-                            <div className="flex justify-between items-start mb-8">
-                                <div>
-                                    <h3 className="text-lg font-bold mb-1">Revenue Overview</h3>
-                                    <p className="text-sm text-gray-400">Monthly revenue growth</p>
-                                </div>
-                                <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-400 focus:outline-none focus:border-cyan-500/50">
-                                    <option>Last 7 Months</option>
-                                    <option>This Year</option>
-                                </select>
-                            </div>
-
-                            <div className="h-[300px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={mrrData}>
-                                        <defs>
-                                            <linearGradient id="colorMrr" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#22D3EE" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#22D3EE" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                        <XAxis
-                                            dataKey="month"
-                                            stroke="#6b7280"
-                                            fontSize={12}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            dy={10}
-                                        />
-                                        <YAxis
-                                            stroke="#6b7280"
-                                            fontSize={12}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(value) => `$${value / 1000}k`}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                            itemStyle={{ color: '#22D3EE' }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="mrr"
-                                            stroke="#22D3EE"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorMrr)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+                <section className="overflow-hidden rounded-xl border border-white/10 bg-[#101722]">
+                    <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                        <div>
+                            <h2 className="font-semibold text-white">Recent projects</h2>
+                            <p className="mt-1 text-xs text-slate-500">Open a project to manage its domains, services and payments.</p>
                         </div>
-
-                        {/* Audit Logs */}
-                        <div className="p-8 rounded-3xl bg-[#111827] border border-white/5">
-                            <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                <ShieldCheck size={20} className="text-cyan-400" />
-                                Audit Logs
-                            </h3>
-                            <div className="space-y-6">
-                                {auditLogs.map((log) => (
-                                    <div key={log.id} className="flex gap-4 group">
-                                        <div className="mt-1">
-                                            <div className={`w-2 h-2 rounded-full ring-4 ring-${log.status === 'success' ? 'emerald' : log.status === 'warning' ? 'amber' : 'blue'}-500/20 bg-${log.status === 'success' ? 'emerald' : log.status === 'warning' ? 'amber' : 'blue'}-500`} />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors">{log.action}</div>
-                                            <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
-                                                <span>{log.entity}</span>
-                                                <span className="w-1 h-1 bg-gray-700 rounded-full" />
-                                                <span>{log.time}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-gray-400 hover:bg-white/10 hover:text-white transition-all mt-4">
-                                    View All Logs
-                                </button>
-                            </div>
-                        </div>
+                        <Link href="/admin/projects" className="flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300">View all <ArrowRight size={15} /></Link>
                     </div>
-
-                    {/* Alerts Widget */}
-                    <AlertsWidget />
-
-                    {/* System Pulse / Server Status */}
-                    <div className="p-8 rounded-3xl bg-[#111827] border border-white/5">
-                        <h3 className="text-lg font-bold mb-8 flex items-center gap-2">
-                            <Server size={20} className="text-purple-400" />
-                            System Pulse
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {servers.map((server, i) => (
-                                <div key={i} className="p-5 rounded-2xl bg-black/20 border border-white/5 flex flex-col gap-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="text-sm font-bold text-gray-200 truncate w-3/4">{server.name}</div>
-                                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${server.status === 'Online' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-                                            }`}>
-                                            <Activity size={10} />
-                                            {server.status}
-                                        </div>
+                    {projects.length === 0 ? (
+                        <div className="px-5 py-12 text-center text-sm text-slate-500">No projects yet.</div>
+                    ) : (
+                        <div className="divide-y divide-white/10">
+                            {projects.slice(0, 6).map((project) => (
+                                <Link key={project.id} href={`/admin/projects/${project.id}`} className="grid gap-2 px-5 py-4 transition hover:bg-white/[0.03] sm:grid-cols-[minmax(0,1fr)_150px_90px] sm:items-center">
+                                    <div className="min-w-0">
+                                        <div className="truncate text-sm font-medium text-white">{project.projectName}</div>
+                                        <div className="mt-1 text-xs text-slate-500">{project.client?.companyName || "Unassigned client"}</div>
                                     </div>
-                                    <div className="flex justify-between items-end border-t border-white/5 pt-4">
-                                        <div>
-                                            <div className="text-[10px] text-gray-500 uppercase tracking-tighter">Latency</div>
-                                            <div className="text-sm font-mono text-cyan-400">{server.latency}</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-[10px] text-gray-500 uppercase tracking-tighter">Load</div>
-                                            <div className="text-sm font-mono text-purple-400">{server.load}</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    <div className="text-xs text-slate-400">{(project.currentPhase || "DISCOVERY").replace(/_/g, " ")}</div>
+                                    <div className="text-xs text-slate-500 sm:text-right">{formatDate(project.createdAt, "New")}</div>
+                                </Link>
                             ))}
                         </div>
-                    </div>
-                </>
-            )}
+                    )}
+                </section>
 
-            {activeTab === 'settings' && <SettingsPage />}
-            {activeTab === 'crm' && <CRMModule />}
-            {activeTab === 'contracts' && <ContractVaultModule />}
-            {activeTab === 'kanban' && <KanbanModule />}
-            {activeTab === 'infra' && <InfrastructureModule />}
-            {activeTab === 'alerts' && <AlertsModule />}
-            {activeTab === 'billing' && <BillingModule />}
-            {activeTab === 'subscriptions' && <SubscriptionsModule />}
-            {activeTab === 'forecast' && <ForecastModule />}
-            {activeTab === 'logs' && <AuditModule />}
+                <aside className="space-y-3">
+                    <h2 className="text-sm font-semibold text-white">Quick actions</h2>
+                    <Link href="/admin/projects/new" className="flex min-h-12 items-center gap-3 rounded-lg bg-blue-500 px-4 text-sm font-semibold text-white transition hover:bg-blue-400">
+                        <Plus size={17} /> Create project
+                    </Link>
+                    <button onClick={() => setActiveTab("crm")} className="flex min-h-12 w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white">
+                        <Users size={17} /> Manage clients
+                    </button>
+                    <button onClick={() => setActiveTab("billing")} className="flex min-h-12 w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white">
+                        <ArrowRight size={17} /> Review payments
+                    </button>
+                </aside>
+            </div>
         </div>
     );
 }

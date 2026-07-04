@@ -5,17 +5,25 @@ import Link from "next/link";
 import {
   Plus,
   Search,
-  Filter,
-  MoreVertical,
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
+import { ProjectsAPI } from "@/lib/api";
+
+type ApiDate = string | { _seconds?: number; seconds?: number } | null;
+
+function formatDate(value: ApiDate) {
+  if (!value) return "Not recorded";
+  const seconds = typeof value === "object" ? value._seconds ?? value.seconds : undefined;
+  const date = seconds ? new Date(seconds * 1000) : new Date(value as string);
+  return Number.isNaN(date.getTime()) ? "Not recorded" : date.toLocaleDateString();
+}
 
 interface Project {
   id: string;
   projectName: string;
   currentPhase: string;
-  client: { companyName: string };
+  client?: { companyName?: string };
   completion: {
     overallCompletionPercentage: number;
     status: "ON_TRACK" | "AT_RISK" | "BLOCKED";
@@ -25,7 +33,7 @@ interface Project {
     domains: number;
     subscriptions: number;
   };
-  createdAt: string;
+  createdAt: ApiDate;
 }
 
 export default function ProjectsPage() {
@@ -34,6 +42,7 @@ export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPhase, setFilterPhase] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchProjects();
@@ -42,17 +51,16 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (filterPhase) params.append("phase", filterPhase);
-      if (filterStatus) params.append("status", filterStatus);
-
-      const response = await fetch(`/api/v1/projects?${params}`, {
-        credentials: "include",
+      setError("");
+      const data = await ProjectsAPI.list({
+        ...(filterPhase && { phase: filterPhase }),
+        ...(filterStatus && { status: filterStatus }),
       });
-      const data = await response.json();
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
+      setProjects([]);
+      setError("Projects could not be loaded. Refresh the page or sign in again.");
     } finally {
       setLoading(false);
     }
@@ -183,17 +191,9 @@ export default function ProjectsPage() {
                       {project.projectName}
                     </h3>
                     <p className="text-sm text-gray-400 mt-1">
-                      {project.client.companyName}
+                      {project.client?.companyName || "Unassigned client"}
                     </p>
                   </div>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 p-2 rounded-lg hover:bg-white/10 transition-all"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
-                    <MoreVertical size={18} className="text-gray-500" />
-                  </button>
                 </div>
 
                 <div className="flex items-center gap-4 mb-4">
@@ -254,13 +254,18 @@ export default function ProjectsPage() {
 
                 <div className="text-xs text-gray-500">
                   Created{" "}
-                  {new Date(project.createdAt).toLocaleDateString()}
+                  {formatDate(project.createdAt)}
                 </div>
               </Link>
             ))}
           </div>
         )}
       </div>
+      {error && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {error}
+        </div>
+      )}
     </div>
   );
 }

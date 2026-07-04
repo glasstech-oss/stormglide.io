@@ -7,38 +7,24 @@ import {
   BarChart3,
   FileText,
   Gauge,
-  Server,
-  Settings,
-  Users,
-  Clock,
-  Zap,
   Lock,
-  HardDrive,
-  History,
-  AlertCircle,
   Package,
+  ReceiptText,
+  WalletCards,
 } from "lucide-react";
 import Link from "next/link";
 import { DomainsTab } from "@/components/admin/projects/DomainsTab";
 import { SubscriptionsTab } from "@/components/admin/projects/SubscriptionsTab";
 import { TechStackTab } from "@/components/admin/projects/TechStackTab";
 import { CompletionTab } from "@/components/admin/projects/CompletionTab";
-import { TimelineTabFull } from "@/components/admin/projects/TimelineTabFull";
-import { DeliverablesTabFull } from "@/components/admin/projects/DeliverablesTabFull";
 import { FinancesTabFull } from "@/components/admin/projects/FinancesTabFull";
-import {
-  TeamTabFull,
-  HostingTabFull,
-  CredentialsTabFull,
-  BackupsTabFull,
-  HistoryTabFull,
-} from "@/components/admin/projects/RemainingTabs";
+import { ProjectsAPI } from "@/lib/api";
 
 interface ProjectData {
   id: string;
   projectName: string;
   currentPhase: string;
-  client: { companyName: string };
+  client?: { companyName?: string };
   completion: {
     overallCompletionPercentage: number;
     status: string;
@@ -46,23 +32,23 @@ interface ProjectData {
   _count?: {
     domains: number;
     subscriptions: number;
+    milestones?: number;
+    expenses?: number;
+  };
+  summary?: {
+    monthlyRecurring: number;
+    totalExpenses: number;
+    totalInvoiced: number;
+    totalPaid: number;
   };
 }
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
-  { id: "timeline", label: "Timeline", icon: Clock },
-  { id: "deliverables", label: "Deliverables", icon: Zap },
-  { id: "tech-stack", label: "Tech Stack", icon: Package },
-  { id: "finances", label: "Finances", icon: FileText },
-  { id: "team", label: "Team", icon: Users },
-  { id: "hosting", label: "Hosting & Infrastructure", icon: Server },
-  { id: "domains", label: "Domains & SSL", icon: Lock },
-  { id: "credentials", label: "Credentials & Access", icon: Settings },
-  { id: "backups", label: "Backups & Security", icon: HardDrive },
-  { id: "subscriptions", label: "Subscriptions", icon: AlertCircle },
-  { id: "completion", label: "Completion", icon: Gauge },
-  { id: "history", label: "History", icon: History },
+  { id: "progress", label: "Progress", icon: Gauge },
+  { id: "technology", label: "Technology", icon: Package },
+  { id: "domains", label: "Domains", icon: Lock },
+  { id: "costs", label: "Costs & billing", icon: FileText },
 ];
 
 export default function ProjectDetailPage() {
@@ -72,6 +58,7 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchProject();
@@ -80,13 +67,12 @@ export default function ProjectDetailPage() {
   const fetchProject = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/projects/${projectId}`, {
-        credentials: "include",
-      });
-      const data = await response.json();
+      setError("");
+      const data = await ProjectsAPI.get(projectId);
       setProject(data);
     } catch (error) {
       console.error("Failed to fetch project:", error);
+      setError("This project could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +91,7 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <div className="text-center py-16 text-gray-500">
-        Project not found
+        {error || "Project not found"}
       </div>
     );
   }
@@ -125,13 +111,13 @@ export default function ProjectDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               {project.projectName}
             </h1>
-            <p className="text-gray-400 mt-1">{project.client.companyName}</p>
+            <p className="text-gray-400 mt-1">{project.client?.companyName || "Unassigned client"}</p>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 overflow-x-auto pb-4 border-b border-white/10">
+      <div className="flex gap-1 overflow-x-auto border-b border-white/10">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -139,9 +125,9 @@ export default function ProjectDetailPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap rounded-t-lg border-b-2 transition-all ${
+              className={`flex items-center gap-2 px-4 py-3 whitespace-nowrap border-b-2 transition-all ${
                 isActive
-                  ? "border-cyan-500 text-cyan-400 bg-cyan-500/5"
+                  ? "border-blue-500 text-blue-400"
                   : "border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5"
               }`}
             >
@@ -155,26 +141,44 @@ export default function ProjectDetailPage() {
       {/* Tab Content */}
       <div className="mt-8">
         {activeTab === "overview" && <OverviewTab project={project} />}
-        {activeTab === "timeline" && <TimelineTabFull projectId={projectId} />}
-        {activeTab === "deliverables" && <DeliverablesTabFull projectId={projectId} />}
-        {activeTab === "tech-stack" && <TechStackTab projectId={projectId} />}
-        {activeTab === "finances" && <FinancesTabFull projectId={projectId} />}
-        {activeTab === "team" && <TeamTabFull projectId={projectId} />}
-        {activeTab === "hosting" && <HostingTabFull projectId={projectId} />}
+        {activeTab === "progress" && <CompletionTab projectId={projectId} />}
+        {activeTab === "technology" && <TechStackTab projectId={projectId} />}
         {activeTab === "domains" && <DomainsTab projectId={projectId} />}
-        {activeTab === "credentials" && <CredentialsTabFull projectId={projectId} />}
-        {activeTab === "backups" && <BackupsTabFull projectId={projectId} />}
-        {activeTab === "subscriptions" && <SubscriptionsTab projectId={projectId} />}
-        {activeTab === "completion" && <CompletionTab projectId={projectId} />}
-        {activeTab === "history" && <HistoryTabFull projectId={projectId} />}
+        {activeTab === "costs" && (
+          <div className="space-y-10">
+            <SubscriptionsTab projectId={projectId} />
+            <div className="border-t border-white/10 pt-8"><FinancesTabFull projectId={projectId} /></div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 function OverviewTab({ project }: { project: ProjectData }) {
+  const summary = project.summary || { monthlyRecurring: 0, totalExpenses: 0, totalInvoiced: 0, totalPaid: 0 };
+  const money = (value: number) => new Intl.NumberFormat("en-GH", {
+    style: "currency",
+    currency: "GHS",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {[
+          { label: "Monthly services", value: money(summary.monthlyRecurring), icon: WalletCards, color: "text-cyan-400" },
+          { label: "Project payments recorded", value: String(project._count?.expenses || 0), icon: ReceiptText, color: "text-amber-400" },
+          { label: "Client payments received", value: money(summary.totalPaid), icon: FileText, color: "text-emerald-400" },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <item.icon size={18} className={item.color} />
+            <div className={`mt-3 text-2xl font-bold ${item.color}`}>{item.value}</div>
+            <div className="mt-1 text-xs text-gray-500">{item.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Project Status */}
       <div className="p-6 rounded-2xl bg-[#111827] border border-white/5">
         <h3 className="text-lg font-bold mb-4">Project Status</h3>
@@ -237,6 +241,7 @@ function OverviewTab({ project }: { project: ProjectData }) {
             <div className="text-xs text-gray-500">Services</div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

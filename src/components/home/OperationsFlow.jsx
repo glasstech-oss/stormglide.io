@@ -1,4 +1,5 @@
 import { ArrowRight, BarChart3, Database, FileSpreadsheet, MessageCircle, Zap } from 'lucide-react'
+import WordReveal from '../common/WordReveal'
 
 const INPUTS = [
   { icon: MessageCircle, title: 'Customer messages', detail: 'Requests, updates, approvals' },
@@ -12,7 +13,7 @@ export default function OperationsFlow() {
       <div className="sg-home-container sg-operations-layout">
         <div className="sg-operations-copy">
           <span className="sg-home-section-label">From fragmented to visible</span>
-          <h2>One operating system, not another disconnected tool.</h2>
+          <WordReveal text="One operating system, not another disconnected tool." />
           <p>We map the workflow first, then connect the people, data and decisions that keep the business moving.</p>
           <div className="sg-operations-outcomes">
             <span><Zap size={16} /> Faster handoffs</span>

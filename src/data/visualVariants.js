@@ -150,12 +150,12 @@ export const auroraLightColors = {
   muted: 'rgba(13,28,49,0.42)',
   accent: '#087FAE',
   accentDark: '#05658C',
-  accent2: '#6954D9',
+  accent2: '#0E9C8F',
   accent3: '#178B48',
   warning: '#A56800',
   danger: '#C33F3A',
   heroGlow: 'rgba(8,127,174,0.22)',
-  heroGlow2: 'rgba(105,84,217,0.14)',
+  heroGlow2: 'rgba(14,156,143,0.14)',
 }
 
 export const defaultVisualVariantId = 'aurora'

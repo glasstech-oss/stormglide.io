@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, ArrowLeft, CheckCircle2, Users, Heart, Package, Factory, Layers, ExternalLink } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2, Users, Heart, Package, Factory, Layers, ExternalLink, Stethoscope } from 'lucide-react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { useState } from 'react'
 import PageLayout from '../components/layout/PageLayout'
@@ -11,7 +11,7 @@ import CargoScanDemo from '../components/demos/CargoScanDemo'
 import NexusMFGDemo from '../components/demos/NexusMFGDemo'
 import GlasstechDemo from '../components/demos/GlasstechDemo'
 
-const ICONS = { Users, Heart, Package, Factory, Layers }
+const ICONS = { Users, Heart, Package, Factory, Layers, Stethoscope }
 
 const DEMO_COMPONENTS = {
   'nexus-hrm': NexusHRMDemo,

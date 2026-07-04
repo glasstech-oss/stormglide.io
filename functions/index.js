@@ -7,6 +7,9 @@ const cors = require('cors');
 const https = require('https');
 const http = require('http');
 const tls = require('tls');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -15,7 +18,9 @@ const fbAuth = admin.auth();
 // ── Express app ──────────────────────────────────────────────────────────────
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+// `verify` captures the raw request body so we can validate the Paystack
+// webhook's HMAC signature later without adding a second body parser.
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 // ── Firestore helpers ─────────────────────────────────────────────────────────
 const toDoc = (snap) => (snap.exists ? { id: snap.id, ...snap.data() } : null);
@@ -47,16 +52,32 @@ const adminOnly = (req, res, next) => {
 const DEFAULT_SITE_SETTINGS = {
   companyName: 'Stormglide Technologies',
   logoUrl: '/logo.png',
+  // Uploaded from Admin > Website settings — a data: URI stored inline so no
+  // Cloud Storage bucket is required. Empty until an admin uploads a logo.
+  logoDataUri: '',
   faviconUrl: '/icon.png',
-  primaryColor: '#22D3EE',
-  secondaryColor: '#1688FF',
-  accentColor: '#F472B6',
+  primaryColor: '#2563EB',
+  secondaryColor: '#0F172A',
+  accentColor: '#F5A623',
   backgroundColor: '#0B0F19',
   foregroundColor: '#FFFFFF',
   heroHeadline: 'Software systems built for serious growth.',
   heroSubtext: 'Web platforms, mobile products, and business systems designed and engineered in Accra.',
-  contactEmail: 'hello@stormglide.io',
+  contactEmail: 'info@stormglide.io',
   contactPhone: '',
+  invoiceCompanyName: 'Stormglide.io',
+  invoiceAddress: 'Accra, Ghana',
+  invoiceTaxId: '',
+  bankPrimaryName: 'Absa Bank',
+  bankPrimaryAccountName: 'Stormglide',
+  bankPrimaryAccountNumber: '0041131632',
+  bankPrimaryBranch: 'East Legon Branch',
+  bankSecondaryName: 'Stanbic Bank',
+  bankSecondaryAccountName: 'Stormglide',
+  bankSecondaryAccountNumber: '9040012518859',
+  bankSecondaryBranch: 'University of Ghana',
+  invoiceTerms: 'Payment is due by the due date shown on this invoice. Amounts are quoted in the currency stated and are non-refundable once services have commenced or products have been delivered, except as required by law. Invoices unpaid 14 days past the due date may attract a 5% late fee and paused delivery until settled.',
+  invoiceWarranty: 'Stormglide.io warrants that delivered software will perform substantially as agreed for 30 days from delivery, covering defects in workmanship only. This warranty does not cover changes to third-party services, misuse, or modifications made after delivery. Third-party or licensed products are covered under their original vendor warranty where applicable.',
   twitterUrl: '',
   linkedinUrl: 'https://www.linkedin.com/company/stormglide-io/',
   githubUrl: '',
@@ -64,10 +85,23 @@ const DEFAULT_SITE_SETTINGS = {
 
 const SITE_SETTING_FIELDS = new Set(Object.keys(DEFAULT_SITE_SETTINGS));
 
+// logoDataUri holds an inline base64 image (no Cloud Storage bucket needed);
+// every other setting is a short display string.
+const LOGO_DATA_URI_MAX_LENGTH = 700_000; // ~525KB decoded, well under Firestore's 1MB doc limit
+const isValidLogoDataUri = (value) => /^data:image\/(png|jpeg|jpg);base64,[A-Za-z0-9+/=]+$/.test(value);
+
 const sanitizeSiteSettings = (value) => Object.fromEntries(
   Object.entries(value || {})
     .filter(([key, setting]) => SITE_SETTING_FIELDS.has(key) && typeof setting === 'string')
-    .map(([key, setting]) => [key, setting.trim().slice(0, 1000)])
+    .map(([key, setting]) => {
+      if (key === 'logoDataUri') {
+        const trimmed = setting.trim();
+        if (!trimmed) return [key, ''];
+        return [key, isValidLogoDataUri(trimmed) && trimmed.length <= LOGO_DATA_URI_MAX_LENGTH ? trimmed : null];
+      }
+      return [key, setting.trim().slice(0, 1000)];
+    })
+    .filter(([, setting]) => setting !== null)
 );
 
 // ── Email via Resend ──────────────────────────────────────────────────────────
@@ -112,6 +146,14 @@ const emailInvoice = (to, inv) => sendEmail(to,
   `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0d1117;color:#fff;border-radius:16px;padding:32px">
     <div style="font-size:22px;font-weight:700;margin-bottom:8px;color:#22D3EE">Stormglide.io</div>
     <h2 style="font-size:18px;margin:0 0 24px">Invoice ${inv.invoiceNumber}</h2>
+    ${Array.isArray(inv.items) && inv.items.length ? `
+    <div style="border:1px solid #1f2937;border-radius:12px;overflow:hidden;margin-bottom:20px">
+      ${inv.items.map((item) => `
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #1f2937">
+          <span style="color:#e5e7eb;font-size:13px">${item.description}${item.quantity > 1 ? ` × ${item.quantity}` : ''}</span>
+          <span style="color:#9ca3af;font-size:13px;white-space:nowrap">${inv.currency} ${(item.quantity * item.unitPrice).toLocaleString()}</span>
+        </div>`).join('')}
+    </div>` : ''}
     <div style="background:#111827;border-radius:12px;padding:20px;margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
         <span style="color:#9ca3af">Amount Due</span>
@@ -173,13 +215,15 @@ const createAlertIfNew = async (clientId, type, severity, title, description, cl
 };
 
 // ── Paystack payment link ─────────────────────────────────────────────────────
-const paystackLink = (invoice, email) => new Promise((resolve) => {
+// `callbackPath` defaults to the client portal for backward compatibility with
+// existing callers; the public invoice pay flow passes its own return path.
+const paystackLink = (invoice, email, callbackPath = '/portal') => new Promise((resolve) => {
   const key = process.env.PAYSTACK_SECRET_KEY;
   if (!key) return resolve(null);
   const body = JSON.stringify({
     email, amount: Math.round(Number(invoice.amount) * 100),
     currency: invoice.currency, reference: invoice.invoiceNumber,
-    callback_url: `${process.env.FRONTEND_URL || 'https://stormglide.io'}/portal`,
+    callback_url: `${process.env.FRONTEND_URL || 'https://stormglide.io'}${callbackPath}`,
   });
   const req = https.request(
     {
@@ -200,6 +244,353 @@ const paystackLink = (invoice, email) => new Promise((resolve) => {
   req.write(body);
   req.end();
 });
+
+// Verifies Paystack's `x-paystack-signature` header: HMAC-SHA512 of the raw
+// request body, keyed with the Paystack secret key.
+const verifyPaystackSignature = (req) => {
+  const key = process.env.PAYSTACK_SECRET_KEY;
+  const signature = req.headers['x-paystack-signature'];
+  if (!key || !signature || !req.rawBody) return false;
+  const hash = crypto.createHmac('sha512', key).update(req.rawBody).digest('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+};
+
+// ── Invoice line items ────────────────────────────────────────────────────────
+const INVOICE_ITEM_TYPES = new Set(['PRODUCT', 'SERVICE']);
+
+const sanitizeInvoiceItems = (rawItems) => {
+  if (!Array.isArray(rawItems) || !rawItems.length) return null;
+  const items = rawItems.map((item) => {
+    const quantity = Math.max(0, Number(item?.quantity) || 0);
+    const unitPrice = Math.max(0, Number(item?.unitPrice) || 0);
+    // `name` is the required bold title; `description` is optional detail text.
+    // Falls back to the legacy single `description` field for older clients.
+    const name = String(item?.name || item?.description || '').trim().slice(0, 200);
+    const description = String(item?.description && item?.name ? item.description : '').trim().slice(0, 500);
+    const type = INVOICE_ITEM_TYPES.has(item?.type) ? item.type : 'SERVICE';
+    if (!name || quantity <= 0) return null;
+    return { type, name, description, quantity, unitPrice };
+  }).filter(Boolean);
+  return items.length ? items : null;
+};
+
+const computeInvoiceTotals = (items, taxPercent, discountPercent) => {
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const tax = Math.max(0, Number(taxPercent) || 0);
+  const discount = Math.max(0, Number(discountPercent) || 0);
+  const discountAmount = round2(subtotal * (discount / 100));
+  const taxableAmount = subtotal - discountAmount;
+  const taxAmount = round2(taxableAmount * (tax / 100));
+  const amount = round2(taxableAmount + taxAmount);
+  return { subtotal: round2(subtotal), taxPercent: tax, discountPercent: discount, taxAmount, discountAmount, amount };
+};
+
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+// ── Branded PDF invoice ────────────────────────────────────────────────────────
+let cachedLogoBytes = null;
+const getLogoBytes = () => {
+  if (cachedLogoBytes) return cachedLogoBytes;
+  try {
+    cachedLogoBytes = fs.readFileSync(path.join(__dirname, 'assets', 'logo.png'));
+  } catch {
+    cachedLogoBytes = null;
+  }
+  return cachedLogoBytes;
+};
+
+// Greedy word-wrap: packs words into lines no wider than maxWidth at the given font/size.
+const wrapText = (text, textFont, size, maxWidth) => {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (textFont.widthOfTextAtSize(candidate, size) > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+};
+
+// Parses a #rrggbb hex string into a pdf-lib rgb() color; falls back to the
+// Stormglide teal if the value is missing or malformed.
+const hexToRgb = (hex, rgbFn, fallback = [0.13, 0.83, 0.93]) => {
+  const match = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!match) return rgbFn(...fallback);
+  const int = parseInt(match[1], 16);
+  return rgbFn(((int >> 16) & 255) / 255, ((int >> 8) & 255) / 255, (int & 255) / 255);
+};
+
+const buildInvoicePdf = async (invoice, client, settings) => {
+  const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+  const pdfDoc = await PDFDocument.create();
+  let page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const firstPage = page;
+  const { width, height } = page.getSize();
+  const PAGE_BOTTOM_MARGIN = 64;
+  const newPage = () => {
+    page = pdfDoc.addPage([width, height]);
+    return height - 56;
+  };
+  const ensureSpace = (currentY, needed) => (currentY - needed < PAGE_BOTTOM_MARGIN ? newPage() : currentY);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const italic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+
+  const ink = rgb(0.07, 0.09, 0.13);
+  const muted = rgb(0.45, 0.48, 0.53);
+  const line = rgb(0.88, 0.9, 0.93);
+  const brand = hexToRgb(settings.primaryColor, rgb, [0.13, 0.83, 0.93]);
+  const brand2 = hexToRgb(settings.secondaryColor, rgb, [0.09, 0.53, 1]);
+  const brandTint = hexToRgb(settings.primaryColor, (r, g, b) => rgb(r + (1 - r) * 0.9, g + (1 - g) * 0.9, b + (1 - b) * 0.9), [0.13, 0.83, 0.93]);
+
+  // Top gradient bar — segmented rectangles blending brand -> brand2 across the page width.
+  const GRADIENT_SEGMENTS = 24;
+  const barHeight = 7;
+  for (let i = 0; i < GRADIENT_SEGMENTS; i++) {
+    const t = i / (GRADIENT_SEGMENTS - 1);
+    const segColor = rgb(
+      brand.red + (brand2.red - brand.red) * t,
+      brand.green + (brand2.green - brand.green) * t,
+      brand.blue + (brand2.blue - brand.blue) * t,
+    );
+    page.drawRectangle({ x: (width / GRADIENT_SEGMENTS) * i, y: height - barHeight, width: width / GRADIENT_SEGMENTS + 1, height: barHeight, color: segColor });
+  }
+
+  let y = height - 56 - barHeight / 2;
+
+  // Prefer a logo uploaded via Website Settings; fall back to the bundled default.
+  let logoImage = null;
+  const uploadedMatch = /^data:image\/(png|jpe?g);base64,(.+)$/.exec(settings.logoDataUri || '');
+  if (uploadedMatch) {
+    try {
+      const bytes = Buffer.from(uploadedMatch[2], 'base64');
+      logoImage = uploadedMatch[1] === 'png' ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+    } catch {
+      logoImage = null;
+    }
+  }
+  if (!logoImage) {
+    const logoBytes = getLogoBytes();
+    if (logoBytes) logoImage = await pdfDoc.embedPng(logoBytes);
+  }
+  let logoH = 0;
+  if (logoImage) {
+    const logoW = 190;
+    logoH = (logoImage.height / logoImage.width) * logoW;
+    page.drawImage(logoImage, { x: 48, y: y - logoH + 10, width: logoW, height: logoH });
+  } else {
+    page.drawText(settings.invoiceCompanyName || 'Stormglide.io', { x: 48, y, size: 16, font: bold, color: ink });
+  }
+
+  page.drawText('INVOICE', { x: width - 200, y, size: 22, font: bold, color: brand });
+  page.drawText(invoice.invoiceNumber, { x: width - 200, y: y - 20, size: 11, font, color: muted });
+
+  // Header gap scales with the logo's actual rendered height so a large or
+  // unusually tall/wide uploaded logo never collides with the next section.
+  y -= Math.max(70, logoH + 20);
+  page.drawLine({ start: { x: 48, y }, end: { x: width - 48, y }, thickness: 1.5, color: brand });
+  y -= 24;
+
+  // From / Bill To / Details — three columns
+  const colFrom = 48;
+  const colBillTo = 230;
+  const colDetails = 400;
+
+  page.drawText('FROM', { x: colFrom, y, size: 8, font: bold, color: brand });
+  page.drawText('BILL TO', { x: colBillTo, y, size: 8, font: bold, color: brand });
+  page.drawText('DETAILS', { x: colDetails, y, size: 8, font: bold, color: brand });
+  y -= 16;
+
+  const fromLines = [
+    settings.invoiceCompanyName || 'Stormglide.io',
+    settings.invoiceAddress || 'Accra, Ghana',
+    settings.contactEmail || '',
+    settings.contactPhone || '',
+    settings.invoiceTaxId ? `TIN: ${settings.invoiceTaxId}` : '',
+  ].filter(Boolean);
+
+  const billToLines = [
+    client?.companyName || 'Client',
+    client?.contactName || '',
+    client?.email || '',
+  ].filter(Boolean);
+
+  const STATUS_COLORS = {
+    DRAFT: muted, SENT: brand2, PAID: rgb(0.13, 0.7, 0.4), OVERDUE: rgb(0.86, 0.2, 0.2), VOID: muted,
+  };
+
+  const drawColumn = (lines, x, startY) => {
+    let cy = startY;
+    lines.forEach((text, i) => {
+      page.drawText(text, { x, y: cy, size: 10, font: i === 0 ? bold : font, color: i === 0 ? ink : muted });
+      cy -= 14;
+    });
+    return cy;
+  };
+
+  const afterFrom = drawColumn(fromLines, colFrom, y);
+  const afterBillTo = drawColumn(billToLines, colBillTo, y);
+  page.drawText(`Issued: ${formatPdfDate(invoice.issuedAt || invoice.createdAt)}`, { x: colDetails, y, size: 10, font, color: muted });
+  page.drawText(`Due: ${formatPdfDate(invoice.dueDate)}`, { x: colDetails, y: y - 14, size: 10, font, color: muted });
+  const statusColor = STATUS_COLORS[invoice.status] || muted;
+  const statusLabel = String(invoice.status);
+  const statusWidth = bold.widthOfTextAtSize(statusLabel, 8);
+  page.drawRectangle({ x: colDetails, y: y - 32, width: statusWidth + 16, height: 15, color: statusColor, opacity: 0.14 });
+  page.drawText(statusLabel, { x: colDetails + 8, y: y - 28, size: 8, font: bold, color: statusColor });
+  const afterDetails = y - 32 - 14;
+  y = Math.min(afterFrom, afterBillTo, afterDetails) - 24;
+
+  // Items table
+  const drawItemsHeader = (headerY) => {
+    page.drawRectangle({ x: 48, y: headerY - 20, width: width - 96, height: 24, color: brand });
+    page.drawText('ITEM', { x: 56, y: headerY - 13, size: 8, font: bold, color: rgb(1, 1, 1) });
+    page.drawText('TYPE', { x: 300, y: headerY - 13, size: 8, font: bold, color: rgb(1, 1, 1) });
+    page.drawText('QTY', { x: 370, y: headerY - 13, size: 8, font: bold, color: rgb(1, 1, 1) });
+    page.drawText('UNIT PRICE', { x: 420, y: headerY - 13, size: 8, font: bold, color: rgb(1, 1, 1) });
+    page.drawText('TOTAL', { x: width - 100, y: headerY - 13, size: 8, font: bold, color: rgb(1, 1, 1) });
+    return headerY - 20;
+  };
+  y = drawItemsHeader(y);
+
+  const items = Array.isArray(invoice.items) ? invoice.items : [];
+  const descMaxWidth = 235;
+  items.forEach((item, i) => {
+    // Wrap the full name and description — never silently truncate real
+    // invoice content. Rows grow to fit; pagination below handles overflow.
+    const nameLines = wrapText(item.name, bold, 9.5, descMaxWidth);
+    const descLines = item.description ? wrapText(item.description, italic, 8.5, descMaxWidth) : [];
+    const nameBlockHeight = nameLines.length * 13;
+    const descBlockHeight = descLines.length * 12;
+    const rowHeight = 10 + nameBlockHeight + descBlockHeight;
+
+    // Break to a new page (with a fresh header) if this row won't fit.
+    if (y - rowHeight < PAGE_BOTTOM_MARGIN) {
+      y = newPage();
+      y = drawItemsHeader(y);
+    }
+
+    y -= rowHeight;
+    if (i % 2 === 1) {
+      page.drawRectangle({ x: 48, y: y - 2, width: width - 96, height: rowHeight, color: rgb(0.97, 0.98, 0.99) });
+    }
+    const rowTop = y + rowHeight - 14;
+    nameLines.forEach((l, li) => {
+      page.drawText(l, { x: 56, y: rowTop - li * 13, size: 9.5, font: bold, color: ink });
+    });
+    const descTop = rowTop - nameBlockHeight;
+    descLines.forEach((l, li) => {
+      page.drawText(l, { x: 56, y: descTop - li * 12, size: 8.5, font: italic, color: muted });
+    });
+    page.drawText(item.type === 'PRODUCT' ? 'Product' : 'Service', { x: 300, y: rowTop, size: 9.5, font, color: muted });
+    page.drawText(String(item.quantity), { x: 370, y: rowTop, size: 9.5, font, color: muted });
+    page.drawText(money2(item.unitPrice), { x: 420, y: rowTop, size: 9.5, font, color: muted });
+    const lineTotal = money2(item.quantity * item.unitPrice);
+    const totalWidth = font.widthOfTextAtSize(lineTotal, 9.5);
+    page.drawText(lineTotal, { x: width - 56 - totalWidth, y: rowTop, size: 9.5, font: bold, color: ink });
+  });
+
+  y -= 20;
+  page.drawLine({ start: { x: 48, y }, end: { x: width - 48, y }, thickness: 1, color: line });
+  y -= 20;
+
+  // Totals block, right-aligned
+  const totalsX = width - 220;
+  const drawTotalRow = (label, value, isFinal, finalColor) => {
+    const rowColor = isFinal ? (finalColor || ink) : muted;
+    page.drawText(label, { x: totalsX, y, size: isFinal ? 11 : 9.5, font: isFinal ? bold : font, color: rowColor });
+    const valStr = `${invoice.currency} ${value}`;
+    const valWidth = (isFinal ? bold : font).widthOfTextAtSize(valStr, isFinal ? 11 : 9.5);
+    page.drawText(valStr, { x: width - 56 - valWidth, y, size: isFinal ? 11 : 9.5, font: isFinal ? bold : font, color: rowColor });
+    y -= isFinal ? 22 : 16;
+  };
+
+  drawTotalRow('Subtotal', money2(invoice.subtotal ?? invoice.amount));
+  if (invoice.discountAmount) drawTotalRow(`Discount (${invoice.discountPercent || 0}%)`, `-${money2(invoice.discountAmount)}`);
+  if (invoice.taxAmount) drawTotalRow(`Tax (${invoice.taxPercent || 0}%)`, money2(invoice.taxAmount));
+
+  // Highlighted brand-tinted box snugly wrapping the final Total Due row.
+  page.drawRectangle({ x: totalsX - 12, y: y - 12, width: width - 48 - (totalsX - 12), height: 24, color: brandTint });
+  drawTotalRow('Total Due', money2(invoice.amount), true, brand);
+
+  // Draws a labeled section heading followed by a wrapped paragraph, breaking
+  // to a new page if there isn't room — used for notes/terms/warranty.
+  const drawTextSection = (label, text, size = 9) => {
+    if (!text) return;
+    const lines = wrapText(text, font, size, width - 96);
+    y = ensureSpace(y, 14 + lines.length * (size + 3.5) + 10);
+    y -= 20;
+    page.drawText(label, { x: 48, y, size: 8, font: bold, color: brand });
+    y -= 14;
+    for (const l of lines) {
+      page.drawText(l, { x: 48, y, size, font, color: muted });
+      y -= size + 3.5;
+    }
+  };
+
+  drawTextSection('NOTES', invoice.notes, 9.5);
+
+  // Payment details — up to two bank accounts, side by side.
+  const banks = [
+    { name: settings.bankPrimaryName, accountName: settings.bankPrimaryAccountName, accountNumber: settings.bankPrimaryAccountNumber, branch: settings.bankPrimaryBranch },
+    { name: settings.bankSecondaryName, accountName: settings.bankSecondaryAccountName, accountNumber: settings.bankSecondaryAccountNumber, branch: settings.bankSecondaryBranch },
+  ].filter((b) => b.name && b.accountNumber);
+
+  if (banks.length) {
+    y = ensureSpace(y, 90);
+    y -= 22;
+    page.drawText('PAYMENT DETAILS — BANK TRANSFER', { x: 48, y, size: 8, font: bold, color: brand });
+    y -= 16;
+    const colWidth = (width - 96) / banks.length;
+    banks.forEach((bank, i) => {
+      const x = 48 + i * colWidth;
+      const rows = [bank.name, `Account name: ${bank.accountName}`, `Account number: ${bank.accountNumber}`, bank.branch ? `Branch: ${bank.branch}` : null].filter(Boolean);
+      let by = y;
+      rows.forEach((rowText, r) => {
+        page.drawText(rowText, { x, y: by, size: 9, font: r === 0 ? bold : font, color: r === 0 ? ink : muted });
+        by -= 13.5;
+      });
+    });
+    y -= 4 * 13.5 + 6;
+  }
+
+  drawTextSection('TERMS & CONDITIONS', settings.invoiceTerms, 8);
+  // Skip the warranty clause for product-only / non-software invoices — the
+  // admin toggles this off per invoice ("Include warranty clause" checkbox).
+  if (invoice.includeWarranty !== false) {
+    drawTextSection('WARRANTY', settings.invoiceWarranty, 8);
+  }
+
+  if (invoice.status === 'PAID') {
+    firstPage.drawText('PAID', {
+      x: width / 2 - 70, y: height / 2, size: 64, font: bold,
+      color: rgb(0.13, 0.7, 0.4), opacity: 0.15, rotate: { type: 'degrees', angle: 24 },
+    });
+  }
+
+  page.drawText(
+    `${settings.invoiceCompanyName || 'Stormglide.io'} · ${settings.invoiceAddress || 'Accra, Ghana'}${settings.contactEmail ? ` · ${settings.contactEmail}` : ''}`,
+    { x: 48, y: 36, size: 8, font, color: muted }
+  );
+
+  return pdfDoc.save();
+};
+
+const money2 = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatPdfDate = (value) => {
+  const date = value?.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 // =============================================================================
 // AUTH ROUTES
@@ -432,9 +823,11 @@ app.get('/v1/crm/clients/:id', verifyToken, adminOnly, async (req, res) => {
 });
 
 app.post('/v1/crm/client', verifyToken, adminOnly, async (req, res) => {
-  const { userId, companyName, contactName, whatsappNumber, region, industry } = req.body;
+  const { userId, companyName, contactName, email, whatsappNumber, region, industry } = req.body;
+  if (!companyName || !contactName) return res.status(400).json({ message: 'Company and contact names are required' });
   const ref = await db.collection('clientProfiles').add({
     userId: userId || null, companyName, contactName,
+    email: email || null,
     whatsappNumber: whatsappNumber || null,
     region: region || 'GLOBAL',
     industry: industry || null,
@@ -632,49 +1025,100 @@ app.get('/v1/billing/subscriptions', verifyToken, adminOnly, async (req, res) =>
   return res.json(enriched);
 });
 
+// Resolves a client's email — direct field first, falling back to the linked
+// Firebase Auth user (older client records only have the latter).
+const resolveClientEmail = async (clientData) => {
+  if (clientData.email) return clientData.email;
+  if (clientData.userId) {
+    const userDoc = await db.collection('users').doc(clientData.userId).get();
+    return userDoc.data()?.email || null;
+  }
+  return null;
+};
+
+app.get('/v1/billing/invoice/:id', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('invoices').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const invoice = toDoc(doc);
+  const [clientDoc, projectDoc, settingsDoc] = await Promise.all([
+    db.collection('clientProfiles').doc(invoice.clientId).get(),
+    invoice.projectId ? db.collection('projects').doc(invoice.projectId).get() : Promise.resolve(null),
+    db.collection('settings').doc('site').get(),
+  ]);
+  const settings = { ...DEFAULT_SITE_SETTINGS, ...(settingsDoc.exists ? settingsDoc.data() : {}) };
+  return res.json({
+    ...invoice,
+    client: toDoc(clientDoc),
+    project: projectDoc ? toDoc(projectDoc) : null,
+    company: {
+      name: settings.invoiceCompanyName, address: settings.invoiceAddress, taxId: settings.invoiceTaxId,
+      email: settings.contactEmail, phone: settings.contactPhone,
+      primaryColor: settings.primaryColor, secondaryColor: settings.secondaryColor, logoUrl: settings.logoDataUri || settings.logoUrl,
+      bankPrimary: { name: settings.bankPrimaryName, accountName: settings.bankPrimaryAccountName, accountNumber: settings.bankPrimaryAccountNumber, branch: settings.bankPrimaryBranch },
+      bankSecondary: { name: settings.bankSecondaryName, accountName: settings.bankSecondaryAccountName, accountNumber: settings.bankSecondaryAccountNumber, branch: settings.bankSecondaryBranch },
+      terms: settings.invoiceTerms, warranty: settings.invoiceWarranty,
+    },
+  });
+});
+
 app.post('/v1/billing/invoice/:clientId', verifyToken, adminOnly, async (req, res) => {
-  const { amount, currency, projectId, dueDate } = req.body;
+  const { items, taxPercent, discountPercent, currency, projectId, dueDate, notes, includeWarranty } = req.body;
   const { clientId } = req.params;
+
+  const cleanItems = sanitizeInvoiceItems(items);
+  if (!cleanItems) return res.status(400).json({ message: 'At least one valid line item (description, quantity, unit price) is required.' });
+
   const clientDoc = await db.collection('clientProfiles').doc(clientId).get();
   if (!clientDoc.exists) return res.status(404).json({ message: 'Client not found' });
 
   const cur = (currency || 'USD').toUpperCase();
   const gateway = ['GHS', 'NGN', 'ZAR'].includes(cur) ? 'PAYSTACK' : 'STRIPE';
   const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 900000 + 100000)}`;
+  const totals = computeInvoiceTotals(cleanItems, taxPercent, discountPercent);
 
   const ref = await db.collection('invoices').add({
     clientId, projectId: projectId || null, invoiceNumber,
-    amount: Number(amount), currency: cur, paymentGateway: gateway,
+    items: cleanItems, notes: (notes || '').toString().trim().slice(0, 1000),
+    includeWarranty: includeWarranty !== false,
+    ...totals, currency: cur, paymentGateway: gateway,
     status: 'DRAFT',
     dueDate: dueDate ? admin.firestore.Timestamp.fromDate(new Date(dueDate)) : now(),
-    paidAt: null, paymentLink: null, transactionId: null,
-    createdAt: now(), updatedAt: now(),
+    paidAt: null, sentAt: null, paymentLink: null, transactionId: null,
+    issuedAt: now(), createdAt: now(), updatedAt: now(),
   });
 
-  const clientData = clientDoc.data();
-  let email = null;
-  if (clientData.userId) {
-    const userDoc = await db.collection('users').doc(clientData.userId).get();
-    email = userDoc.data()?.email;
+  const doc = await ref.get();
+  return res.status(201).json(toDoc(doc));
+});
+
+app.put('/v1/billing/invoice/:id', verifyToken, adminOnly, async (req, res) => {
+  const ref = db.collection('invoices').doc(req.params.id);
+  const doc = await ref.get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const existing = doc.data();
+  if (existing.status === 'PAID' || existing.status === 'VOID') {
+    return res.status(409).json({ message: 'Paid or voided invoices can no longer be edited. Void this invoice and create a new one instead.' });
   }
 
-  let paymentLink = null;
-  const invoice = { id: ref.id, invoiceNumber, amount, currency: cur };
-  if (gateway === 'PAYSTACK' && email) paymentLink = await paystackLink(invoice, email);
+  const { items, taxPercent, discountPercent, currency, projectId, dueDate, notes, includeWarranty } = req.body;
+  const cleanItems = sanitizeInvoiceItems(items);
+  if (!cleanItems) return res.status(400).json({ message: 'At least one valid line item (description, quantity, unit price) is required.' });
 
-  if (paymentLink) await ref.update({ paymentLink, status: 'SENT' });
+  const cur = (currency || existing.currency || 'USD').toUpperCase();
+  const gateway = ['GHS', 'NGN', 'ZAR'].includes(cur) ? 'PAYSTACK' : 'STRIPE';
+  const totals = computeInvoiceTotals(cleanItems, taxPercent, discountPercent);
 
-  if (email) {
-    emailInvoice(email, {
-      invoiceNumber, amount, currency: cur,
-      dueDate: dueDate
-        ? new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-        : 'N/A',
-      paymentLink,
-    }).catch((e) => console.warn('Invoice email failed:', e.message));
-  }
+  await ref.update({
+    items: cleanItems, notes: (notes || '').toString().trim().slice(0, 1000),
+    includeWarranty: includeWarranty !== false,
+    ...totals, currency: cur, paymentGateway: gateway,
+    projectId: projectId || null,
+    dueDate: dueDate ? admin.firestore.Timestamp.fromDate(new Date(dueDate)) : existing.dueDate,
+    updatedAt: now(),
+  });
 
-  return res.json({ ...invoice, paymentLink });
+  const updated = await ref.get();
+  return res.json(toDoc(updated));
 });
 
 app.put('/v1/billing/invoice/:id/status', verifyToken, adminOnly, async (req, res) => {
@@ -685,7 +1129,62 @@ app.put('/v1/billing/invoice/:id/status', verifyToken, adminOnly, async (req, re
   return res.json({ id: req.params.id, status });
 });
 
+// Sends (or re-sends) a DRAFT invoice: generates a fresh Paystack link and
+// emails the client. Separate from creation so admins can review before sending.
+app.post('/v1/billing/invoice/:id/send', verifyToken, adminOnly, async (req, res) => {
+  const ref = db.collection('invoices').doc(req.params.id);
+  const doc = await ref.get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const invoice = toDoc(doc);
+  if (invoice.status === 'VOID') return res.status(409).json({ message: 'Cannot send a voided invoice.' });
+
+  const clientDoc = await db.collection('clientProfiles').doc(invoice.clientId).get();
+  const clientData = clientDoc.exists ? clientDoc.data() : {};
+  const email = await resolveClientEmail(clientData);
+  if (!email) return res.status(400).json({ message: 'This client has no email on file — add one before sending.' });
+
+  let paymentLink = invoice.paymentLink || null;
+  if (invoice.paymentGateway === 'PAYSTACK') {
+    paymentLink = await paystackLink(invoice, email, `/invoice/${invoice.id}?paid=1`);
+  }
+
+  await ref.update({
+    paymentLink,
+    status: invoice.status === 'DRAFT' ? 'SENT' : invoice.status,
+    sentAt: now(), updatedAt: now(),
+  });
+
+  await emailInvoice(email, {
+    invoiceNumber: invoice.invoiceNumber, amount: invoice.amount, currency: invoice.currency,
+    items: invoice.items,
+    dueDate: formatPdfDate(invoice.dueDate),
+    paymentLink: paymentLink || `${process.env.FRONTEND_URL || 'https://stormglide.io'}/invoice/${invoice.id}`,
+  }).catch((e) => console.warn('Invoice email failed:', e.message));
+
+  const updated = await ref.get();
+  return res.json(toDoc(updated));
+});
+
+app.get('/v1/billing/invoice/:id/pdf', verifyToken, adminOnly, async (req, res) => {
+  const doc = await db.collection('invoices').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const invoice = toDoc(doc);
+  const [clientDoc, settingsDoc] = await Promise.all([
+    db.collection('clientProfiles').doc(invoice.clientId).get(),
+    db.collection('settings').doc('site').get(),
+  ]);
+  const settings = { ...DEFAULT_SITE_SETTINGS, ...(settingsDoc.exists ? settingsDoc.data() : {}) };
+  const pdfBytes = await buildInvoicePdf(invoice, toDoc(clientDoc), settings);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${invoice.invoiceNumber}.pdf"`);
+  return res.send(Buffer.from(pdfBytes));
+});
+
 app.post('/v1/billing/webhook/paystack', async (req, res) => {
+  if (!verifyPaystackSignature(req)) {
+    console.warn('Rejected Paystack webhook — invalid signature');
+    return res.status(401).json({ message: 'Invalid signature' });
+  }
   if (req.body.event === 'charge.success') {
     const ref = req.body.data?.reference;
     if (ref) {
@@ -696,6 +1195,70 @@ app.post('/v1/billing/webhook/paystack', async (req, res) => {
     }
   }
   return res.json({ received: true });
+});
+
+// =============================================================================
+// PUBLIC INVOICE (no auth) — powers the shareable "pay this invoice" link
+// =============================================================================
+
+app.get('/v1/public/invoice/:id', async (req, res) => {
+  const doc = await db.collection('invoices').doc(req.params.id).get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const invoice = toDoc(doc);
+  if (invoice.status === 'VOID') return res.status(410).json({ message: 'This invoice has been voided.' });
+
+  const [clientDoc, projectDoc, settingsDoc] = await Promise.all([
+    db.collection('clientProfiles').doc(invoice.clientId).get(),
+    invoice.projectId ? db.collection('projects').doc(invoice.projectId).get() : Promise.resolve(null),
+    db.collection('settings').doc('site').get(),
+  ]);
+  const client = toDoc(clientDoc);
+  const settings = { ...DEFAULT_SITE_SETTINGS, ...(settingsDoc.exists ? settingsDoc.data() : {}) };
+
+  return res.json({
+    id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
+    items: invoice.items || [],
+    subtotal: invoice.subtotal, taxPercent: invoice.taxPercent, taxAmount: invoice.taxAmount,
+    discountPercent: invoice.discountPercent, discountAmount: invoice.discountAmount,
+    amount: invoice.amount, currency: invoice.currency, status: invoice.status,
+    notes: invoice.notes || '', issuedAt: invoice.issuedAt || invoice.createdAt, dueDate: invoice.dueDate,
+    paymentLink: invoice.status === 'PAID' ? null : invoice.paymentLink || null,
+    includeWarranty: invoice.includeWarranty !== false,
+    client: client ? { companyName: client.companyName, contactName: client.contactName } : null,
+    project: projectDoc && projectDoc.exists ? { projectName: projectDoc.data().projectName } : null,
+    company: {
+      name: settings.invoiceCompanyName, address: settings.invoiceAddress, taxId: settings.invoiceTaxId,
+      email: settings.contactEmail, phone: settings.contactPhone, logoUrl: settings.logoDataUri || settings.logoUrl,
+      primaryColor: settings.primaryColor, secondaryColor: settings.secondaryColor,
+      bankPrimary: { name: settings.bankPrimaryName, accountName: settings.bankPrimaryAccountName, accountNumber: settings.bankPrimaryAccountNumber, branch: settings.bankPrimaryBranch },
+      bankSecondary: { name: settings.bankSecondaryName, accountName: settings.bankSecondaryAccountName, accountNumber: settings.bankSecondaryAccountNumber, branch: settings.bankSecondaryBranch },
+      terms: settings.invoiceTerms, warranty: settings.invoiceWarranty,
+    },
+  });
+});
+
+app.post('/v1/public/invoice/:id/pay', async (req, res) => {
+  const ref = db.collection('invoices').doc(req.params.id);
+  const doc = await ref.get();
+  if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const invoice = toDoc(doc);
+
+  if (invoice.status === 'PAID') return res.json({ alreadyPaid: true });
+  if (invoice.status === 'VOID') return res.status(410).json({ message: 'This invoice has been voided.' });
+  if (invoice.paymentGateway !== 'PAYSTACK') {
+    return res.status(400).json({ message: 'Online payment is not available for this invoice currency yet — please contact us.' });
+  }
+
+  const clientDoc = await db.collection('clientProfiles').doc(invoice.clientId).get();
+  const email = clientDoc.exists ? await resolveClientEmail(clientDoc.data()) : null;
+  if (!email) return res.status(400).json({ message: 'No contact email on file for this invoice.' });
+
+  const url = await paystackLink(invoice, email, `/invoice/${invoice.id}?paid=1`);
+  if (!url) return res.status(502).json({ message: 'Could not start payment right now — please try again shortly.' });
+
+  await ref.update({ paymentLink: url, status: invoice.status === 'DRAFT' ? 'SENT' : invoice.status, updatedAt: now() });
+  return res.json({ url });
 });
 
 // =============================================================================
@@ -931,17 +1494,44 @@ app.post('/v1/audit/logs', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/v1/projects', verifyToken, adminOnly, async (req, res) => {
   const { clientId, phase, status } = req.query;
-  let query = db.collection('projects');
-  if (clientId) query = query.where('clientId', '==', clientId);
-  if (phase) query = query.where('currentPhase', '==', phase);
-  if (status) query = query.where('completionStatus', '==', status);
-  const snap = await query.orderBy('createdAt', 'desc').get();
-  const projects = toDocs(snap).map(p => ({
-    ...p,
-    clientName: p.clientName || 'Unknown',
-    completionPercentage: p.completionPercentage || 0,
-    currentPhase: p.currentPhase || 'DISCOVERY',
+  const snap = await db.collection('projects').get();
+  let records = toDocs(snap);
+  if (clientId) records = records.filter((project) => project.clientId === clientId);
+  if (phase) records = records.filter((project) => project.currentPhase === phase);
+  if (status) records = records.filter((project) => project.completionStatus === status);
+
+  const projects = await Promise.all(records.map(async (project) => {
+    const [clientDoc, completionDoc, milestoneSnap, domainSnap, subscriptionSnap, expenseSnap] = await Promise.all([
+      db.collection('clientProfiles').doc(project.clientId).get(),
+      db.collection('projectCompletion').doc(project.id).get(),
+      db.collection('milestones').where('projectId', '==', project.id).get(),
+      db.collection('domainManagement').where('projectId', '==', project.id).get(),
+      db.collection('projectSubscription').where('projectId', '==', project.id).get(),
+      db.collection('projectExpenses').where('projectId', '==', project.id).get(),
+    ]);
+    const completion = completionDoc.exists ? completionDoc.data() : {
+      overallCompletionPercentage: project.completionPercentage || 0,
+      status: project.completionStatus || 'ON_TRACK',
+      currentPhase: project.currentPhase || 'DISCOVERY',
+    };
+    return {
+      ...project,
+      client: toDoc(clientDoc) || { companyName: project.clientName || 'Unassigned client' },
+      completion,
+      currentPhase: project.currentPhase || 'DISCOVERY',
+      _count: {
+        milestones: milestoneSnap.size,
+        domains: domainSnap.size,
+        subscriptions: subscriptionSnap.size,
+        expenses: expenseSnap.size,
+      },
+    };
   }));
+  projects.sort((a, b) => {
+    const aTime = a.createdAt?.toMillis?.() || 0;
+    const bTime = b.createdAt?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
   return res.json(projects);
 });
 
@@ -949,30 +1539,67 @@ app.get('/v1/projects/:id', verifyToken, adminOnly, async (req, res) => {
   const proj = await db.collection('projects').doc(req.params.id).get();
   if (!proj.exists) return res.status(404).json({ error: 'Project not found' });
   const data = proj.data();
-  const completion = await db.collection('projectCompletion').doc(req.params.id).get();
-  const stack = await db.collection('projectStack').doc(req.params.id).get();
-  const domains = await db.collection('domainManagement').where('projectId', '==', req.params.id).get();
-  const subscriptions = await db.collection('projectSubscription').where('projectId', '==', req.params.id).get();
-  const milestones = await db.collection('milestones').where('projectId', '==', req.params.id).get();
+  const [client, completion, stack, domains, subscriptions, milestones, invoices, expenses, infrastructure] = await Promise.all([
+    db.collection('clientProfiles').doc(data.clientId).get(),
+    db.collection('projectCompletion').doc(req.params.id).get(),
+    db.collection('projectStack').doc(req.params.id).get(),
+    db.collection('domainManagement').where('projectId', '==', req.params.id).get(),
+    db.collection('projectSubscription').where('projectId', '==', req.params.id).get(),
+    db.collection('milestones').where('projectId', '==', req.params.id).get(),
+    db.collection('invoices').where('projectId', '==', req.params.id).get(),
+    db.collection('projectExpenses').where('projectId', '==', req.params.id).get(),
+    db.collection('infrastructure').doc(req.params.id).get(),
+  ]);
+  const subscriptionRecords = toDocs(subscriptions);
+  const expenseRecords = toDocs(expenses);
+  const invoiceRecords = toDocs(invoices);
+  const monthlyRecurring = subscriptionRecords
+    .filter((item) => item.status === 'ACTIVE' && item.billingFrequency === 'MONTHLY')
+    .reduce((total, item) => total + Number(item.monthlyCost || 0), 0);
+  const totalExpenses = expenseRecords.reduce((total, item) => total + Number(item.amount || 0), 0);
+  const totalInvoiced = invoiceRecords.reduce((total, item) => total + Number(item.amount || 0), 0);
+  const totalPaid = invoiceRecords
+    .filter((item) => item.status === 'PAID')
+    .reduce((total, item) => total + Number(item.amount || 0), 0);
   return res.json({
     ...data, id: proj.id,
-    completion: completion.exists ? completion.data() : null,
-    stack: stack.exists ? stack.data() : null,
+    client: toDoc(client) || { companyName: data.clientName || 'Unassigned client' },
+    completion: completion.exists ? completion.data() : {
+      overallCompletionPercentage: data.completionPercentage || 0,
+      status: data.completionStatus || 'ON_TRACK',
+      currentPhase: data.currentPhase || 'DISCOVERY',
+      healthScore: 5,
+      riskFactors: [],
+    },
+    stack: stack.exists ? stack.data() : {},
     domains: toDocs(domains),
-    subscriptions: toDocs(subscriptions),
+    subscriptions: subscriptionRecords,
     milestones: toDocs(milestones),
+    invoices: invoiceRecords,
+    expenses: expenseRecords,
+    infrastructure: infrastructure.exists ? infrastructure.data() : null,
+    summary: { monthlyRecurring, totalExpenses, totalInvoiced, totalPaid },
+    _count: {
+      domains: domains.size,
+      subscriptions: subscriptions.size,
+      milestones: milestones.size,
+      expenses: expenses.size,
+    },
   });
 });
 
 app.post('/v1/projects', verifyToken, adminOnly, async (req, res) => {
   const { clientId, projectName, description, estimatedEnd } = req.body;
   if (!clientId || !projectName) return res.status(400).json({ error: 'Missing required fields' });
+  const client = await db.collection('clientProfiles').doc(clientId).get();
+  if (!client.exists) return res.status(404).json({ error: 'Client not found' });
   const ref = db.collection('projects').doc();
   await ref.set({
     clientId, projectName, description: description || null,
+    clientName: client.data().companyName || null,
     estimatedEnd: estimatedEnd || null, currentPhase: 'DISCOVERY',
     completionStatus: 'ON_TRACK', completionPercentage: 0,
-    createdAt: now(), updatedAt: now(),
+    startDate: now(), createdAt: now(), updatedAt: now(),
   });
   await db.collection('projectCompletion').doc(ref.id).set({
     projectId: ref.id, overallCompletionPercentage: 0, currentPhase: 'DISCOVERY',
@@ -1050,7 +1677,8 @@ app.get('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) 
 
 app.put('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) => {
   const { frontend, backend, database, hosting, devops, versionControl, cicd, monitoring } = req.body;
-  await db.collection('projectStack').doc(req.params.id).update({
+  await db.collection('projectStack').doc(req.params.id).set({
+    projectId: req.params.id,
     ...(frontend && { frontend }),
     ...(backend && { backend }),
     ...(database && { database }),
@@ -1059,8 +1687,56 @@ app.put('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) 
     ...(versionControl && { versionControl }),
     ...(cicd && { cicd }),
     ...(monitoring && { monitoring }),
-  });
+    updatedAt: now(),
+  }, { merge: true });
   return res.json({ message: 'Tech stack updated' });
+});
+
+// =============================================================================
+// ADMIN PORTAL: PROJECT EXPENSES
+// =============================================================================
+
+app.get('/v1/project-expenses', verifyToken, adminOnly, async (req, res) => {
+  const { projectId } = req.query;
+  const snap = projectId
+    ? await db.collection('projectExpenses').where('projectId', '==', projectId).get()
+    : await db.collection('projectExpenses').get();
+  const expenses = toDocs(snap);
+  expenses.sort((a, b) => {
+    const aTime = a.paidAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+    const bTime = b.paidAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
+  return res.json(expenses);
+});
+
+app.post('/v1/project-expenses', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, vendor, category, description, amount, currency, paidAt, paymentMethod, reference, recurring } = req.body;
+  if (!projectId || !vendor || !amount) return res.status(400).json({ error: 'Project, vendor, and amount are required' });
+  const project = await db.collection('projects').doc(projectId).get();
+  if (!project.exists) return res.status(404).json({ error: 'Project not found' });
+
+  const ref = db.collection('projectExpenses').doc();
+  await ref.set({
+    projectId,
+    vendor: String(vendor).trim(),
+    category: category || 'OTHER',
+    description: description || null,
+    amount: Number(amount),
+    currency: String(currency || 'GHS').toUpperCase(),
+    paidAt: admin.firestore.Timestamp.fromDate(new Date(paidAt || Date.now())),
+    paymentMethod: paymentMethod || null,
+    reference: reference || null,
+    recurring: Boolean(recurring),
+    createdAt: now(),
+    createdBy: req.user.email || req.user.uid,
+  });
+  return res.json({ id: ref.id, message: 'Project payment recorded' });
+});
+
+app.delete('/v1/project-expenses/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('projectExpenses').doc(req.params.id).delete();
+  return res.json({ message: 'Project payment deleted' });
 });
 
 // =============================================================================
@@ -1069,11 +1745,12 @@ app.put('/v1/projects/:id/tech-stack', verifyToken, adminOnly, async (req, res) 
 
 app.get('/v1/domains', verifyToken, adminOnly, async (req, res) => {
   const { projectId, status } = req.query;
-  let query = db.collection('domainManagement');
-  if (projectId) query = query.where('projectId', '==', projectId);
-  if (status) query = query.where('status', '==', status);
-  const snap = await query.orderBy('expirationDate', 'asc').get();
-  return res.json(toDocs(snap));
+  const snap = await db.collection('domainManagement').get();
+  let domains = toDocs(snap);
+  if (projectId) domains = domains.filter((domain) => domain.projectId === projectId);
+  if (status) domains = domains.filter((domain) => domain.status === status);
+  domains.sort((a, b) => (a.expirationDate?.toMillis?.() || 0) - (b.expirationDate?.toMillis?.() || 0));
+  return res.json(domains);
 });
 
 app.get('/v1/domains/expiring', verifyToken, adminOnly, async (req, res) => {
@@ -1095,15 +1772,15 @@ app.get('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
 });
 
 app.post('/v1/domains', verifyToken, adminOnly, async (req, res) => {
-  const { projectId, domainName, registrar, expirationDate, sslProvider, sslExpirationDate, cost } = req.body;
-  if (!projectId || !domainName) return res.status(400).json({ error: 'Missing required fields' });
+  const { projectId, domainName, registrar, expirationDate, sslProvider, sslExpirationDate, cost, autoRenew } = req.body;
+  if (!projectId || !domainName || !expirationDate) return res.status(400).json({ error: 'Project, domain, and expiration date are required' });
   const ref = db.collection('domainManagement').doc();
   await ref.set({
     projectId, domainName, registrar: registrar || 'GoDaddy',
     expirationDate: admin.firestore.Timestamp.fromDate(new Date(expirationDate)),
     sslProvider: sslProvider || 'Let\'s Encrypt',
     sslExpirationDate: sslExpirationDate ? admin.firestore.Timestamp.fromDate(new Date(sslExpirationDate)) : null,
-    cost: cost || 0, autoRenew: true, status: 'ACTIVE',
+    cost: Number(cost || 0), autoRenew: autoRenew !== false, status: 'ACTIVE',
     renewalAlertSentAt: null, createdAt: now(),
   });
   return res.json({ id: ref.id, domainName, message: 'Domain added' });
@@ -1143,11 +1820,12 @@ app.delete('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/v1/project-subscriptions', verifyToken, adminOnly, async (req, res) => {
   const { projectId, status } = req.query;
-  let query = db.collection('projectSubscription');
-  if (projectId) query = query.where('projectId', '==', projectId);
-  if (status) query = query.where('status', '==', status);
-  const snap = await query.orderBy('renewalDate', 'asc').get();
-  return res.json(toDocs(snap));
+  const snap = await db.collection('projectSubscription').get();
+  let subscriptions = toDocs(snap);
+  if (projectId) subscriptions = subscriptions.filter((item) => item.projectId === projectId);
+  if (status) subscriptions = subscriptions.filter((item) => item.status === status);
+  subscriptions.sort((a, b) => (a.renewalDate?.toMillis?.() || 0) - (b.renewalDate?.toMillis?.() || 0));
+  return res.json(subscriptions);
 });
 
 app.get('/v1/project-subscriptions/renewing', verifyToken, adminOnly, async (req, res) => {
@@ -1172,14 +1850,14 @@ app.get('/v1/project-subscriptions/:projectId/total-cost', verifyToken, adminOnl
 });
 
 app.post('/v1/project-subscriptions', verifyToken, adminOnly, async (req, res) => {
-  const { projectId, serviceName, monthlyCost, billingFrequency, renewalDate, notes } = req.body;
+  const { projectId, serviceName, monthlyCost, billingFrequency, renewalDate, notes, autoRenew } = req.body;
   if (!projectId || !serviceName) return res.status(400).json({ error: 'Missing required fields' });
   const ref = db.collection('projectSubscription').doc();
   await ref.set({
-    projectId, serviceName, monthlyCost: monthlyCost || 0,
+    projectId, serviceName, monthlyCost: Number(monthlyCost || 0),
     billingFrequency: billingFrequency || 'MONTHLY',
     renewalDate: admin.firestore.Timestamp.fromDate(new Date(renewalDate || Date.now())),
-    autoRenew: true, status: 'ACTIVE', alertSentAt: null,
+    autoRenew: autoRenew !== false, status: 'ACTIVE', alertSentAt: null,
     notes: notes || null, createdAt: now(),
   });
   return res.json({ id: ref.id, serviceName, message: 'Subscription added' });

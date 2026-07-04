@@ -1,14 +1,14 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, CheckCircle2, MoveUpRight, Stethoscope, MapPin, Cloud, Truck, CreditCard } from 'lucide-react'
+import { ArrowRight, Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, CheckCircle2, MoveUpRight, Stethoscope, MapPin, Cloud, Truck, CreditCard, Cpu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { services } from '../data/services'
 
-const ICONS = { Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, Stethoscope, Cloud, Truck, CreditCard }
+const ICONS = { Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, Stethoscope, Cloud, Truck, CreditCard, Cpu }
 
 const WHY_US = [
   'Every website includes a full admin backoffice — not an afterthought, built in from day one.',
-  'We\'ve shipped and run real products — Nexus HRM, CargoScan, Nexus MFG — used by real businesses.',
+  'We\'ve shipped and run real products — Nexus HRM, Nexus Dental, CargoScan, Nexus MFG — used by real businesses.',
   'Based in Accra. We understand African business constraints, infrastructure, and opportunity.',
   'One team from design to deployment. No handoffs. No finger-pointing.',
   'Every system you pay for is yours — documented, maintainable, source code included.',
@@ -76,9 +76,12 @@ export default function ServicesPage() {
               return (
                 <motion.div
                   key={s.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  className="sg-cursor-hover"
+                  whileHover={{ y: -4 }}
                   style={{
                     background: 'var(--bg-white)', border: '1.5px solid var(--ink-100)',
                     borderRadius: 'var(--radius-xl)', padding: '2rem',
@@ -90,9 +93,16 @@ export default function ServicesPage() {
 
                   {/* Icon + badge */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                    <div style={{ width: 46, height: 46, borderRadius: '13px', background: `${s.color}10`, border: `1.5px solid ${s.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <motion.div
+                      initial={{ scale: 0, rotate: -20 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      viewport={{ once: true, margin: '-40px' }}
+                      whileHover={{ scale: 1.12, rotate: 6 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 16, delay: (i % 3) * 0.08 + 0.12 }}
+                      style={{ width: 46, height: 46, borderRadius: '13px', background: `${s.color}10`, border: `1.5px solid ${s.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                       <Icon size={20} color={s.color} />
-                    </div>
+                    </motion.div>
                     {s.badge && (
                       <span style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', padding: '0.2rem 0.55rem', borderRadius: '99px', background: `${s.color}10`, border: `1px solid ${s.color}25`, color: s.color, fontWeight: 600, letterSpacing: '0.04em' }}>
                         {s.badge}

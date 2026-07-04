@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import Magnetic from '../common/Magnetic'
 
 /**
  * FinalCTA - Strong final call-to-action before footer
@@ -95,16 +96,18 @@ export default function FinalCTA() {
             flexWrap: 'wrap',
           }}
         >
-          <Link
-            to="/contact"
-            className="btn-primary"
-            style={{
-              textDecoration: 'none',
-              gap: '0.5rem',
-            }}
-          >
-            Discuss Your Project <ArrowRight size={16} />
-          </Link>
+          <Magnetic>
+            <Link
+              to="/contact"
+              className="btn-primary"
+              style={{
+                textDecoration: 'none',
+                gap: '0.5rem',
+              }}
+            >
+              Discuss Your Project <ArrowRight size={16} />
+            </Link>
+          </Magnetic>
           <a
             href="mailto:hello@stormglide.tech"
             className="btn-secondary"

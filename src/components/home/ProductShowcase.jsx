@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useRef, useState } from 'react'
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import WordReveal from '../common/WordReveal'
 
 const SYSTEMS = [
   {
@@ -32,6 +33,20 @@ const SYSTEMS = [
     path: '/sano-health',
   },
   {
+    id: 'dental',
+    name: 'Nexus Dental',
+    type: 'Dental practice system',
+    title: 'Patient records, appointments, billing — one system.',
+    description: 'A full practice management platform built for dental clinics. Manages patients, treatment plans, scheduling and invoicing without paper or disconnected spreadsheets.',
+    points: ['Patient records & dental history', 'Appointment scheduling', 'Treatment plans & billing'],
+    image: '/images/mockups/dental.png',
+    width: 1024,
+    height: 662,
+    alt: 'Nexus Dental practice management dashboard',
+    path: '/nexus-dental',
+    external: 'https://nexusdental--nexusdentalsystem.us-east4.hosted.app',
+  },
+  {
     id: 'commerce',
     name: 'Lollarod Commerce',
     type: 'Client platform',
@@ -50,6 +65,32 @@ const SYSTEMS = [
 export default function ProductShowcase() {
   const [activeId, setActiveId] = useState(SYSTEMS[0].id)
   const activeSystem = SYSTEMS.find(system => system.id === activeId) || SYSTEMS[0]
+  const reduceMotion = useReducedMotion()
+
+  /* Scroll parallax — mockup drifts slower than the page */
+  const visualRef = useRef(null)
+  const { scrollYProgress } = useScroll({ target: visualRef, offset: ['start end', 'end start'] })
+  const parallaxY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [46, -46])
+
+  /* Mouse tilt — figure leans toward the cursor */
+  const tiltX = useMotionValue(0)
+  const tiltY = useMotionValue(0)
+  const springTiltX = useSpring(tiltX, { stiffness: 160, damping: 20 })
+  const springTiltY = useSpring(tiltY, { stiffness: 160, damping: 20 })
+
+  const handleTilt = event => {
+    if (reduceMotion) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const px = (event.clientX - rect.left) / rect.width - 0.5
+    const py = (event.clientY - rect.top) / rect.height - 0.5
+    tiltX.set(py * -5)
+    tiltY.set(px * 7)
+  }
+
+  const resetTilt = () => {
+    tiltX.set(0)
+    tiltY.set(0)
+  }
 
   return (
     <section className="sg-systems-section" id="systems">
@@ -57,7 +98,7 @@ export default function ProductShowcase() {
         <div className="sg-home-section-heading">
           <div>
             <span className="sg-home-section-label">Systems you can inspect</span>
-            <h2>Real interfaces. Real operating context.</h2>
+            <WordReveal text="Real interfaces. Real operating context." />
           </div>
           <p>We show the software because the work should be visible before the sales call.</p>
         </div>
@@ -110,14 +151,21 @@ export default function ProductShowcase() {
             </AnimatePresence>
           </div>
 
-          <div className={`sg-system-visual is-${activeSystem.id}`}>
+          <motion.div
+            ref={visualRef}
+            className={`sg-system-visual is-${activeSystem.id}`}
+            style={{ y: parallaxY, rotateX: springTiltX, rotateY: springTiltY, transformPerspective: 1100 }}
+            onMouseMove={handleTilt}
+            onMouseLeave={resetTilt}
+          >
             <AnimatePresence mode="wait">
               <motion.figure
                 key={activeSystem.id}
-                initial={{ opacity: 0, scale: 0.985 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, rotateX: 7, y: 22 }}
+                animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
                 exit={{ opacity: 0, scale: 0.99 }}
-                transition={{ duration: 0.28 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                style={{ transformPerspective: 900 }}
               >
                 <div className="sg-system-browser-bar">
                   <span /><span /><span />
@@ -133,7 +181,7 @@ export default function ProductShowcase() {
                 />
               </motion.figure>
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

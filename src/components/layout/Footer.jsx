@@ -2,14 +2,16 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, ArrowRight } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import BrandLogo from '../common/BrandLogo'
+import Magnetic from '../common/Magnetic'
 import { getProductPath } from '../../data/products'
 
 const PRODUCTS = [
-  { name: 'Nexus HRM',   slug: 'nexus-hrm',  color: 'var(--color-accent-blue)' },
-  { name: 'SANO Health', slug: 'sano',        color: 'var(--color-success)' },
-  { name: 'CargoScan',   slug: 'cargoscan',   color: 'var(--color-warning)' },
-  { name: 'Nexus MFG',   slug: 'nexus-mfg',  color: 'var(--color-success)' },
-  { name: 'Glasstech',   slug: 'glasstech',   color: 'var(--color-accent-violet)' },
+  { name: 'Nexus HRM',    slug: 'nexus-hrm',    color: 'var(--color-accent-blue)' },
+  { name: 'Nexus Dental', slug: 'nexus-dental', color: '#00BFA5' },
+  { name: 'SANO Health',  slug: 'sano',         color: 'var(--color-success)' },
+  { name: 'CargoScan',    slug: 'cargoscan',    color: 'var(--color-warning)' },
+  { name: 'Nexus MFG',    slug: 'nexus-mfg',   color: 'var(--color-success)' },
+  { name: 'Glasstech',    slug: 'glasstech',    color: 'var(--color-accent-violet)' },
 ]
 
 const NAV = [
@@ -82,18 +84,20 @@ export default function Footer() {
               Ready to build something your business can rely on?
             </h2>
           </div>
-          <Link
-            to="/contact"
-            className="btn-primary"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.625rem',
-              padding: '0.9rem 1.875rem',
-              fontSize: '0.9rem',
-              flexShrink: 0,
-            }}
-          >
-            Let's talk <ArrowRight size={15} />
-          </Link>
+          <Magnetic>
+            <Link
+              to="/contact"
+              className="btn-primary"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.625rem',
+                padding: '0.9rem 1.875rem',
+                fontSize: '0.9rem',
+                flexShrink: 0,
+              }}
+            >
+              Let's talk <ArrowRight size={15} />
+            </Link>
+          </Magnetic>
         </div>
       </div>
 

@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ProjectsAPI } from "@/lib/api";
+import { formatDate, SerializedDate, toDate } from "@/lib/firestore";
 
 interface Domain {
   id: string;
   domainName: string;
   registrar?: string;
-  expirationDate?: string;
-  sslExpirationDate?: string;
+  expirationDate?: SerializedDate;
+  sslExpirationDate?: SerializedDate;
   autoRenew: boolean;
   cost?: number;
   status: string;
@@ -35,10 +37,7 @@ export function DomainsTab({ projectId }: { projectId: string }) {
   const fetchDomains = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/domains?projectId=${projectId}`, {
-        credentials: "include",
-      });
-      const data = await response.json();
+      const data = await ProjectsAPI.getDomains(projectId);
       setDomains(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch domains:", error);
@@ -50,32 +49,19 @@ export function DomainsTab({ projectId }: { projectId: string }) {
   const handleAddDomain = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/v1/domains", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId,
-          ...formData,
-          cost: formData.cost ? parseFloat(formData.cost) : undefined,
-          expirationDate: formData.expirationDate ? new Date(formData.expirationDate) : undefined,
-          sslExpirationDate: formData.sslExpirationDate ? new Date(formData.sslExpirationDate) : undefined,
-        }),
-        credentials: "include",
+      await ProjectsAPI.addDomain({
+        projectId,
+        domainName: formData.domainName,
+        registrar: formData.registrar,
+        sslProvider: formData.sslCertProvider,
+        autoRenew: formData.autoRenew,
+        cost: formData.cost ? parseFloat(formData.cost) : undefined,
+        expirationDate: formData.expirationDate,
+        sslExpirationDate: formData.sslExpirationDate || undefined,
       });
-
-      if (response.ok) {
-        setFormData({
-          domainName: "",
-          registrar: "",
-          expirationDate: "",
-          sslCertProvider: "",
-          sslExpirationDate: "",
-          autoRenew: true,
-          cost: "",
-        });
-        setShowForm(false);
-        fetchDomains();
-      }
+      setFormData({ domainName: "", registrar: "", expirationDate: "", sslCertProvider: "", sslExpirationDate: "", autoRenew: true, cost: "" });
+      setShowForm(false);
+      await fetchDomains();
     } catch (error) {
       console.error("Failed to add domain:", error);
     }
@@ -83,11 +69,8 @@ export function DomainsTab({ projectId }: { projectId: string }) {
 
   const handleRenew = async (domainId: string) => {
     try {
-      await fetch(`/api/v1/domains/${domainId}/renew`, {
-        method: "PUT",
-        credentials: "include",
-      });
-      fetchDomains();
+      await ProjectsAPI.renewDomain(domainId);
+      await fetchDomains();
     } catch (error) {
       console.error("Failed to renew domain:", error);
     }
@@ -95,19 +78,17 @@ export function DomainsTab({ projectId }: { projectId: string }) {
 
   const handleDelete = async (domainId: string) => {
     try {
-      await fetch(`/api/v1/domains/${domainId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      fetchDomains();
+      await ProjectsAPI.deleteDomain(domainId);
+      await fetchDomains();
     } catch (error) {
       console.error("Failed to delete domain:", error);
     }
   };
 
-  const getDaysUntilExpiry = (date: string | undefined) => {
+  const getDaysUntilExpiry = (value: SerializedDate) => {
+    const date = toDate(value);
     if (!date) return null;
-    const days = Math.floor((new Date(date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const days = Math.floor((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return days;
   };
 
@@ -155,6 +136,7 @@ export function DomainsTab({ projectId }: { projectId: string }) {
               value={formData.expirationDate}
               onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
               className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
+              required
             />
             <input
               type="text"
@@ -264,7 +246,7 @@ export function DomainsTab({ projectId }: { projectId: string }) {
                           )}
                         </span>
                         <span className="text-gray-300">
-                          {new Date(domain.expirationDate).toLocaleDateString()}
+                          {formatDate(domain.expirationDate)}
                           {expiryDays !== null && ` (${expiryDays} days)`}
                         </span>
                       </div>
@@ -285,7 +267,7 @@ export function DomainsTab({ projectId }: { projectId: string }) {
                           )}
                         </span>
                         <span className="text-gray-300">
-                          {new Date(domain.sslExpirationDate).toLocaleDateString()}
+                          {formatDate(domain.sslExpirationDate)}
                           {sslExpiryDays !== null && ` (${sslExpiryDays} days)`}
                         </span>
                       </div>

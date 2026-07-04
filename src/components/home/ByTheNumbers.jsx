@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useTheme } from '../../context/ThemeContext'
+import CountUp from '../common/CountUp'
 
 export default function ByTheNumbers() {
   const { activeVariant } = useTheme()
@@ -101,7 +102,7 @@ export default function ByTheNumbers() {
                 lineHeight: 1,
                 margin: 0
               }}>
-                {metric.value}
+                <CountUp value={metric.value} />
               </div>
               <p style={{
                 fontSize: '0.95rem',

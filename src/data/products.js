@@ -72,6 +72,24 @@ export const products = [
     color: '#7B61FF',
   },
   {
+    id: 'nexus-dental',
+    name: 'Nexus Dental',
+    icon: 'Stethoscope',
+    status: 'live',
+    tagline: 'Practice management built for dental clinics',
+    description: 'Nexus Dental is a complete dental practice management system — handling patient records, appointment scheduling, treatment plans, billing, and clinical notes in one connected platform built for African clinics.',
+    features: [
+      'Patient records and dental history',
+      'Appointment scheduling and reminders',
+      'Treatment plan management',
+      'Billing and invoicing',
+      'Clinical notes and charting',
+      'Multi-dentist, multi-chair support',
+    ],
+    tech: ['React', 'Firebase', 'Node.js'],
+    color: '#00BFA5',
+  },
+  {
     id: 'glasstech',
     name: 'Glasstech',
     icon: 'Layers',
@@ -95,6 +113,7 @@ const productLandingPaths = {
   'nexus-hrm': '/nexus-hrm',
   sano: '/sano-health',
   cargoscan: '/cargoscan',
+  'nexus-dental': '/nexus-dental',
 }
 
 export function getProductPath(productId) {
