@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import WordReveal from '../common/WordReveal'
+import { useActivePanelNode } from '../../lib/panelRegistry'
 
 const SYSTEMS = [
   {
@@ -58,7 +59,7 @@ const SYSTEMS = [
     height: 588,
     alt: 'Lollarod commerce website with a furniture collection hero',
     path: '/work',
-    external: 'https://lollarodgh.web.app/',
+    external: 'https://lollarodenterprisenew.com/',
   },
 ]
 
@@ -67,9 +68,17 @@ export default function ProductShowcase() {
   const activeSystem = SYSTEMS.find(system => system.id === activeId) || SYSTEMS[0]
   const reduceMotion = useReducedMotion()
 
-  /* Scroll parallax — mockup drifts slower than the page */
+  /* Scroll parallax — mockup drifts slower than the page.
+     Scrolling now happens inside the active board panel, not the window, so
+     useScroll needs that panel as its `container` (framer retries until the
+     ref resolves, so it's fine that this starts out null on first render). */
   const visualRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: visualRef, offset: ['start end', 'end start'] })
+  const panelContainerRef = useRef(null)
+  const activePanelNode = useActivePanelNode()
+  useLayoutEffect(() => {
+    panelContainerRef.current = activePanelNode
+  }, [activePanelNode])
+  const { scrollYProgress } = useScroll({ target: visualRef, container: panelContainerRef, offset: ['start end', 'end start'] })
   const parallaxY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [46, -46])
 
   /* Mouse tilt — figure leans toward the cursor */

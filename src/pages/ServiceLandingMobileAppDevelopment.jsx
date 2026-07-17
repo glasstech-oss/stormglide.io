@@ -35,7 +35,7 @@ export default function ServiceLandingMobileAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="What We Build" title="App Types" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -87,7 +87,7 @@ export default function ServiceLandingMobileAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <SectionHeader label="Questions" title="Mobile App FAQ" alignment="center" />
           <div style={{ marginTop: '3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

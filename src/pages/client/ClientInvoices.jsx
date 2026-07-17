@@ -313,7 +313,7 @@ export default function ClientInvoices() {
               </div>
               <div>
                 <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Support</p>
-                <p>Email: support@stormglide.io</p>
+                <p>Email: john@stormglide.io</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 .sg-home {
   overflow: clip;
-  background: var(--color-background);
+  background: transparent;
 }
 
 .sg-home-container {
@@ -80,9 +80,7 @@
   align-items: center;
   overflow: hidden;
   padding: 8.4rem 2rem 4.5rem;
-  background:
-    radial-gradient(circle at 72% 24%, color-mix(in srgb, var(--sg-accent) 17%, transparent), transparent 35rem),
-    var(--color-background);
+  background: radial-gradient(circle at 72% 24%, color-mix(in srgb, var(--sg-accent) 17%, transparent), transparent 35rem);
 }
 
 .sg-home-hero[data-variant='aurora']::before {
@@ -599,7 +597,7 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 /* Product showcase */
 .sg-systems-section {
   padding: 7rem 0;
-  background: var(--color-background);
+  background: transparent;
 }
 
 .sg-system-tabs {
@@ -843,12 +841,57 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 }
 
 .sg-flow-output {
+  position: relative;
   min-height: 300px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--sg-accent) 30%, var(--color-border-subtle));
   border-radius: var(--radius-lg);
   background: var(--color-background);
   box-shadow: 0 22px 60px color-mix(in srgb, var(--sg-accent) 10%, transparent);
+}
+
+/* A soft diagonal light sweep drifting across the whole panel every few
+   seconds — reads as "this is actively scanning/processing", not static. */
+.sg-flow-scan {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 40%, color-mix(in srgb, var(--sg-accent) 10%, transparent) 50%, transparent 60%);
+  background-size: 300% 100%;
+  animation: sgFlowScanSweep 5.5s ease-in-out infinite;
+}
+
+@keyframes sgFlowScanSweep {
+  0%, 25% { background-position: 130% 0; }
+  75%, 100% { background-position: -60% 0; }
+}
+
+.sg-flow-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  color: var(--sg-accent);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sg-flow-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent);
+  animation: sgFlowLivePulse 1.8s ease-out infinite;
+}
+
+@keyframes sgFlowLivePulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 55%, transparent); }
+  70% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-success) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 0%, transparent); }
 }
 
 .sg-flow-output-head {
@@ -864,13 +907,15 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 .sg-flow-output-head small { color: var(--sg-accent); font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; }
 
 .sg-flow-output-grid {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
   padding: 1rem;
 }
 
-.sg-flow-output-grid > div:not(.sg-flow-chart) {
+.sg-flow-output-grid > div:not(.sg-flow-chart):not(.sg-flow-metric-row):not(.sg-flow-log) {
   display: grid;
   gap: 0.3rem;
   border: 1px solid var(--color-border-subtle);
@@ -881,6 +926,103 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 
 .sg-flow-output-grid small { color: var(--color-text-secondary); font-size: 0.62rem; }
 .sg-flow-output-grid strong { color: var(--color-text-heading); font-size: 0.9rem; }
+
+.sg-flow-number {
+  display: inline-grid;
+  overflow: hidden;
+}
+
+.sg-flow-number span {
+  grid-area: 1 / 1;
+}
+
+.sg-flow-metric-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 0.85rem;
+}
+
+.sg-flow-ring {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.sg-flow-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.sg-flow-ring-track {
+  fill: none;
+  stroke: var(--color-border-subtle);
+  stroke-width: 3;
+}
+
+.sg-flow-ring-value {
+  fill: none;
+  stroke: var(--sg-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 900ms cubic-bezier(.32,.72,0,1);
+}
+
+.sg-flow-ring-sweep {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--sg-accent) 55%, transparent) 26deg, transparent 52deg);
+  animation: sgFlowRingSpin 3.2s linear infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes sgFlowRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.sg-flow-ring strong {
+  position: relative;
+  font-size: 0.58rem !important;
+  font-family: var(--font-mono);
+}
+
+.sg-flow-throughput {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  position: relative;
+}
+
+.sg-flow-sparkline {
+  position: absolute;
+  right: 0;
+  bottom: 0.15rem;
+  display: flex;
+  align-items: end;
+  gap: 2px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.sg-flow-sparkline i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: var(--sg-accent);
+  transition: height 400ms ease;
+}
 
 .sg-flow-chart {
   height: 116px;
@@ -895,15 +1037,46 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
     var(--color-surface);
   background-size: 100% 25%;
   padding: 0.8rem;
+  overflow: hidden;
 }
 
 .sg-flow-chart span {
   width: 100%;
-  height: var(--bar-height);
+  min-width: 6px;
   border-radius: 3px 3px 0 0;
   background: linear-gradient(180deg, var(--sg-accent), var(--sg-accent-2));
   transform-origin: bottom;
-  animation: sgBarIn 700ms both;
+}
+
+.sg-flow-log {
+  grid-column: 1 / -1;
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 0.7rem 0.85rem;
+  /* fixed height, not min-height: entering/exiting log lines must never
+     resize this box — layout shifts above the fold make browser scroll
+     anchoring "correct" the page a few px per tick (visible page drift). */
+  height: 118px;
+  overflow: hidden;
+}
+
+.sg-flow-log-line {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sg-flow-log-line::before {
+  content: '›';
+  color: var(--sg-accent);
+  margin-right: 0.4rem;
 }
 
 @keyframes sgBarIn {
@@ -914,9 +1087,7 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 /* Trust */
 .sg-trust-section {
   padding: 7rem 0;
-  background:
-    radial-gradient(circle at 18% 40%, color-mix(in srgb, var(--sg-accent) 9%, transparent), transparent 28rem),
-    var(--color-background);
+  background: radial-gradient(circle at 18% 40%, color-mix(in srgb, var(--sg-accent) 9%, transparent), transparent 28rem);
 }
 
 .sg-trust-layout {
@@ -1087,5 +1258,174 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 
 @media (prefers-reduced-motion: reduce) {
   .sg-flow-chart span { animation: none; }
+  .sg-flow-scan,
+  .sg-flow-ring-sweep,
+  .sg-flow-live-dot { animation: none; }
   .sg-home * { scroll-behavior: auto; }
+}
+
+/* ── Minimal hero stage: one static frame instead of the tabbed triple stack ── */
+.sg-home-product-stage-minimal { min-height: unset; }
+.sg-home-product-stage-minimal .sg-stage-frame.is-static {
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  cursor: default;
+  opacity: 1;
+}
+
+/* ── Scroll world: fragments assemble into one dashboard ── */
+.sg-story {
+  position: relative;
+  height: 300vh;
+}
+.sg-story[data-static] { height: auto; padding: var(--section-padding) 0; }
+
+.sg-story-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2rem;
+  overflow: hidden;
+}
+.sg-story[data-static] .sg-story-sticky { position: static; height: auto; }
+
+.sg-story-line {
+  font-family: var(--font-heading);
+  font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-heading);
+  text-align: center;
+  max-width: 26ch;
+  margin: 0;
+}
+.sg-story[data-static] .sg-story-line-start { display: none; }
+
+.sg-story-stage {
+  position: relative;
+  width: min(680px, 92vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sg-story-fragment {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-bg-strong), var(--sg-local-tint) 8%);
+  backdrop-filter: var(--glass-blur-soft);
+  -webkit-backdrop-filter: var(--glass-blur-soft);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.sg-story-fragment svg { color: var(--sg-accent); }
+
+.sg-story-dashboard {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border-bright);
+  background: color-mix(in srgb, var(--color-background) 72%, var(--sg-local-tint));
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.sg-story-dashboard-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.sg-story-dashboard-bar i {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--glass-border-bright);
+}
+.sg-story-dashboard-bar small {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-text-secondary);
+}
+.sg-story-dashboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.3rem 0.4rem;
+}
+.sg-story-dashboard-head strong {
+  font-family: var(--font-heading);
+  font-size: 1.02rem;
+  color: var(--color-text-heading);
+}
+.sg-story-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  color: var(--color-success);
+}
+.sg-story-live i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--color-success);
+  animation: sgFlowLivePulse 1.8s ease-in-out infinite;
+}
+.sg-story-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+  padding: 0.9rem 1.3rem 1.3rem;
+}
+.sg-story-dashboard-grid > div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  border-radius: calc(var(--radius) - 8px);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+.sg-story-dashboard-grid small {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+.sg-story-dashboard-grid strong {
+  font-family: var(--font-heading);
+  font-size: 1.18rem;
+  color: var(--color-text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .sg-story { height: 260vh; }
+  .sg-story-fragment { font-size: 0.6rem; padding: 0.45rem 0.7rem; }
+  .sg-story-dashboard-grid { grid-template-columns: 1fr 1fr; padding: 0.7rem 0.9rem 0.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-story-live i { animation: none; }
+}
+
+/* Testimonial cards read better with a tighter, more restrained corner —
+   the site-wide squircle clip reads too playful for a credibility section. */
+.sg-testimonial-card {
+  clip-path: none;
+  border-radius: 14px;
 }

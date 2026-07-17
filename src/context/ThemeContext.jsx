@@ -1,12 +1,7 @@
 import { createContext, useContext, useEffect } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { defaultTheme } from '../data/defaultTheme'
-import {
-  auroraLightColors,
-  defaultVisualVariantId,
-  getVisualVariant,
-  visualVariants,
-} from '../data/visualVariants'
+import { defaultVisualVariantId, getVisualVariant, lightColors } from '../data/visualVariants'
 
 const ThemeContext = createContext(null)
 
@@ -58,7 +53,7 @@ export function getThemeVariables(theme, variant, preserveFonts = false) {
     '--bg-white': c.background,
     '--bg-soft': c.surface,
     '--bg-subtle': c.surfaceAlt,
-    '--bg-dark': c.textHeading,
+    '--bg-dark': c.background,
     '--bg-dark-2': c.surfaceAlt,
     '--ink-950': c.textHeading,
     '--ink-900': c.textHeading,
@@ -110,34 +105,28 @@ function setVars(root, vars) {
   })
 }
 
-function getAppearanceVariant(variant, auroraAppearance) {
-  if (variant.id !== 'aurora' || auroraAppearance !== 'light') return variant
-  return { ...variant, colors: auroraLightColors }
+function getAppearanceVariant(variant, appearance) {
+  if (appearance !== 'light') return variant
+  return { ...variant, colors: lightColors }
 }
 
-function applyThemeToDOM(theme, variant, auroraAppearance) {
+function applyThemeToDOM(theme, variant, appearance) {
   const root = document.documentElement
   root.dataset.sgVariant = variant.id
-  if (variant.id === 'aurora') {
-    root.dataset.sgAppearance = auroraAppearance
-  } else {
-    delete root.dataset.sgAppearance
-  }
-  
-  const vars = getThemeVariables(theme, getAppearanceVariant(variant, auroraAppearance))
+  root.dataset.sgAppearance = appearance
+  const vars = getThemeVariables(theme, getAppearanceVariant(variant, appearance))
   setVars(root, vars)
 }
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useLocalStorage('theme', defaultTheme)
-  const [visualVariant, setStoredVisualVariant] = useLocalStorage('visualVariant', defaultVisualVariantId)
-  const [storedAuroraAppearance, setStoredAuroraAppearance] = useLocalStorage('auroraAppearance', 'dark')
-  const activeVariant = getVisualVariant(visualVariant)
-  const auroraAppearance = storedAuroraAppearance === 'light' ? 'light' : 'dark'
+  const [storedAppearance, setStoredAppearance] = useLocalStorage('appearance', 'light')
+  const appearance = storedAppearance === 'dark' ? 'dark' : 'light'
+  const activeVariant = getVisualVariant(defaultVisualVariantId)
 
   useEffect(() => {
-    applyThemeToDOM(theme, activeVariant, auroraAppearance)
-  }, [theme, activeVariant, auroraAppearance])
+    applyThemeToDOM(theme, activeVariant, appearance)
+  }, [theme, activeVariant, appearance])
 
   function updateTheme(key, value) {
     setTheme(prev => ({ ...prev, [key]: value }))
@@ -147,12 +136,12 @@ export function ThemeProvider({ children }) {
     setTheme(defaultTheme)
   }
 
-  function setVisualVariant(id) {
-    setStoredVisualVariant(getVisualVariant(id).id)
+  function setAppearance(next) {
+    setStoredAppearance(next === 'light' ? 'light' : 'dark')
   }
 
-  function setAuroraAppearance(appearance) {
-    setStoredAuroraAppearance(appearance === 'light' ? 'light' : 'dark')
+  function toggleAppearance() {
+    setAppearance(appearance === 'light' ? 'dark' : 'light')
   }
 
   return (
@@ -162,10 +151,9 @@ export function ThemeProvider({ children }) {
       resetTheme,
       visualVariant: activeVariant.id,
       activeVariant,
-      visualVariants,
-      setVisualVariant,
-      auroraAppearance,
-      setAuroraAppearance,
+      appearance,
+      setAppearance,
+      toggleAppearance,
     }}>
       {children}
     </ThemeContext.Provider>

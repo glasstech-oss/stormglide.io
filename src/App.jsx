@@ -1,16 +1,25 @@
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useRef, lazy, Suspense } from 'react'
+import { AnimatePresence, motion, useReducedMotion, useSpring } from 'framer-motion'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { ThemeProvider } from './context/ThemeContext'
 import { AdminProvider } from './context/AdminContext'
 import BrandLoader from './components/common/BrandLoader'
 import RouteSEO from './components/common/RouteSEO'
+import { trackPageview } from './lib/analytics'
+import GradientMesh from './components/common/GradientMesh'
+import AmbientGlow from './components/common/AmbientGlow'
+import GlassFootprints from './components/common/GlassFootprints'
+import SquircleDefs from './components/common/SquircleDefs'
+import Navbar from './components/layout/Navbar'
+import WhatsAppFloat from './components/layout/WhatsAppFloat'
+import { BOARD_PATHS, getBoardKey, getMove, getSpatialPosition } from './lib/spatialBoard'
+import { boardPageComponents } from './lib/boardPages'
+import { OVERLAY_KEY, setPanelNode, useActivePanelNode } from './lib/panelRegistry'
 
-/* ── Lazy-loaded pages (each becomes its own chunk) ── */
-const Home          = lazy(() => import('./pages/Home'))
-const ProductsPage  = lazy(() => import('./pages/ProductsPage'))
+/* ── Lazy-loaded sub-pages (the 6 board pages live in ./lib/boardPages.js) ── */
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const WorkDetail = lazy(() => import('./pages/WorkDetail'))
 const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
 const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
 const SANOLanding   = lazy(() => import('./pages/ProductLandingSANO'))
@@ -22,17 +31,49 @@ const ServiceLandingWebAppDevelopment = lazy(() => import('./pages/ServiceLandin
 const ServiceLandingMobileAppDevelopment = lazy(() => import('./pages/ServiceLandingMobileAppDevelopment'))
 const ServiceLandingDesign = lazy(() => import('./pages/ServiceLandingDesign'))
 const ServiceLandingPrototyping = lazy(() => import('./pages/ServiceLandingPrototyping'))
-const ServicesPage  = lazy(() => import('./pages/ServicesPage'))
-const AboutPage     = lazy(() => import('./pages/AboutPage'))
-const ContactPage   = lazy(() => import('./pages/ContactPage'))
-const WorkPage      = lazy(() => import('./pages/WorkPage'))
-const PricingPage   = lazy(() => import('./pages/PricingPage'))
 const ClientLogin   = lazy(() => import('./pages/client/ClientLogin'))
 const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'))
 const ClientProject = lazy(() => import('./pages/client/ClientProject'))
 const ClientInvoices = lazy(() => import('./pages/client/ClientInvoices'))
 const ClientSupportTickets = lazy(() => import('./pages/client/ClientSupportTickets'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
+
+/* ── Drives the pointer-reactive glass specular highlight + mesh parallax ── */
+function GlassPointerTracker() {
+  useEffect(() => {
+    if (window.matchMedia('(pointer: coarse)').matches) return undefined
+
+    let frame = 0
+    const root = document.documentElement
+
+    const handleMove = event => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const xPct = (event.clientX / window.innerWidth) * 100
+        const yPct = (event.clientY / window.innerHeight) * 100
+        root.style.setProperty('--sg-pointer-x-n', `${xPct / 100 - 0.5}`)
+        root.style.setProperty('--sg-pointer-y-n', `${yPct / 100 - 0.5}`)
+
+        const surface = event.target.closest('.card, .btn-primary, .btn-secondary')
+        if (surface) {
+          const rect = surface.getBoundingClientRect()
+          const localX = ((event.clientX - rect.left) / rect.width) * 100
+          const localY = ((event.clientY - rect.top) / rect.height) * 100
+          surface.style.setProperty('--sg-pointer-x', `${localX}%`)
+          surface.style.setProperty('--sg-pointer-y', `${localY}%`)
+        }
+      })
+    }
+
+    window.addEventListener('pointermove', handleMove, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', handleMove)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  return null
+}
 
 /* ── Page loading skeleton ── */
 function PageLoader() {
@@ -43,19 +84,19 @@ function PageLoader() {
   )
 }
 
-/* ── Scroll progress bar ── */
-function ScrollProgress() {
+/* ── Scroll progress bar — tracks whichever panel/overlay is currently active ── */
+function ScrollProgress({ activeNode }) {
   const progressRef = useRef(null)
 
   useEffect(() => {
+    if (!activeNode) return undefined
     let frame = 0
 
     const onScroll = () => {
       if (frame) return
       frame = window.requestAnimationFrame(() => {
-        const el = document.documentElement
-        const scrolled = el.scrollTop || document.body.scrollTop
-        const total = el.scrollHeight - el.clientHeight
+        const scrolled = activeNode.scrollTop
+        const total = activeNode.scrollHeight - activeNode.clientHeight
         const pct = total > 0 ? scrolled / total : 0
         if (progressRef.current) {
           progressRef.current.style.transform = `scaleX(${pct})`
@@ -65,79 +106,403 @@ function ScrollProgress() {
     }
 
     onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
+    activeNode.addEventListener('scroll', onScroll, { passive: true })
     return () => {
-      window.removeEventListener('scroll', onScroll)
+      activeNode.removeEventListener('scroll', onScroll)
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [activeNode])
 
   return <div ref={progressRef} id="sg-scroll-progress" />
 }
 
-/* ── Animated routes ── */
-function AnimatedRoutes() {
-  const location = useLocation()
+const BOARD_EASE = [0.22, 1, 0.36, 1]
+const BOARD_DURATION = 0.5
+
+/* Variants receive { move } via AnimatePresence `custom`.
+   Used by the depth/off-board overlay (sub-pages, client portal, 404) — the
+   6 main destinations no longer mount/unmount, so they don't need these. */
+const pageVariants = {
+  initial: ({ move }) => {
+    // A native View Transition is already handling this navigation's visuals
+    // (see viewTransition.js) — stay at the settled state so Framer Motion
+    // doesn't also animate the same nav on top of it.
+    if (move.type === 'instant') return { opacity: 1, y: 0, x: 0, rotateY: 0, scale: 1 }
+    if (move.type === 'lateral') {
+      return {
+        x: `${move.dir * 6}%`,
+        rotateY: move.dir * -8,
+        scale: 0.98,
+        opacity: 0,
+        transformOrigin: move.dir > 0 ? 'left center' : 'right center',
+      }
+    }
+    if (move.type === 'depth') {
+      return { scale: move.dir > 0 ? 1.035 : 0.975, opacity: 0, x: 0, rotateY: 0 }
+    }
+    return { opacity: 0, y: 10, x: 0, rotateY: 0, scale: 1 }
+  },
+  animate: {
+    x: 0,
+    y: 0,
+    rotateY: 0,
+    scale: 1,
+    opacity: 1,
+    transition: { duration: BOARD_DURATION, ease: BOARD_EASE },
+  },
+  exit: ({ move }) => {
+    if (move.type === 'instant') return { opacity: 1, y: 0, x: 0, rotateY: 0, scale: 1, transition: { duration: 0 } }
+    if (move.type === 'lateral') {
+      return {
+        x: `${move.dir * -5}%`,
+        rotateY: move.dir * 6,
+        scale: 0.985,
+        opacity: 0,
+        transformOrigin: move.dir > 0 ? 'right center' : 'left center',
+        transition: { duration: BOARD_DURATION * 0.7, ease: BOARD_EASE },
+      }
+    }
+    if (move.type === 'depth') {
+      return {
+        scale: move.dir > 0 ? 0.975 : 1.03,
+        opacity: 0,
+        transition: { duration: BOARD_DURATION * 0.7, ease: BOARD_EASE },
+      }
+    }
+    return { opacity: 0, y: -6, transition: { duration: 0.22, ease: BOARD_EASE } }
+  },
+}
+
+/* Every non-board route. `includeTopLevel` also mounts the 6 board pages —
+   used by the mobile fallback, which has no persistent board to draw them from. */
+function SiteRoutes({ location, includeTopLevel }) {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.26, ease: [0.32, 0.72, 0, 1] }}
-        >
-        <Routes location={location}>
-          <Route path="/"               element={<Home />} />
-          <Route path="/nexus-hrm"      element={<NexusHRMLanding />} />
-          <Route path="/cargoscan"      element={<CargoScanLanding />} />
-          <Route path="/sano-health"    element={<SANOLanding />} />
-          <Route path="/nexus-dental"   element={<NexusDentalLanding />} />
-          <Route path="/services"       element={<ServicesPage />} />
-          <Route path="/services/software-development"           element={<ServiceLandingSoftwareDevelopment />} />
-          <Route path="/services/saas-development"               element={<ServiceLandingSaasDevelopment />} />
-          <Route path="/services/website-development"            element={<ServiceLandingWebsiteDevelopment />} />
-          <Route path="/services/web-app-development"            element={<ServiceLandingWebAppDevelopment />} />
-          <Route path="/services/mobile-app-development"         element={<ServiceLandingMobileAppDevelopment />} />
-          <Route path="/services/design-services"                element={<ServiceLandingDesign />} />
-          <Route path="/services/prototyping"                    element={<ServiceLandingPrototyping />} />
-          <Route path="/services/website-development-ghana"      element={<ServiceLandingWebsiteDevelopment />} />
-          <Route path="/services/web-app-development-ghana"      element={<ServiceLandingWebAppDevelopment />} />
-          <Route path="/services/mobile-app-development-ghana"   element={<ServiceLandingMobileAppDevelopment />} />
-          <Route path="/services/design-services-ghana"          element={<ServiceLandingDesign />} />
-          <Route path="/services/prototyping-ghana"              element={<ServiceLandingPrototyping />} />
-          <Route path="/products"       element={<ProductsPage />} />
-          <Route path="/products/nexus-hrm" element={<Navigate to="/nexus-hrm" replace />} />
-          <Route path="/products/cargoscan" element={<Navigate to="/cargoscan" replace />} />
-          <Route path="/products/sano" element={<Navigate to="/sano-health" replace />} />
-          <Route path="/products/nexus-dental" element={<Navigate to="/nexus-dental" replace />} />
-          <Route path="/products/:slug" element={<ProductDetail />} />
-          <Route path="/about"          element={<AboutPage />} />
-          <Route path="/contact"        element={<ContactPage />} />
-          <Route path="/work"           element={<WorkPage />} />
-          <Route path="/pricing"        element={<PricingPage />} />
-          <Route path="/admin/*" element={<AdminDeprecatedRedirect />} />
-          <Route path="/client/login" element={<ClientLogin />} />
-          <Route path="/client/dashboard" element={<ClientDashboard />} />
-          <Route path="/client/project" element={<ClientProject />} />
-          <Route path="/client/invoices" element={<ClientInvoices />} />
-          <Route path="/client/support-tickets" element={<ClientSupportTickets />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        </motion.div>
-      </AnimatePresence>
-      <RouteSEO />
-    </Suspense>
+    <Routes location={location}>
+      {includeTopLevel && BOARD_PATHS.map(path => {
+        const Component = boardPageComponents[path]
+        return <Route key={path} path={path} element={<Component />} />
+      })}
+      <Route path="/nexus-hrm"      element={<NexusHRMLanding />} />
+      <Route path="/cargoscan"      element={<CargoScanLanding />} />
+      <Route path="/sano-health"    element={<SANOLanding />} />
+      <Route path="/nexus-dental"   element={<NexusDentalLanding />} />
+      <Route path="/services/software-development"           element={<ServiceLandingSoftwareDevelopment />} />
+      <Route path="/services/saas-development"               element={<ServiceLandingSaasDevelopment />} />
+      <Route path="/services/website-development"            element={<ServiceLandingWebsiteDevelopment />} />
+      <Route path="/services/web-app-development"            element={<ServiceLandingWebAppDevelopment />} />
+      <Route path="/services/mobile-app-development"         element={<ServiceLandingMobileAppDevelopment />} />
+      <Route path="/services/design-services"                element={<ServiceLandingDesign />} />
+      <Route path="/services/prototyping"                    element={<ServiceLandingPrototyping />} />
+      <Route path="/services/website-development-ghana"      element={<ServiceLandingWebsiteDevelopment />} />
+      <Route path="/services/web-app-development-ghana"      element={<ServiceLandingWebAppDevelopment />} />
+      <Route path="/services/mobile-app-development-ghana"   element={<ServiceLandingMobileAppDevelopment />} />
+      <Route path="/services/design-services-ghana"          element={<ServiceLandingDesign />} />
+      <Route path="/services/prototyping-ghana"              element={<ServiceLandingPrototyping />} />
+      <Route path="/products/nexus-hrm" element={<Navigate to="/nexus-hrm" replace />} />
+      <Route path="/products/cargoscan" element={<Navigate to="/cargoscan" replace />} />
+      <Route path="/products/sano" element={<Navigate to="/sano-health" replace />} />
+      <Route path="/products/nexus-dental" element={<Navigate to="/nexus-dental" replace />} />
+      <Route path="/products/:slug" element={<ProductDetail />} />
+      <Route path="/work/:slug" element={<WorkDetail />} />
+      <Route path="/about"          element={<Navigate to="/contact" replace />} />
+      <Route path="/admin/*" element={<AdminDeprecatedRedirect />} />
+      <Route path="/client/login" element={<ClientLogin />} />
+      <Route path="/client/dashboard" element={<ClientDashboard />} />
+      <Route path="/client/project" element={<ClientProject />} />
+      <Route path="/client/invoices" element={<ClientInvoices />} />
+      <Route path="/client/support-tickets" element={<ClientSupportTickets />} />
+      {/* Board paths must resolve to nothing here (not the wildcard below) — they're
+          rendered by their persistent board panel, and this overlay just sits empty
+          and invisible while one of them is active. */}
+      {!includeTopLevel && BOARD_PATHS.map(path => <Route key={`empty-${path}`} path={path} element={null} />)}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   )
+}
+
+/* Each panel sits over a different region of the wallpaper (GradientMesh's
+   diagonal coral→magenta→violet→blue→cyan flow) — glass on that panel picks
+   up a faint matching tint (see --sg-local-tint usage in index.css) so the
+   glass and the world read as one material instead of two separate layers. */
+const PANEL_TINT = {
+  '/': 'var(--sg-wall-coral)',
+  '/services': 'var(--sg-wall-magenta)',
+  '/products': 'var(--sg-wall-violet)',
+  '/work': 'var(--sg-wall-blue)',
+  '/pricing': 'var(--sg-wall-cyan)',
+  '/contact': 'color-mix(in srgb, var(--sg-wall-blue), var(--sg-wall-cyan))',
+}
+
+/* ── One persistently-mounted board panel (one of the 6 main destinations) ── */
+function BoardPanel({ path, index, visited }) {
+  const ref = useRef(null)
+  const Component = boardPageComponents[path]
+
+  useEffect(() => {
+    setPanelNode(path, ref.current)
+    return () => setPanelNode(path, null)
+  }, [path])
+
+  return (
+    <div
+      ref={ref}
+      className="sg-board-panel"
+      style={{
+        position: 'absolute',
+        left: `${index * 100}vw`,
+        top: 0,
+        width: '100vw',
+        height: '100vh',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        // The board keeps every visited panel mounted so state/scroll persists,
+        // but that means 5 pages' worth of cards (each with infinite CSS
+        // animations + backdrop-filter blur) were animating/compositing in the
+        // background at all times — content-visibility:auto tells the browser
+        // to skip layout/paint/animation entirely for whichever panels aren't
+        // actually on-screen, without unmounting them (unlike display:none).
+        contentVisibility: 'auto',
+        containIntrinsicSize: '100vw 100vh',
+        overscrollBehavior: 'contain',
+        // Live-updating widgets (OperationsFlow's chart/log) change layout
+        // above the fold; scroll anchoring would "compensate" by nudging
+        // scrollTop every tick, making the page drift on its own.
+        overflowAnchor: 'none',
+        '--sg-local-tint': PANEL_TINT[path],
+      }}
+    >
+      {visited && (
+        <Suspense fallback={<PageLoader />}>
+          <Component />
+        </Suspense>
+      )}
+    </div>
+  )
+}
+
+/* ── The persistent canvas: a spring-driven camera panning across 6 always-mounted panels ── */
+function Board({ activeX, instant, visitedPanels }) {
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth)
+  const cameraX = useSpring(-activeX * viewportWidth, { stiffness: 140, damping: 24 })
+  const hasMounted = useRef(false)
+
+  useEffect(() => {
+    const onResize = () => {
+      const w = window.innerWidth
+      setViewportWidth(w)
+      cameraX.jump(-activeX * w)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [activeX, cameraX])
+
+  useEffect(() => {
+    const target = -activeX * viewportWidth
+    if (instant || !hasMounted.current) {
+      cameraX.jump(target)
+      hasMounted.current = true
+    } else {
+      cameraX.set(target)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeX])
+
+  // While the camera is in flight, flag the document so CSS can temporarily
+  // drop backdrop-filter/shimmer work — compositing dozens of blurred glass
+  // layers during a full-viewport pan is what made pans take multiple seconds
+  // on mid-range machines.
+  useEffect(() => {
+    const root = document.documentElement
+    const clear = () => root.removeAttribute('data-sg-panning')
+    const unsubStart = cameraX.on('animationStart', () => root.setAttribute('data-sg-panning', ''))
+    const unsubEnd = cameraX.on('animationComplete', clear)
+    const unsubCancel = cameraX.on('animationCancel', clear)
+    return () => { unsubStart(); unsubEnd(); unsubCancel(); clear() }
+  }, [cameraX])
+
+  const trackStyle = {
+    // absolute + inset:0, not relative — these two tracks must overlap exactly
+    // (both spanning the whole board), not stack as normal-flow block siblings.
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: '100vh',
+    width: `${BOARD_PATHS.length * 100}vw`,
+    x: cameraX,
+    willChange: 'transform',
+  }
+
+  return (
+    <div className="sg-board" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1 }}>
+      {/* The mesh and the panels are two separate tracks (sharing the same
+          camera transform) so GlassFootprints can sit between them, screen-fixed
+          — behind the glass panels (so their backdrop-filter blurs it, like real
+          condensation seen through frosted glass) but above the flat wallpaper. */}
+      <motion.div className="sg-board-mesh-track" style={trackStyle}>
+        <GradientMesh />
+      </motion.div>
+      <GlassFootprints />
+      <motion.div className="sg-board-track" style={trackStyle}>
+        {BOARD_PATHS.map((path, index) => (
+          <BoardPanel key={path} path={path} index={index} visited={visitedPanels.has(path)} />
+        ))}
+      </motion.div>
+    </div>
+  )
+}
+
+/* ── Depth/off-board overlay: service & product detail pages, client portal, 404.
+     Its <Routes> has no match while a board path is active, so it's naturally
+     empty — the opacity/pointer-events toggle just keeps it out of the way. ── */
+function DepthOverlay({ location, move, isActive }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    setPanelNode(OVERLAY_KEY, ref.current)
+    return () => setPanelNode(OVERLAY_KEY, null)
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className="sg-depth-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        overflowY: isActive ? 'auto' : 'hidden',
+        overflowX: 'hidden',
+        opacity: isActive ? 1 : 0,
+        pointerEvents: isActive ? 'auto' : 'none',
+        transition: 'opacity 260ms ease',
+        background: isActive ? 'var(--color-background)' : 'transparent',
+      }}
+    >
+      <Suspense fallback={<PageLoader />}>
+        <div style={{ perspective: '2200px', overflowX: 'clip', position: 'relative' }}>
+          <AnimatePresence mode="popLayout" initial={false} custom={{ move }}>
+            <motion.div
+              key={location.pathname}
+              custom={{ move }}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              style={{ backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
+            >
+              <SiteRoutes location={location} includeTopLevel={false} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </Suspense>
+    </div>
+  )
+}
+
+const DESKTOP_BOARD_QUERY = '(min-width: 920px)'
+
+function useIsDesktopBoard() {
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia(DESKTOP_BOARD_QUERY).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_BOARD_QUERY)
+    // Belt-and-suspenders: some environments resize the viewport without firing
+    // a MediaQueryList 'change' event, so also recheck on a plain window resize.
+    const handler = () => setIsDesktop(mq.matches)
+    mq.addEventListener('change', handler)
+    window.addEventListener('resize', handler)
+    return () => {
+      mq.removeEventListener('change', handler)
+      window.removeEventListener('resize', handler)
+    }
+  }, [])
+  return isDesktop
 }
 
 /* ── The main interactive layout ── */
 function SiteContent() {
+  const location = useLocation()
+  const reduceMotion = useReducedMotion()
+  const isDesktopBoard = useIsDesktopBoard()
+
+  const [trail, setTrail] = useState({ curr: location.pathname, prev: null })
+  if (trail.curr !== location.pathname) {
+    setTrail({ curr: location.pathname, prev: trail.curr })
+  }
+
+  useEffect(() => {
+    trackPageview(location.pathname)
+  }, [location.pathname])
+
+  const currentPos = getSpatialPosition(location.pathname)
+  const move = location.state?.sgViaVT
+    ? { type: 'instant' } // a native View Transition is driving this nav's visuals — see viewTransition.js
+    : reduceMotion
+      ? { type: 'fade' }
+      : getMove(trail.prev ? getSpatialPosition(trail.prev) : currentPos, currentPos)
+
+  const boardKey = getBoardKey(location.pathname)
+  const [visitedPanels, setVisitedPanels] = useState(() => new Set(boardKey ? [boardKey] : []))
+  if (boardKey && !visitedPanels.has(boardKey)) {
+    setVisitedPanels(prev => new Set(prev).add(boardKey))
+  }
+
+  // `trail.prev` is null only until the first navigation happens (see above) —
+  // reuse that as "is this the very first render" instead of a render-time ref.
+  const instant = trail.prev === null
+
+  const [lastBoardX, setLastBoardX] = useState(currentPos ? currentPos.x : 0)
+  if (currentPos && lastBoardX !== currentPos.x) {
+    setLastBoardX(currentPos.x)
+  }
+
+  // Navbar/WhatsAppFloat are global singletons living outside the board, so
+  // --sg-local-tint set on a BoardPanel div doesn't cascade up to them — mirror
+  // the active panel's tint onto the document root for anything above the board.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sg-local-tint', PANEL_TINT[boardKey] || 'var(--sg-accent)')
+  }, [boardKey])
+
+  const isOverlayActive = !currentPos || currentPos.depth > 0
+  const scrollNode = useActivePanelNode()
+
   return (
     <>
-      <ScrollProgress />
-      <AnimatedRoutes />
+      <Navbar />
+      <ScrollProgress activeNode={scrollNode} />
+      <AmbientGlow />
+      {isDesktopBoard ? (
+        <>
+          <Board activeX={lastBoardX} instant={instant} visitedPanels={visitedPanels} />
+          <DepthOverlay location={location} move={move} isActive={isOverlayActive} />
+        </>
+      ) : (
+        <Suspense fallback={<PageLoader />}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
+            <GradientMesh />
+          </div>
+          {/* z-index:auto (no explicit stacking level) + DOM order before the routed
+              content below is what puts footprints behind the page but above the
+              mesh — see the comment on .sg-glass-footprints in index.css. */}
+          <GlassFootprints />
+          <div style={{ perspective: '2200px', overflowX: 'clip', position: 'relative' }}>
+            <AnimatePresence mode="popLayout" initial={false} custom={{ move }}>
+              <motion.div
+                key={location.pathname}
+                custom={{ move }}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                style={{ backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
+              >
+                <SiteRoutes location={location} includeTopLevel />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </Suspense>
+      )}
+      <WhatsAppFloat />
+      <RouteSEO />
     </>
   )
 }
@@ -146,7 +511,7 @@ function AdminDeprecatedRedirect() {
   useEffect(() => {
     window.location.href = 'https://frontend-ten-blush-98.vercel.app/admin/login';
   }, []);
-  
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050608', color: '#fff', fontFamily: 'sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
@@ -166,6 +531,8 @@ export default function App() {
       <ThemeProvider>
         <AdminProvider>
           <BrowserRouter>
+            <GlassPointerTracker />
+            <SquircleDefs />
             <SiteContent />
           </BrowserRouter>
         </AdminProvider>

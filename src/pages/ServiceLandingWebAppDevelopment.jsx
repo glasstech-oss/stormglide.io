@@ -35,7 +35,7 @@ export default function ServiceLandingWebAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Apps We Build" title="Custom Software Solutions" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -87,7 +87,7 @@ export default function ServiceLandingWebAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Examples" title="Apps We've Built" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))', gap: '2rem' }}>
@@ -118,7 +118,7 @@ export default function ServiceLandingWebAppDevelopment() {
               { q: 'How much does it cost?', a: 'Depends on complexity. MVPs start at GHS 15,000-30,000. Full apps: GHS 30,000-100,000+. We quote after understanding scope.' },
               { q: 'What if I need changes later?', a: 'Easy. You own the code. We provide documentation, training, and ongoing support for any updates.' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                 <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text-heading)' }}>{item.q}</h4>
                 <p style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', margin: 0 }}>{item.a}</p>
               </motion.div>
@@ -127,7 +127,7 @@ export default function ServiceLandingWebAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)', textAlign: 'center' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)', textAlign: 'center' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Ready to Build Your App?</h2>
           <p style={{ fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: '2rem', lineHeight: 1.6 }}>Tell us about your idea. We'll help you understand requirements, timeline, and investment.</p>

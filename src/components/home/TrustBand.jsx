@@ -17,7 +17,7 @@ export default function TrustBand() {
           <WordReveal text="Built close to the problem." />
           <p>Stormglide is based in Accra. We build for the infrastructure, payment methods and operational realities our customers use every day.</p>
           <div className="sg-trust-location"><MapPin size={16} /> Accra, Ghana</div>
-          <Link to="/about" className="sg-home-text-link">
+          <Link to="/contact" className="sg-home-text-link">
             How we work <ArrowRight size={15} />
           </Link>
         </div>

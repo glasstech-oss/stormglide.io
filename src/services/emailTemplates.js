@@ -191,7 +191,7 @@ export const getWelcomeEmailTemplate = (clientData, projectData) => {
                 </p>
                 <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px; color: #475569;">
                   <li>Submit a support ticket in your dashboard</li>
-                  <li>Email us: <a href="mailto:support@stormglide.io" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">support@stormglide.io</a></li>
+                  <li>Email us: <a href="mailto:john@stormglide.io" style="color: ${BRAND_COLORS.primary}; text-decoration: none;">john@stormglide.io</a></li>
                   <li>Check our documentation and guides</li>
                 </ul>
               </div>
@@ -260,7 +260,7 @@ WHAT'S INCLUDED:
 ${projectData.stacks?.map(s => `• ${s.name} (GHS ${parseFloat(s.costPerMonth).toFixed(2)}/mo)`).join('\n')}
 
 NEED HELP?
-Email: support@stormglide.io
+Email: john@stormglide.io
 Dashboard Support Tickets: https://stormglideio.web.app/client/support-tickets
 
 Best regards,

@@ -160,7 +160,7 @@ export default function SiteCustomizer() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '500px' }}>
           {[
             { key: 'contactWhatsapp', label: 'WhatsApp Number', placeholder: '0530828898' },
-            { key: 'contactEmail', label: 'Email Address', placeholder: 'hello@stormglide.io' },
+            { key: 'contactEmail', label: 'Email Address', placeholder: 'john@stormglide.io' },
             { key: 'contactLinkedIn', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/...' },
             { key: 'contactTikTok', label: 'TikTok URL', placeholder: 'https://tiktok.com/@...' },
           ].map(({ key, label, placeholder }) => (

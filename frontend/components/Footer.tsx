@@ -40,7 +40,7 @@ export default function Footer() {
             links: [
                 { name: "Contact Us", href: "/contact" },
                 { name: "Client Login", href: "/portal" },
-                { name: "Support", href: "mailto:hello@stormglide.io" },
+                { name: "Support", href: "mailto:john@stormglide.io" },
             ]
         }
     ];

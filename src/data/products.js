@@ -5,7 +5,7 @@ export const products = [
     icon: 'Users',
     status: 'live',
     tagline: 'Enterprise HR & payroll for growing businesses',
-    description: 'Nexus HRM is a multi-tenant human resource management platform built for African businesses. It handles the full employee lifecycle — from onboarding to payroll, leave management, performance tracking, and compliance reporting.',
+    description: 'The full employee lifecycle — onboarding, payroll, leave, and performance — in one system.',
     features: [
       'Multi-company, multi-tenant architecture',
       'Full payroll processing with tax calculations',
@@ -23,7 +23,7 @@ export const products = [
     icon: 'Heart',
     status: 'beta',
     tagline: 'AI health monitoring built for African communities',
-    description: 'SANO is a health technology platform designed for African healthcare contexts. It provides on-device health monitoring, skin scan analysis, and community health tracking — accessible on low-end smartphones with or without consistent internet.',
+    description: 'On-device health monitoring and skin scan analysis — works on low-end phones, offline.',
     features: [
       'On-device heart rate detection via camera',
       'AI-powered basic skin scan analysis',
@@ -41,7 +41,7 @@ export const products = [
     icon: 'Package',
     status: 'beta',
     tagline: 'CBM calculator and freight cost estimator',
-    description: 'CargoScan solves a real daily problem in freight forwarding — calculating cubic meters (CBM) accurately and quickly. Scan or enter package dimensions, get instant CBM calculations, freight cost estimates, and shareable shipment reports.',
+    description: 'Scan or enter package dimensions — get instant CBM calculations and freight cost estimates.',
     features: [
       'Instant CBM calculation from dimensions',
       'Multi-package shipment tracking',
@@ -59,7 +59,7 @@ export const products = [
     icon: 'Factory',
     status: 'live',
     tagline: 'Production management for manufacturing businesses',
-    description: 'Nexus MFG gives factory floors and production managers real-time visibility into what is being made, by whom, and at what cost. Track production orders, raw materials, machine usage, and output quality in one system.',
+    description: 'Real-time visibility into what\'s being made, by whom, and at what cost.',
     features: [
       'Production order management',
       'Raw material and inventory tracking',
@@ -77,7 +77,7 @@ export const products = [
     icon: 'Stethoscope',
     status: 'live',
     tagline: 'Practice management built for dental clinics',
-    description: 'Nexus Dental is a complete dental practice management system — handling patient records, appointment scheduling, treatment plans, billing, and clinical notes in one connected platform built for African clinics.',
+    description: 'Patient records, scheduling, treatment plans, and billing — in one connected system.',
     features: [
       'Patient records and dental history',
       'Appointment scheduling and reminders',
@@ -95,7 +95,7 @@ export const products = [
     icon: 'Layers',
     status: 'live',
     tagline: 'Product catalog and quote system for glass & aluminum works',
-    description: 'A professional web platform for Glasstech Fabrications — showcasing glass, aluminum, and kitchen cabinet products with a full product catalog, specification sheets, and an integrated quote request system for contractors and developers.',
+    description: 'Full product catalog and an integrated quote system for contractors and developers.',
     features: [
       'Full product catalog with specs',
       'Glass, aluminum, and cabinet categories',

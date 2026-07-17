@@ -38,7 +38,7 @@ export default function NexusHRMLanding() {
       </section>
 
       {/* Key Features */}
-      <section id="features" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section id="features" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Core Capabilities" title="What Nexus HRM Does" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -81,7 +81,7 @@ export default function NexusHRMLanding() {
       </section>
 
       {/* Tech Stack */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Technology" title="Built for Enterprise Scale" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
@@ -122,7 +122,7 @@ export default function NexusHRMLanding() {
               { q: 'Can I import data from my old system?', a: 'Yes. We support bulk import from Excel, Google Sheets, or other HR systems. Typical migration takes 1-2 weeks including data cleaning.' },
               { q: 'Is Nexus HRM GDPR/compliance compliant?', a: 'Nexus HRM follows GDPR, data localization rules, and African data protection standards. We can store data in-country if required.' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                 <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text-heading)' }}>{item.q}</h4>
                 <p style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', margin: 0 }}>{item.a}</p>
               </motion.div>
@@ -132,7 +132,7 @@ export default function NexusHRMLanding() {
       </section>
 
       {/* Final CTA */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)', textAlign: 'center' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)', textAlign: 'center' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Ready to simplify HR management?</h2>
           <p style={{ fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: '2rem', lineHeight: 1.6 }}>Join 50+ African companies using Nexus HRM to automate payroll, leave management, and employee tracking.</p>

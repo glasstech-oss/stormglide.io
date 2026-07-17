@@ -60,8 +60,8 @@ export default function EditInvoicePage() {
   useEffect(() => {
     Promise.all([BillingAPI.getInvoice(invoiceId), ProjectsAPI.list()])
       .then(([invoice, projectData]) => {
-        if (invoice.status === "PAID" || invoice.status === "VOID") {
-          setError("Paid or voided invoices can no longer be edited.");
+        if (invoice.status === "VOID") {
+          setError("Voided invoices can no longer be edited.");
           setNotFound(true);
           return;
         }
@@ -179,10 +179,16 @@ export default function EditInvoicePage() {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit draft invoice</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Edit invoice</h1>
           <p className="mt-1 text-gray-400">{clientInfo?.companyName || clientInfo?.contactName || clientId}</p>
         </div>
       </div>
+
+      {invoiceStatus === "PAID" && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          This invoice is marked as paid. Saving changes updates the invoice record and PDF, but does not affect the payment already recorded.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
         <form onSubmit={submit} className="space-y-6 rounded-2xl border border-white/10 bg-[#111827] p-6">

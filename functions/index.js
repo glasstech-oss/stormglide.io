@@ -10,6 +10,7 @@ const tls = require('tls');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { BetaAnalyticsDataClient } = require('@google-analytics/data');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -63,7 +64,7 @@ const DEFAULT_SITE_SETTINGS = {
   foregroundColor: '#FFFFFF',
   heroHeadline: 'Software systems built for serious growth.',
   heroSubtext: 'Web platforms, mobile products, and business systems designed and engineered in Accra.',
-  contactEmail: 'info@stormglide.io',
+  contactEmail: 'john@stormglide.io',
   contactPhone: '',
   invoiceCompanyName: 'Stormglide.io',
   invoiceAddress: 'Accra, Ghana',
@@ -103,6 +104,28 @@ const sanitizeSiteSettings = (value) => Object.fromEntries(
     })
     .filter(([, setting]) => setting !== null)
 );
+
+const sanitizeTeamMember = (value) => {
+  const body = value || {};
+  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : '';
+  if (!name) return null;
+
+  const title = typeof body.title === 'string' ? body.title.trim().slice(0, 120) : '';
+  const bio = typeof body.bio === 'string' ? body.bio.trim().slice(0, 600) : '';
+  const linkedinUrl = typeof body.linkedinUrl === 'string' ? body.linkedinUrl.trim().slice(0, 300) : '';
+
+  let photoDataUri = '';
+  if (typeof body.photoDataUri === 'string' && body.photoDataUri.trim()) {
+    const trimmed = body.photoDataUri.trim();
+    if (isValidLogoDataUri(trimmed) && trimmed.length <= LOGO_DATA_URI_MAX_LENGTH) {
+      photoDataUri = trimmed;
+    }
+  }
+
+  const order = Number.isFinite(body.order) ? body.order : 0;
+
+  return { name, title, bio, linkedinUrl, photoDataUri, order };
+};
 
 // ── Email via Resend ──────────────────────────────────────────────────────────
 const sendEmail = (to, subject, html) => {
@@ -755,6 +778,51 @@ app.put('/v1/settings', verifyToken, adminOnly, async (req, res) => {
 });
 
 // =============================================================================
+// TEAM MEMBERS (public About page content, admin-managed)
+// =============================================================================
+
+app.get('/v1/team', async (req, res) => {
+  try {
+    const snap = await db.collection('teamMembers').orderBy('order', 'asc').get();
+    return res.json(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  } catch (err) {
+    console.error('Team members read error:', err);
+    return res.status(500).json({ message: 'Unable to load team members.' });
+  }
+});
+
+app.post('/v1/team', verifyToken, adminOnly, async (req, res) => {
+  const member = sanitizeTeamMember(req.body);
+  if (!member) return res.status(400).json({ message: 'A name is required.' });
+
+  const ref = await db.collection('teamMembers').add({
+    ...member,
+    createdAt: now(),
+    updatedAt: now(),
+  });
+  const doc = await ref.get();
+  return res.status(201).json({ id: doc.id, ...doc.data() });
+});
+
+app.put('/v1/team/:id', verifyToken, adminOnly, async (req, res) => {
+  const ref = db.collection('teamMembers').doc(req.params.id);
+  const existing = await ref.get();
+  if (!existing.exists) return res.status(404).json({ message: 'Team member not found.' });
+
+  const member = sanitizeTeamMember(req.body);
+  if (!member) return res.status(400).json({ message: 'A name is required.' });
+
+  await ref.set({ ...member, updatedAt: now() }, { merge: true });
+  const doc = await ref.get();
+  return res.json({ id: doc.id, ...doc.data() });
+});
+
+app.delete('/v1/team/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('teamMembers').doc(req.params.id).delete();
+  return res.json({ success: true });
+});
+
+// =============================================================================
 // CRM ROUTES
 // =============================================================================
 
@@ -960,17 +1028,113 @@ app.get('/v1/crm/leads', verifyToken, adminOnly, async (req, res) => {
 });
 
 app.post('/v1/crm/lead', async (req, res) => {
-  const { name, email, organization, missionScope, details } = req.body;
-  const ref = await db.collection('leads').add({
-    name, email, organization: organization || null,
-    missionScope, details, status: 'NEW', createdAt: now(),
-  });
-  return res.json({ id: ref.id, name, email });
+  const {
+    name, email, organization, missionScope, details,
+    phone, product, source, configuratorSelections, budget, timeline, type,
+  } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ message: 'Name and email are required.' });
+  }
+  try {
+    const ref = await db.collection('leads').add({
+      name,
+      email,
+      organization: organization || null,
+      missionScope: missionScope || type || product || null,
+      details: details || null,
+      phone: phone || null,
+      product: product || null,
+      source: source || 'contact_form',
+      configuratorSelections: configuratorSelections || null,
+      budget: budget || null,
+      timeline: timeline || null,
+      status: 'NEW',
+      createdAt: now(),
+    });
+    return res.json({ id: ref.id, name, email });
+  } catch (err) {
+    console.error('Lead creation error:', err);
+    return res.status(500).json({ message: 'Unable to submit lead.' });
+  }
 });
 
 app.put('/v1/crm/lead/:id/status', verifyToken, adminOnly, async (req, res) => {
   await db.collection('leads').doc(req.params.id).update({ status: req.body.status });
   return res.json({ id: req.params.id, status: req.body.status });
+});
+
+// =============================================================================
+// ANALYTICS ROUTES (Google Analytics 4)
+// =============================================================================
+
+// Not configured until GA4_PROPERTY_ID + GA4_SERVICE_ACCOUNT_KEY_BASE64 are
+// set in functions/.env (see .env.example / setup docs) — mirrors the
+// RESEND_API_KEY "warn and continue" convention used elsewhere in this file
+// rather than crashing when a third-party integration isn't wired up yet.
+function getGaClient() {
+  const keyB64 = process.env.GA4_SERVICE_ACCOUNT_KEY_BASE64;
+  if (!keyB64) return null;
+  try {
+    const credentials = JSON.parse(Buffer.from(keyB64, 'base64').toString('utf8'));
+    return new BetaAnalyticsDataClient({ credentials });
+  } catch (err) {
+    console.error('GA4 credential parse error:', err);
+    return null;
+  }
+}
+
+app.get('/v1/analytics/summary', verifyToken, adminOnly, async (req, res) => {
+  const propertyId = process.env.GA4_PROPERTY_ID;
+  const client = getGaClient();
+  if (!propertyId || !client) {
+    return res.status(200).json({ configured: false, message: 'GA4 not configured yet.' });
+  }
+  try {
+    const range = { startDate: req.query.startDate || '30daysAgo', endDate: req.query.endDate || 'today' };
+    const property = `properties/${propertyId}`;
+    const [overview] = await client.runReport({
+      property,
+      dateRanges: [range],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'averageSessionDuration' },
+        { name: 'screenPageViews' },
+        { name: 'totalUsers' },
+      ],
+    });
+    const [byDevice] = await client.runReport({
+      property,
+      dateRanges: [range],
+      dimensions: [{ name: 'deviceCategory' }],
+      metrics: [{ name: 'sessions' }],
+    });
+    const [byPage] = await client.runReport({
+      property,
+      dateRanges: [range],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [{ name: 'screenPageViews' }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 10,
+    });
+    const [bySource] = await client.runReport({
+      property,
+      dateRanges: [range],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+      metrics: [{ name: 'sessions' }],
+    });
+    const [byCountry] = await client.runReport({
+      property,
+      dateRanges: [range],
+      dimensions: [{ name: 'country' }],
+      metrics: [{ name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10,
+    });
+    return res.json({ configured: true, range, overview, byDevice, byPage, bySource, byCountry });
+  } catch (err) {
+    console.error('GA4 analytics fetch error:', err);
+    return res.status(500).json({ message: 'Unable to load analytics.' });
+  }
 });
 
 // =============================================================================
@@ -1091,13 +1255,39 @@ app.post('/v1/billing/invoice/:clientId', verifyToken, adminOnly, async (req, re
   return res.status(201).json(toDoc(doc));
 });
 
+// Duplicates an existing invoice (any status) into a brand-new DRAFT —
+// same client, items, tax/discount, currency and notes, fresh number
+// and no payment history carried over.
+app.post('/v1/billing/invoice/:id/clone', verifyToken, adminOnly, async (req, res) => {
+  const sourceDoc = await db.collection('invoices').doc(req.params.id).get();
+  if (!sourceDoc.exists) return res.status(404).json({ message: 'Invoice not found' });
+  const source = sourceDoc.data();
+
+  const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 900000 + 100000)}`;
+  const totals = computeInvoiceTotals(source.items || [], source.taxPercent, source.discountPercent);
+
+  const ref = await db.collection('invoices').add({
+    clientId: source.clientId, projectId: source.projectId || null, invoiceNumber,
+    items: source.items || [], notes: source.notes || '',
+    includeWarranty: source.includeWarranty !== false,
+    ...totals, currency: source.currency, paymentGateway: source.paymentGateway,
+    status: 'DRAFT',
+    dueDate: now(),
+    paidAt: null, sentAt: null, paymentLink: null, transactionId: null,
+    issuedAt: now(), createdAt: now(), updatedAt: now(),
+  });
+
+  const doc = await ref.get();
+  return res.status(201).json(toDoc(doc));
+});
+
 app.put('/v1/billing/invoice/:id', verifyToken, adminOnly, async (req, res) => {
   const ref = db.collection('invoices').doc(req.params.id);
   const doc = await ref.get();
   if (!doc.exists) return res.status(404).json({ message: 'Invoice not found' });
   const existing = doc.data();
-  if (existing.status === 'PAID' || existing.status === 'VOID') {
-    return res.status(409).json({ message: 'Paid or voided invoices can no longer be edited. Void this invoice and create a new one instead.' });
+  if (existing.status === 'VOID') {
+    return res.status(409).json({ message: 'Voided invoices can no longer be edited. Create a new invoice instead.' });
   }
 
   const { items, taxPercent, discountPercent, currency, projectId, dueDate, notes, includeWarranty } = req.body;

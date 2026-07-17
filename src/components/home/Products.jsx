@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Heart, Package, Factory, Layers, X, Check } from 'lucide-react'
 import { products } from '../../data/products'
 import { useAdmin } from '../../context/AdminContext'
+import { submitLead } from '../../lib/crm'
 
 const ICONS = { Users, Heart, Package, Factory, Layers }
 
@@ -102,6 +103,13 @@ function DemoRequestModal({ productName, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     addDemoRequest({ ...form, product: productName, source: 'Products Section', configuratorSelections: null })
+    submitLead({
+      name: form.name,
+      email: form.email,
+      product: productName,
+      source: 'products_section',
+      details: `Demo requested for ${productName}`,
+    }).catch(() => {})
     setSubmitted(true)
   }
 

@@ -3,7 +3,9 @@ import { motion } from 'framer-motion'
 import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Factory, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
+import WordReveal from '../components/common/WordReveal'
 import { getProductPath } from '../data/products'
+import { revealItem } from '../lib/reveal'
 
 const PLANS = [
   {
@@ -164,14 +166,11 @@ function FAQItem({ faq, index }) {
   const [open, setOpen] = useState(false)
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.04 }}
+      {...revealItem(index)}
       style={{
         border: '1.5px solid var(--color-border-subtle)',
         borderRadius: 'var(--border-radius-lg)',
-        background: 'var(--color-background)',
+        background: 'var(--glass-bg)',
         overflow: 'hidden',
         transition: 'border-color 0.2s',
         ...(open && { borderColor: 'color-mix(in srgb, var(--sg-accent) 25%, transparent)' }),
@@ -209,9 +208,11 @@ export default function PricingPage() {
         <div style={{ maxWidth: '1280px', margin: '0 auto', textAlign: 'center' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>PRICING</div>
-            <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', letterSpacing: '-0.03em', marginBottom: '1.25rem', maxWidth: '620px', margin: '0 auto 1.25rem' }}>
-              Transparent pricing. No surprises.
-            </h1>
+            <WordReveal
+              as="h1"
+              text="Transparent pricing. No surprises."
+              style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', letterSpacing: '-0.03em', maxWidth: '620px', margin: '0 auto 1.25rem' }}
+            />
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem', lineHeight: 1.75, maxWidth: '520px', margin: '0 auto 2rem' }}>
               Whether you need to deploy a proven product or build something from the ground up — we give you a real scope, a real timeline, and a real price before any work begins.
             </p>
@@ -230,7 +231,7 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing cards */}
-      <section style={{ padding: '5rem 2rem 4rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: '5rem 2rem 4rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '1.5rem', alignItems: 'start' }}>
             {PLANS.map((plan, i) => {
@@ -238,18 +239,18 @@ export default function PricingPage() {
               return (
                 <motion.div
                   key={plan.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  {...revealItem(i)}
                   style={{
                     position: 'relative',
-                    background: plan.highlight ? plan.color : 'var(--color-background)',
-                    border: plan.highlight ? `2px solid ${plan.color}` : '1.5px solid var(--color-border-subtle)',
+                    background: plan.highlight ? `linear-gradient(160deg, ${plan.color}48, ${plan.color}22)` : 'var(--glass-bg)',
+                    border: plan.highlight ? `1.5px solid ${plan.color}80` : '1.5px solid var(--glass-border)',
                     borderRadius: 'var(--border-radius-lg)',
+                    backdropFilter: 'var(--glass-blur)',
+                    WebkitBackdropFilter: 'var(--glass-blur)',
                     overflow: 'hidden',
                     boxShadow: plan.highlight
-                      ? `0 16px 48px ${plan.color}30`
-                      : '0 2px 8px rgba(15,23,42,0.06)',
+                      ? `0 16px 48px ${plan.color}30, inset 0 1px 0 var(--glass-highlight)`
+                      : 'var(--shadow-sm)',
                   }}
                 >
                   {plan.badge && (
@@ -343,12 +344,12 @@ export default function PricingPage() {
       </section>
 
       {/* Products available to deploy */}
-      <section style={{ padding: '2rem 2rem 5rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: '2rem 2rem 5rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '2.5rem', display: 'flex', gap: '3rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: '1 1 280px' }}>
               <div className="section-label">READY TO DEPLOY</div>
-              <h3 style={{ fontSize: '1.3rem', letterSpacing: '-0.01em', marginBottom: '0.625rem' }}>5 products. Ready in days.</h3>
+              <WordReveal as="h3" text="5 products. Ready in days." style={{ fontSize: '1.3rem', letterSpacing: '-0.01em', marginBottom: '0.625rem' }} />
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', lineHeight: 1.7 }}>
                 Each of these products is already built, tested, and running in real businesses. Choose one, we configure it for you, and you're live within the week.
               </p>
@@ -357,7 +358,7 @@ export default function PricingPage() {
               {PRODUCTS_BRIEF.map(p => {
                 const Icon = p.icon
                 return (
-                  <Link key={p.slug} to={getProductPath(p.slug)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.75rem 1.125rem', background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius)', textDecoration: 'none', transition: 'all 0.2s', flex: '1 1 160px' }}
+                  <Link key={p.slug} to={getProductPath(p.slug)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.75rem 1.125rem', background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius)', textDecoration: 'none', transition: 'all 0.2s', flex: '1 1 160px' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = p.color + '50'; e.currentTarget.style.boxShadow = `0 4px 16px ${p.color}14` }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.boxShadow = 'none' }}
                   >
@@ -381,7 +382,7 @@ export default function PricingPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>REAL EXAMPLES</div>
-            <h2 style={{ letterSpacing: '-0.02em', marginBottom: '0.75rem' }}>What does your project actually cost?</h2>
+            <WordReveal as="h2" text="What does your project actually cost?" style={{ letterSpacing: '-0.02em', marginBottom: '0.75rem' }} />
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.975rem', maxWidth: '480px', margin: '0 auto', lineHeight: 1.75 }}>
               Here's what typical projects in each industry look like — scope, timeline, and ballpark cost.
             </p>
@@ -392,11 +393,8 @@ export default function PricingPage() {
               return (
                 <motion.div
                   key={ex.industry}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.06 }}
-                  style={{ background: 'var(--color-background)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '1.75rem', position: 'relative', overflow: 'hidden' }}
+                  {...revealItem(i)}
+                  style={{ background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '1.75rem', position: 'relative', overflow: 'hidden' }}
                 >
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2.5px', background: `linear-gradient(90deg, ${ex.color}, transparent 60%)` }} />
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', marginBottom: '1rem' }}>
@@ -444,7 +442,7 @@ export default function PricingPage() {
             <div className="section-label" style={{ justifyContent: 'center' }}>
               <HelpCircle size={12} /> FAQ
             </div>
-            <h2 style={{ fontSize: '1.8rem', letterSpacing: '-0.02em' }}>Questions we get asked a lot</h2>
+            <WordReveal as="h2" text="Questions we get asked a lot" style={{ fontSize: '1.8rem', letterSpacing: '-0.02em' }} />
           </motion.div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {FAQS.map((faq, i) => <FAQItem key={i} faq={faq} index={i} />)}
@@ -457,9 +455,11 @@ export default function PricingPage() {
         <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'color-mix(in srgb, var(--color-text-heading) 4%, transparent)' }} />
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 style={{ color: 'var(--color-text-heading)', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', letterSpacing: '-0.02em', marginBottom: '1rem' }}>
-              Not sure which option fits?
-            </h2>
+            <WordReveal
+              as="h2"
+              text="Not sure which option fits?"
+              style={{ color: 'var(--color-text-heading)', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', letterSpacing: '-0.02em', marginBottom: '1rem' }}
+            />
             <p style={{ color: 'color-mix(in srgb, var(--color-text-heading) 75%, transparent)', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '2.25rem' }}>
               Tell us what you're trying to build. We'll give you an honest recommendation — no sales pressure, no commitment required.
             </p>

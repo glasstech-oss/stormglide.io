@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAdminStore } from "@/store/adminStore";
 import { cn } from "@/lib/utils";
@@ -13,9 +13,12 @@ import { PUBLIC_SITE_URL } from "@/lib/navigation";
 const MENU_ITEMS = [
     { id: "dashboard", label: "Overview", icon: LayoutDashboard },
     { id: "crm", label: "Clients", icon: Users },
+    { id: "leads", label: "Leads", icon: Inbox },
     { id: "projects", label: "Projects", icon: BriefcaseBusiness },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "billing", label: "Payments", icon: CreditCard },
+    { id: "analytics", label: "Visitor insight", icon: BarChart3 },
+    { id: "team", label: "About page team", icon: UserSquare2 },
     { id: "settings", label: "Website settings", icon: Settings2 },
 ];
 
@@ -44,6 +47,18 @@ export default function Sidebar() {
         }
         if (id === "invoices") {
             router.push("/admin/invoices");
+            return;
+        }
+        if (id === "team") {
+            router.push("/admin/team");
+            return;
+        }
+        if (id === "leads") {
+            router.push("/admin/leads");
+            return;
+        }
+        if (id === "analytics") {
+            router.push("/admin/analytics");
             return;
         }
         setActiveTab(id);
@@ -80,9 +95,15 @@ export default function Sidebar() {
                 {MENU_ITEMS.map((item) => {
                     const isProjects = pathname.startsWith("/admin/projects");
                     const isInvoices = pathname.startsWith("/admin/invoices");
-                    const isDedicatedRoute = isProjects || isInvoices;
+                    const isTeam = pathname.startsWith("/admin/team");
+                    const isLeads = pathname.startsWith("/admin/leads");
+                    const isAnalytics = pathname.startsWith("/admin/analytics");
+                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isAnalytics;
                     const active = item.id === "projects" ? isProjects
                         : item.id === "invoices" ? isInvoices
+                        : item.id === "team" ? isTeam
+                        : item.id === "leads" ? isLeads
+                        : item.id === "analytics" ? isAnalytics
                         : !isDedicatedRoute && activeTab === item.id;
                     return (
                         <button

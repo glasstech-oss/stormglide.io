@@ -37,7 +37,7 @@ export default function ServiceLandingWebsiteDevelopment() {
       </section>
 
       {/* Problems Section */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="The Problem" title="Why Most Websites Fail" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -70,7 +70,7 @@ export default function ServiceLandingWebsiteDevelopment() {
               { icon: BarChart3, title: 'Service Websites', desc: 'For consultants, agencies, service providers. Portfolio, testimonials, booking system. Show why you\'re different.' },
               { icon: Smartphone, title: 'Portfolio Websites', desc: 'Showcase your work. Artists, photographers, designers. Beautiful galleries, case studies, client testimonials.' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--glass-bg)' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--sg-accent) 28%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                   <item.icon size={24} color="var(--sg-accent)" />
                 </div>
@@ -83,7 +83,7 @@ export default function ServiceLandingWebsiteDevelopment() {
       </section>
 
       {/* Features */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Every Website Includes" title="Built-In Features" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -126,7 +126,7 @@ export default function ServiceLandingWebsiteDevelopment() {
               { num: '5', title: 'Launch', desc: 'Deploy to web, set up domain, configure analytics' },
               { num: '6', title: 'Support', desc: 'Ongoing maintenance, updates, and improvements' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ textAlign: 'center', padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ textAlign: 'center', padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.5rem' }}>{item.num}</div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>{item.title}</h3>
                 <p style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>{item.desc}</p>
@@ -137,7 +137,7 @@ export default function ServiceLandingWebsiteDevelopment() {
       </section>
 
       {/* Pricing */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Investment" title="Website Pricing in Ghana" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -176,7 +176,7 @@ export default function ServiceLandingWebsiteDevelopment() {
               { name: 'Local Service Business', industry: 'Services', before: 'No online presence, bookings via phone', after: 'Professional website with booking system', metric: '40% more inquiries' },
               { name: 'Retail Shop Ghana', industry: 'Retail', before: 'Selling in one location only', after: 'E-commerce website, ship nationwide', metric: '2x revenue from online sales' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--glass-bg)' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text-heading)' }}>{item.name}</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--sg-accent)', fontWeight: 600, marginBottom: '1rem' }}>{item.industry}</p>
                 <div style={{ marginBottom: '1rem' }}>
@@ -191,7 +191,7 @@ export default function ServiceLandingWebsiteDevelopment() {
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <SectionHeader label="Questions" title="Website FAQ" alignment="center" />
           <div style={{ marginTop: '3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

@@ -19,7 +19,6 @@ const NAV = [
   { label: 'Services',  href: '/services'  },
   { label: 'Pricing',   href: '/pricing'   },
   { label: 'Work',      href: '/work'      },
-  { label: 'About',     href: '/about'     },
   { label: 'Contact',   href: '/contact'   },
 ]
 
@@ -45,7 +44,14 @@ export default function Footer() {
   const tikTokUrl = theme.contactTikTok || TIKTOK_URL
 
   return (
-    <footer style={{ background: 'var(--color-surface-alt)', position: 'relative', overflow: 'hidden' }}>
+    <footer style={{
+      background: 'var(--color-surface-alt)',
+      borderTop: '1px solid var(--glass-border)',
+      backdropFilter: 'var(--glass-blur)',
+      WebkitBackdropFilter: 'var(--glass-blur)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
 
       {/* Subtle background glow */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -130,9 +136,11 @@ export default function Footer() {
                   rel={link.label !== 'Email' ? 'me noreferrer' : undefined}
                   style={{
                     padding: '0.35rem 0.875rem',
-                    background: 'color-mix(in srgb, var(--color-surface) 90%, transparent)',
-                    border: '1px solid var(--color-border-subtle)',
-                    borderRadius: '8px',
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '999px',
+                    backdropFilter: 'blur(14px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(14px) saturate(160%)',
                     color: 'var(--ink-400)',
                     fontSize: '0.75rem',
                     textDecoration: 'none',
@@ -140,7 +148,7 @@ export default function Footer() {
                     fontWeight: 500,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in srgb, var(--sg-accent) 20%, transparent)'; e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--sg-accent) 40%, transparent)'; e.currentTarget.style.color = 'var(--color-text-heading)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'color-mix(in srgb, var(--color-surface) 90%, transparent)'; e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.color = 'var(--ink-400)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--glass-bg)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.color = 'var(--ink-400)' }}
                 >{link.label}</a>
               ))}
             </div>
@@ -191,9 +199,12 @@ export default function Footer() {
               textTransform: 'uppercase', marginBottom: '1.375rem',
             }}>Get in touch</div>
             <div style={{
-              background: 'color-mix(in srgb, var(--color-surface) 60%, transparent)',
-              border: '1px solid var(--color-border-subtle)',
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--glass-border)',
               borderRadius: 'var(--radius)',
+              backdropFilter: 'var(--glass-blur-soft)',
+              WebkitBackdropFilter: 'var(--glass-blur-soft)',
+              boxShadow: 'inset 0 1px 0 var(--glass-highlight)',
               padding: '1.25rem',
             }}>
               <div style={{ fontSize: '0.82rem', color: 'var(--ink-400)', lineHeight: 1.7, marginBottom: '1.125rem' }}>

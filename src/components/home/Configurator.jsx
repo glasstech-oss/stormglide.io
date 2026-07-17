@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Factory, Heart, Package, ShoppingCart, Monitor, Check } from 'lucide-react'
 import { useAdmin } from '../../context/AdminContext'
+import { submitLead } from '../../lib/crm'
 
 const STEP1 = [
   { id: 'hr', label: 'HR & Payroll Management', icon: Users },
@@ -57,6 +58,14 @@ export default function Configurator() {
       source: 'Configurator',
       configuratorSelections: { needs, team, timeline },
     })
+    submitLead({
+      name: form.name,
+      email: form.email,
+      product: rec.name,
+      source: 'configurator',
+      configuratorSelections: { needs, team, timeline },
+      details: `Configurator match: ${rec.name}`,
+    }).catch(() => {})
     setSubmitted(true)
   }
 

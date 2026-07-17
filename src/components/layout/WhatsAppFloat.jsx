@@ -1,22 +1,25 @@
 import { MessageCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
+import { useActivePanelNode } from '../../lib/panelRegistry'
 
 export default function WhatsAppFloat() {
   const { theme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const phone = theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')
+  const activePanelNode = useActivePanelNode()
 
   useEffect(() => {
+    if (!activePanelNode) return undefined
     const updateVisibility = () => {
       const revealPoint = Math.min(520, window.innerHeight * 0.65)
-      setIsVisible(window.scrollY > revealPoint)
+      setIsVisible(activePanelNode.scrollTop > revealPoint)
     }
 
     updateVisibility()
-    window.addEventListener('scroll', updateVisibility, { passive: true })
-    return () => window.removeEventListener('scroll', updateVisibility)
-  }, [])
+    activePanelNode.addEventListener('scroll', updateVisibility, { passive: true })
+    return () => activePanelNode.removeEventListener('scroll', updateVisibility)
+  }, [activePanelNode])
 
   return (
     <a
@@ -41,9 +44,11 @@ export default function WhatsAppFloat() {
           justify-content: center;
           border: 1px solid rgba(255, 255, 255, 0.32);
           border-radius: 50%;
-          background: #1ea952;
+          background: linear-gradient(160deg, rgba(30,169,82,0.92), rgba(20,130,64,0.88));
+          backdrop-filter: blur(14px) saturate(160%);
+          -webkit-backdrop-filter: blur(14px) saturate(160%);
           color: #fff;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255,255,255,0.35);
           text-decoration: none;
           opacity: 0;
           visibility: hidden;

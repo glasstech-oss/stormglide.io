@@ -35,7 +35,7 @@ export default function ServiceLandingPrototyping() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="MVP Types" title="What We Prototype" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -68,7 +68,7 @@ export default function ServiceLandingPrototyping() {
                 { phase: 'Weeks 7-8', title: 'Testing & Refinement', desc: 'Test with early users, iterate' },
                 { phase: 'Weeks 9-12', title: 'Launch & Feedback', desc: 'Release, gather feedback, iterate' },
               ].map((item, i) => (
-                <div key={i} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+                <div key={i} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.5rem' }}>{item.phase}</div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>{item.title}</h3>
                   <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>{item.desc}</p>
@@ -79,7 +79,7 @@ export default function ServiceLandingPrototyping() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Features" title="MVP Includes" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
@@ -120,7 +120,7 @@ export default function ServiceLandingPrototyping() {
               { q: 'What happens after MVP launch?', a: 'We help you gather feedback, measure metrics, and plan next features. You decide whether to scale or pivot.' },
               { q: 'Can you help beyond the MVP?', a: 'Yes. Many startups evolve their MVP into full product. We provide scaling roadmap and ongoing development.' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                 <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text-heading)' }}>{item.q}</h4>
                 <p style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', margin: 0 }}>{item.a}</p>
               </motion.div>
@@ -129,7 +129,7 @@ export default function ServiceLandingPrototyping() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)', textAlign: 'center' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)', textAlign: 'center' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Ready to Test Your Startup Idea?</h2>
           <p style={{ fontSize: '1rem', color: 'var(--color-text-secondary)', marginBottom: '2rem', lineHeight: 1.6 }}>Let's build an MVP that validates your idea. Free consultation to discuss scope and timeline.</p>

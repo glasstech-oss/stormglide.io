@@ -32,7 +32,7 @@ export default function ServiceLandingDesign() {
         </div>
       </section>
 
-      <section id="services" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section id="services" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Design Services" title="What We Design" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -66,7 +66,7 @@ export default function ServiceLandingDesign() {
               { num: '5', title: 'Testing', desc: 'Test with real users, iterate' },
               { num: '6', title: 'Handoff', desc: 'Deliver designs and design system' },
             ].map((item, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--color-background)' }}>
+              <div key={i} style={{ textAlign: 'center', padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.5rem' }}>{item.num}</div>
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>{item.title}</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{item.desc}</p>
@@ -76,7 +76,7 @@ export default function ServiceLandingDesign() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <SectionHeader label="Questions" title="Design FAQ" alignment="center" />
           <div style={{ marginTop: '3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

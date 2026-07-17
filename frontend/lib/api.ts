@@ -97,9 +97,54 @@ export const SettingsAPI = {
     },
 };
 
+export interface TeamMember {
+    id: string;
+    name: string;
+    title: string;
+    bio: string;
+    linkedinUrl: string;
+    photoDataUri: string;
+    order: number;
+}
+
+export const TeamAPI = {
+    list: async (): Promise<TeamMember[]> => {
+        const { data } = await apiClient.get('/v1/team');
+        return data;
+    },
+    create: async (member: Partial<TeamMember>) => {
+        const { data } = await apiClient.post('/v1/team', member);
+        return data;
+    },
+    update: async (id: string, member: Partial<TeamMember>) => {
+        const { data } = await apiClient.put(`/v1/team/${id}`, member);
+        return data;
+    },
+    remove: async (id: string) => {
+        const { data } = await apiClient.delete(`/v1/team/${id}`);
+        return data;
+    },
+};
+
 // ==========================================
 // CRM MODULE
 // ==========================================
+export interface Lead {
+    id: string;
+    name: string;
+    email: string;
+    organization: string | null;
+    missionScope: string | null;
+    details: string | null;
+    phone: string | null;
+    product: string | null;
+    source: string | null;
+    budget: string | null;
+    timeline: string | null;
+    status: string;
+    createdAt: unknown;
+}
+
 export const CrmAPI = {
     getClients: async (search?: string) => {
         const { data } = await apiClient.get('/v1/crm/clients', { params: search ? { search } : {} });
@@ -117,7 +162,7 @@ export const CrmAPI = {
         const { data } = await apiClient.get(`/v1/crm/project/${id}`);
         return data;
     },
-    getLeads: async (status?: string) => {
+    getLeads: async (status?: string): Promise<Lead[]> => {
         const { data } = await apiClient.get('/v1/crm/leads', { params: status ? { status } : {} });
         return data;
     },
@@ -284,6 +329,10 @@ export const BillingAPI = {
         const { data } = await apiClient.post(`/v1/billing/invoice/${invoiceId}/send`);
         return data;
     },
+    cloneInvoice: async (invoiceId: string) => {
+        const { data } = await apiClient.post(`/v1/billing/invoice/${invoiceId}/clone`);
+        return data;
+    },
     updateInvoiceStatus: async (invoiceId: string, status: string) => {
         const { data } = await apiClient.put(`/v1/billing/invoice/${invoiceId}/status`, { status });
         return data;
@@ -432,6 +481,34 @@ export const LabAPI = {
     },
     getBlueprintHistory: async (authorId: string) => {
         const { data } = await apiClient.get(`/v1/lab/blueprints/${authorId}`);
+        return data;
+    },
+};
+
+// ==========================================
+// ANALYTICS MODULE (Google Analytics 4)
+// ==========================================
+
+// Raw shape of a GA4 Data API RunReportResponse — passed through as-is by
+// GET /v1/analytics/summary rather than reshaped server-side.
+export interface GaReport {
+    rows?: { dimensionValues?: { value: string }[]; metricValues?: { value: string }[] }[];
+}
+
+export interface AnalyticsSummary {
+    configured: boolean;
+    message?: string;
+    range?: { startDate: string; endDate: string };
+    overview?: GaReport;
+    byDevice?: GaReport;
+    byPage?: GaReport;
+    bySource?: GaReport;
+    byCountry?: GaReport;
+}
+
+export const AnalyticsAPI = {
+    getSummary: async (params?: { startDate?: string; endDate?: string }): Promise<AnalyticsSummary> => {
+        const { data } = await apiClient.get('/v1/analytics/summary', { params });
         return data;
     },
 };

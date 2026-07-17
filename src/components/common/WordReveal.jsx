@@ -20,8 +20,8 @@ export default function WordReveal({ text, as: Tag = 'h2', className, style, del
       style={style}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ staggerChildren: 0.045, delayChildren: delay }}
+      viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+      transition={{ staggerChildren: 0.028, delayChildren: delay }}
       aria-label={text}
     >
       {words.map((word, i) => (
@@ -34,7 +34,7 @@ export default function WordReveal({ text, as: Tag = 'h2', className, style, del
             style={{ display: 'inline-block', willChange: 'transform' }}
             variants={{
               hidden: { y: '112%' },
-              visible: { y: '0%', transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+              visible: { y: '0%', transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
             }}
           >
             {word}

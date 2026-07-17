@@ -1,8 +1,27 @@
+import { testimonials } from './testimonials.js'
+
 export const SITE_URL = 'https://stormglide.io'
 export const DEFAULT_SOCIAL_IMAGE = `${SITE_URL}/og-image.jpg`
 
+const reviewSchemas = testimonials.map(t => ({
+  '@type': 'Review',
+  reviewRating: { '@type': 'Rating', ratingValue: t.rating, bestRating: 5 },
+  author: { '@type': 'Person', name: t.author },
+  reviewBody: t.quote,
+  itemReviewed: { '@id': `${SITE_URL}/#organization` },
+}))
+
+const averageRating = testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length
+
 export const organizationSchema = {
   '@type': 'Organization',
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: averageRating,
+    bestRating: 5,
+    reviewCount: testimonials.length,
+  },
+  review: reviewSchemas,
   '@id': `${SITE_URL}/#organization`,
   name: 'Stormglide Technologies Ltd.',
   alternateName: 'Stormglide',
@@ -12,8 +31,8 @@ export const organizationSchema = {
     url: `${SITE_URL}/favicon.png`,
   },
   image: DEFAULT_SOCIAL_IMAGE,
-  description: 'Software company in Accra, Ghana building websites, web apps, mobile apps, SaaS products, and business systems for African organizations.',
-  email: 'hello@stormglide.io',
+  description: 'Business systems studio in Accra, Ghana — building customer portals, inventory systems, booking systems, and business management software that replace WhatsApp, Excel, and paper.',
+  email: 'john@stormglide.io',
   telephone: '+233547738678',
   address: {
     '@type': 'PostalAddress',
@@ -46,7 +65,7 @@ export const organizationSchema = {
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'sales',
-    email: 'hello@stormglide.io',
+    email: 'john@stormglide.io',
     telephone: '+233547738678',
     areaServed: ['GH', 'Africa'],
     availableLanguage: ['English'],
@@ -66,20 +85,20 @@ export const websiteSchema = {
 export const seoRoutes = [
   {
     path: '/',
-    title: 'Custom Software & Website Development Company | Stormglide',
-    description: 'Build websites, web apps, SaaS products, and business systems. Expert software development company. Based in Accra, Ghana. Serving Africa and global clients.',
-    h1: 'Software that runs African operations.',
-    kicker: 'Software company in Accra, Ghana',
-    summary: 'We design, build, and operate reliable digital products around how African teams, customers, payments, and infrastructure work.',
+    title: 'Custom Business Systems for African Companies | Stormglide',
+    description: 'Stop running your business on WhatsApp and Excel. We build custom customer portals, inventory systems, booking systems, and business management software. Based in Accra, Ghana.',
+    h1: 'Stop running your business on WhatsApp and Excel.',
+    kicker: 'Business Systems Studio — Accra, Ghana',
+    summary: 'We design, build, and operate the custom system that replaces WhatsApp, Excel, and paper — customers, staff, inventory, payments, and reports in one dashboard.',
     topics: ['Custom websites and e-commerce', 'Web apps and business systems', 'Mobile apps and SaaS products'],
     schemaType: 'WebPage',
   },
   {
     path: '/services',
-    title: 'Software Development Services | Web, Mobile, SaaS | Stormglide',
-    description: 'Custom software development services for websites, web apps, mobile apps, SaaS platforms, and business systems. Expert team. Global and Africa-based clients.',
-    h1: 'Custom software development for African businesses',
-    kicker: 'Software development services',
+    title: 'Custom Business Systems: Customer Portals, Inventory & Booking | Stormglide',
+    description: 'We build the system behind your website — customer portals, inventory & operations dashboards, booking systems, and full business management software. Based in Accra, Ghana.',
+    h1: 'Custom systems for how your business actually runs',
+    kicker: 'Business systems, not just websites',
     summary: 'Stormglide plans, designs, builds, and supports production software for organizations in Ghana and across Africa.',
     topics: ['Website development', 'Web and SaaS applications', 'Mobile apps and product design'],
     schemaType: 'CollectionPage',
@@ -218,12 +237,12 @@ export const seoRoutes = [
   },
   {
     path: '/products',
-    title: 'Business Software and SaaS Products Africa | Stormglide',
-    description: 'Explore Stormglide software products for HR, payroll, logistics, healthcare, manufacturing, and commerce, designed around African business operations.',
-    h1: 'Software products built for African operations',
+    title: 'HR, Dental, Logistics & Booking Systems Already Running | Stormglide',
+    description: 'Real business systems already in use in Ghana — HR & payroll management, dental practice management, freight & logistics tracking, health monitoring, and manufacturing. See what replacing WhatsApp and Excel actually looks like.',
+    h1: 'Systems already solving these problems for real businesses',
     kicker: 'Stormglide products',
-    summary: 'Our products solve practical operational problems across people, freight, health, manufacturing, and digital commerce.',
-    topics: ['Nexus HRM', 'CargoScan and SANO Health', 'Nexus MFG and Glasstech'],
+    summary: 'Our products solve practical operational problems across HR, dental care, freight, health, manufacturing, and digital commerce.',
+    topics: ['Nexus HRM and Nexus Dental', 'CargoScan and SANO Health', 'Nexus MFG and Glasstech'],
     schemaType: 'CollectionPage',
   },
   {
@@ -257,6 +276,16 @@ export const seoRoutes = [
     schemaType: 'SoftwareApplication',
   },
   {
+    path: '/nexus-dental',
+    title: 'Dental Management System for Clinics in Ghana | Nexus Dental',
+    description: 'Nexus Dental is a complete dental practice management system — patient records, appointment scheduling, treatment plans, pharmacy, and billing in one platform. Built for clinics in Ghana and across Africa.',
+    h1: 'Dental practice management, all in one system',
+    kicker: 'Nexus Dental',
+    summary: 'A dental management system covering patient records, scheduling, treatment planning, and billing for growing clinics.',
+    topics: ['Patient records and dental history', 'Appointment scheduling', 'Treatment planning and billing'],
+    schemaType: 'SoftwareApplication',
+  },
+  {
     path: '/products/nexus-mfg',
     title: 'Manufacturing Operations Software Africa | Nexus MFG',
     description: 'Nexus MFG helps African manufacturers manage production orders, materials, machines, quality control, shifts, output, and waste in one system.',
@@ -278,18 +307,18 @@ export const seoRoutes = [
   },
   {
     path: '/work',
-    title: 'Software Case Studies and Live Products | Stormglide',
-    description: 'See websites, SaaS products, mobile apps, and business systems Stormglide has built for HR, logistics, health, manufacturing, commerce, and African operations.',
+    title: 'Real Client Systems: Portals, Tracking, QR Ordering & More | Stormglide',
+    description: 'Live client portals with OTP login, real-time shipment tracking, QR restaurant ordering, multi-branch inventory — real systems replacing WhatsApp and paper for real Ghanaian businesses.',
     h1: 'Real software, not concept work',
     kicker: 'Case studies and live systems',
     summary: 'Explore selected products and client platforms built by Stormglide for practical business use.',
-    topics: ['Web and commerce platforms', 'Business and operations software', 'Mobile and SaaS products'],
+    topics: ['Barbershop and salon booking systems', 'QR restaurant ordering systems', 'Logistics and shipment tracking systems'],
     schemaType: 'CollectionPage',
   },
   {
     path: '/pricing',
-    title: 'Software and Website Development Pricing Ghana | Stormglide',
-    description: 'Clear pricing paths for websites, custom software, mobile apps, SaaS products, and enterprise systems built by Stormglide in Accra, Ghana.',
+    title: 'Custom Business System Pricing Ghana | Stormglide',
+    description: 'Clear pricing for customer portals, booking systems, inventory & operations dashboards, and full business management systems built by Stormglide in Accra, Ghana.',
     h1: 'Clear paths from idea to production software',
     kicker: 'Project pricing',
     summary: 'Choose a focused launch, a custom build, or a longer-term engineering partnership based on your product and operational needs.',
@@ -297,23 +326,13 @@ export const seoRoutes = [
     schemaType: 'WebPage',
   },
   {
-    path: '/about',
-    title: 'About Stormglide | Software Company in Accra, Ghana',
-    description: 'Stormglide is a software company in Accra building enterprise systems, SaaS products, mobile apps, websites, and AI-enabled tools for African businesses.',
-    h1: 'A Ghanaian software company built for African scale',
-    kicker: 'About Stormglide',
-    summary: 'We are engineers, designers, and product builders creating dependable software from Accra for organizations across Africa.',
-    topics: ['Based in Accra, Ghana', 'Africa-first product engineering', 'Web, mobile, SaaS, and business systems'],
-    schemaType: 'AboutPage',
-  },
-  {
     path: '/contact',
-    title: 'Contact a Software Company in Ghana | Stormglide',
-    description: 'Talk to Stormglide about your website, mobile app, SaaS product, automation, or custom software project. Based in Accra and working across Africa.',
-    h1: 'Tell us what your business needs to build',
-    kicker: 'Contact Stormglide',
+    title: 'Contact & About Stormglide | Business Systems Studio, Accra Ghana',
+    description: 'Tell us what\'s still running on WhatsApp, Excel, or paper — and see who\'s behind Stormglide, how we protect your data, and how we operate. Based in Accra, working across Africa.',
+    h1: 'A software company built by people who understand the African market',
+    kicker: 'About Stormglide',
     summary: 'Share the problem, users, and outcome you are working toward. Our team will respond with the next practical step.',
-    topics: ['Website project enquiries', 'Custom software consultations', 'SaaS and mobile product development'],
+    topics: ['Website project enquiries', 'Custom software consultations', 'SaaS and mobile product development', 'Company background, team, and data security'],
     schemaType: 'ContactPage',
   },
 ]

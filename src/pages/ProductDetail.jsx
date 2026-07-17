@@ -5,6 +5,8 @@ import { useState } from 'react'
 import PageLayout from '../components/layout/PageLayout'
 import { getProductPath, products } from '../data/products'
 import { useAdmin } from '../context/AdminContext'
+import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/viewTransition'
+import { submitLead } from '../lib/crm'
 import NexusHRMDemo from '../components/demos/NexusHRMDemo'
 import SANODemo from '../components/demos/SANODemo'
 import CargoScanDemo from '../components/demos/CargoScanDemo'
@@ -29,6 +31,13 @@ function DemoRequest({ productName, color }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     addDemoRequest({ ...form, product: productName, source: 'Product Page', configuratorSelections: null })
+    submitLead({
+      name: form.name,
+      email: form.email,
+      product: productName,
+      source: 'product_page',
+      details: `Demo requested for ${productName}`,
+    }).catch(() => {})
     setSent(true)
   }
 
@@ -55,6 +64,7 @@ function DemoRequest({ productName, color }) {
 export default function ProductDetail() {
   const { slug } = useParams()
   const product = products.find(p => p.id === slug)
+  const vtNavigate = useViewTransitionNavigate()
 
   if (!product) return <Navigate to="/products" replace />
 
@@ -179,8 +189,11 @@ export default function ProductDetail() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                 {products.filter(p => p.id !== product.id).slice(0, 3).map(p => {
                   const OtherIcon = ICONS[p.icon]
+                  const otherPath = getProductPath(p.id)
                   return (
-                    <Link key={p.id} to={getProductPath(p.id)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.15s' }}
+                    <Link key={p.id} to={otherPath}
+                      onClick={e => handleViewTransitionClick(e, vtNavigate, otherPath, { name: 'depth' })}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-alt)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >

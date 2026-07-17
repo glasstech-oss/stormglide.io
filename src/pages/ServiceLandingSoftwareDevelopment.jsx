@@ -41,7 +41,7 @@ export default function ServiceLandingSoftwareDevelopment() {
       </section>
 
       {/* Why Custom Software */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="The Challenge" title="Why Off-the-Shelf Solutions Fall Short" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
@@ -74,7 +74,7 @@ export default function ServiceLandingSoftwareDevelopment() {
               { icon: TrendingUp, title: 'SaaS Platforms', desc: 'Multi-tenant SaaS products with subscription management, analytics dashboards, and automated workflows. Scalable architecture for growth.' },
               { icon: Users, title: 'Business Systems', desc: 'ERP, CRM, inventory, and operations systems tailored to your industry. Replaces fragmented tools with unified, integrated solutions.' },
             ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--glass-bg)' }}>
                 <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--sg-accent) 28%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                   <item.icon size={24} color="var(--sg-accent)" />
                 </div>
@@ -87,7 +87,7 @@ export default function ServiceLandingSoftwareDevelopment() {
       </section>
 
       {/* Process */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Our Approach" title="How We Build Software" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '2rem' }}>
@@ -118,7 +118,7 @@ export default function ServiceLandingSoftwareDevelopment() {
               { cat: 'Database', items: ['PostgreSQL', 'MongoDB', 'Firebase', 'Redis', 'Supabase'] },
               { cat: 'DevOps', items: ['Docker', 'Vercel', 'AWS', 'GitHub Actions', 'CI/CD'] },
             ].map((group, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--color-background)' }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--glass-bg)' }}>
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{group.cat}</h4>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
                   {group.items.map((item, j) => (
@@ -132,7 +132,7 @@ export default function ServiceLandingSoftwareDevelopment() {
       </section>
 
       {/* CTA */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--color-background)' }}>
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '4rem 2rem', background: 'linear-gradient(135deg, color-mix(in srgb, var(--sg-accent) 8%, transparent) 0%, color-mix(in srgb, var(--sg-accent) 4%, transparent) 100%)', border: '1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)', borderRadius: '20px', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Ready to Build Your Software?</h2>
           <p style={{ fontSize: '1.05rem', color: 'var(--color-text-secondary)', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>Let's discuss your project, timeline, and vision. We'll create a custom proposal tailored to your needs.</p>

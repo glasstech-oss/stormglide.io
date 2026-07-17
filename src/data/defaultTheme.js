@@ -37,7 +37,7 @@ export const defaultTheme = {
   siteCurrentlyAccepting: true,
 
   contactWhatsapp: '+233547738678',
-  contactEmail:    'hello@stormglide.io',
+  contactEmail:    'john@stormglide.io',
   contactLinkedIn: 'https://www.linkedin.com/company/stormglide-io/',
   contactTikTok:   'https://www.tiktok.com/@stormglide.io',
 

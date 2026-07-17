@@ -109,7 +109,7 @@ export default function FinalCTA() {
             </Link>
           </Magnetic>
           <a
-            href="mailto:hello@stormglide.tech"
+            href="mailto:john@stormglide.io"
             className="btn-secondary"
             style={{
               textDecoration: 'none',

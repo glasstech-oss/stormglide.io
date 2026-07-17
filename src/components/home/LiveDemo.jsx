@@ -7,6 +7,7 @@ import CargoScanDemo from '../demos/CargoScanDemo'
 import NexusMFGDemo from '../demos/NexusMFGDemo'
 import GlasstechDemo from '../demos/GlasstechDemo'
 import { useAdmin } from '../../context/AdminContext'
+import { submitLead } from '../../lib/crm'
 
 const TABS = [
   { id: 'nexus-hrm', label: 'Nexus HRM', component: NexusHRMDemo },
@@ -24,6 +25,13 @@ function DemoRequestModal({ onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     addDemoRequest({ ...form, source: 'Demo Section', configuratorSelections: null })
+    submitLead({
+      name: form.name,
+      email: form.email,
+      product: form.product,
+      source: 'demo_section',
+      details: `Demo requested for ${form.product}`,
+    }).catch(() => {})
     setSent(true)
   }
 

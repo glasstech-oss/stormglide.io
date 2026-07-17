@@ -1,16 +1,14 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Home, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 
 export default function NotFoundPage() {
   return (
     <>
-      <Navbar />
       <main style={{
         minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '6rem 2rem', background: 'var(--bg-white)', position: 'relative', overflow: 'hidden',
+        padding: '6rem 2rem', paddingTop: 'calc(6rem + 68px)', background: 'var(--bg-white)', position: 'relative', overflow: 'hidden',
       }}>
         {/* Background blobs */}
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -74,7 +72,7 @@ export default function NotFoundPage() {
                 { label: 'Services', href: '/services' },
                 { label: 'Pricing',  href: '/pricing'  },
                 { label: 'Work',     href: '/work'     },
-                { label: 'About',    href: '/about'    },
+                { label: 'Contact',  href: '/contact'  },
               ].map(link => (
                 <Link key={link.href} to={link.href} style={{
                   padding: '0.35rem 0.875rem',

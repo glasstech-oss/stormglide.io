@@ -21,10 +21,10 @@ export default function Card({
   const Container = showMotion ? motion.div : 'div'
   const containerProps = showMotion
     ? {
-        initial: { opacity: 0, y: 16 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true },
-        transition: { delay },
+        initial: { opacity: 0, y: 28, rotateX: 8, transformPerspective: 900 },
+        whileInView: { opacity: 1, y: 0, rotateX: 0 },
+        viewport: { once: true, margin: '-40px' },
+        transition: { delay, duration: 0.6, ease: [0.32, 0.72, 0, 1] },
       }
     : {}
 
@@ -35,9 +35,12 @@ export default function Card({
           style={{
             width: 48,
             height: 48,
-            borderRadius: '12px',
-            background: `${color}15`,
-            border: `1.5px solid ${color}28`,
+            borderRadius: '14px',
+            background: `${color}20`,
+            border: `1px solid ${color}38`,
+            backdropFilter: 'blur(14px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(160%)',
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.25)`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -136,21 +139,24 @@ export default function Card({
                 alignItems: 'center',
                 gap: '0.5rem',
                 padding: '0.75rem 1.5rem',
-                background: color,
+                background: `${color}26`,
+                border: `1px solid ${color}55`,
+                backdropFilter: 'blur(14px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(14px) saturate(160%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22)',
                 color: 'var(--color-text-heading)',
-                border: 'none',
-                borderRadius: 'var(--radius)',
+                borderRadius: '999px',
                 fontWeight: 600,
                 fontSize: '0.875rem',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.opacity = '0.9'
+                e.currentTarget.style.filter = 'brightness(1.15)'
                 e.currentTarget.style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.opacity = '1'
+                e.currentTarget.style.filter = 'none'
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >

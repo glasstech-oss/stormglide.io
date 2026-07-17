@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { MessageSquare, Mail, MapPin, Check, ArrowRight } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAdmin } from '../../context/AdminContext'
+import { submitLead } from '../../lib/crm'
 
 const TYPES = ['New System', 'Product Demo', 'Tech Consulting', 'Partnership', 'Other']
 
@@ -15,6 +16,14 @@ export default function Contact() {
   const handleSubmit = (e) => {
     e.preventDefault()
     addInquiry(form)
+    submitLead({
+      name: form.name,
+      email: form.email,
+      organization: form.company,
+      missionScope: form.type,
+      details: form.message,
+      source: 'home_contact',
+    }).catch(() => {})
     setSubmitted(true)
   }
 

@@ -55,7 +55,7 @@ export default function ContactPage() {
 
                         <div className="space-y-8">
                             {[
-                                { icon: Mail, label: "Email Us", val: "hello@stormglide.io" },
+                                { icon: Mail, label: "Email Us", val: "john@stormglide.io" },
                                 { icon: MapPin, label: "Our Location", val: "Distributed Team" },
                                 { icon: Globe, label: "Work Status", val: "Vailable for new projects" },
                             ].map((item, i) => (

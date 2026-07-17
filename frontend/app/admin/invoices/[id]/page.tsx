@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Copy,
+  CopyPlus,
   Download,
   Loader2,
   Pencil,
@@ -115,6 +116,18 @@ export default function InvoiceDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const duplicate = async () => {
+    setActionLoading("clone");
+    try {
+      const cloned = await BillingAPI.cloneInvoice(invoiceId);
+      router.push(`/admin/invoices/${cloned.id}/edit`);
+    } catch (requestError) {
+      console.error("Failed to duplicate invoice:", requestError);
+      setError("Could not duplicate this invoice.");
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -147,7 +160,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {invoice.status !== "PAID" && invoice.status !== "VOID" && (
+          {invoice.status !== "VOID" && (
             <Link
               href={`/admin/invoices/${invoiceId}/edit`}
               className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/5"
@@ -155,6 +168,13 @@ export default function InvoiceDetailPage() {
               <Pencil size={15} /> Edit
             </Link>
           )}
+          <button
+            onClick={duplicate}
+            disabled={actionLoading === "clone"}
+            className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/5 disabled:opacity-50"
+          >
+            {actionLoading === "clone" ? <Loader2 size={15} className="animate-spin" /> : <CopyPlus size={15} />} Duplicate
+          </button>
           <button
             onClick={copyPayLink}
             className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/5"
