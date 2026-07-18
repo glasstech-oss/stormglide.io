@@ -139,16 +139,16 @@ export default function ServiceLandingWebsiteDevelopment() {
       {/* Pricing */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <SectionHeader label="Investment" title="Website Pricing in Ghana" alignment="left" maxWidth="700px" />
+          <SectionHeader label="Investment" title="What You Get, Scoped to You" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
             {[
-              { title: 'Basic Website', price: 'GHS 2,000-5,000', items: ['5-page website', 'Mobile responsive', 'SEO optimized', 'Contact form', 'Support for 3 months'] },
-              { title: 'Standard Website', price: 'GHS 5,000-10,000', items: ['10-page website', 'E-commerce ready', 'Payment integration', 'Analytics setup', 'Support for 6 months'] },
-              { title: 'Premium Website', price: 'GHS 10,000+', items: ['Custom design', 'Advanced features', 'API integrations', 'Ongoing support', 'Future enhancements'] },
+              { title: 'Starter', desc: 'A focused site for a business that needs a strong first impression online.', items: ['Up to 5 pages', 'Mobile responsive', 'SEO optimized', 'Contact form', 'Support for 3 months'] },
+              { title: 'Standard', desc: 'For businesses ready to sell and grow online.', items: ['Up to 10 pages', 'E-commerce ready', 'Payment integration', 'Analytics setup', 'Support for 6 months'] },
+              { title: 'Advanced', desc: 'Custom builds for businesses with specific integration or workflow needs.', items: ['Custom design', 'Advanced features', 'API integrations', 'Extended support', 'Room to grow'] },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--bg-soft)' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text-heading)' }}>{item.title}</h3>
-                <p style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '1.5rem' }}>{item.price}</p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>{item.desc}</p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {item.items.map((feature, j) => (
                     <li key={j} style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>
@@ -161,7 +161,7 @@ export default function ServiceLandingWebsiteDevelopment() {
             ))}
           </div>
           <p style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>
-            All websites include domain, hosting, SSL certificate, and ongoing support.
+            All websites include domain, hosting, and SSL — we'll scope your project and send a custom quote before any work begins.
           </p>
         </div>
       </section>

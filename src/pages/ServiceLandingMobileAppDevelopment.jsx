@@ -96,7 +96,7 @@ export default function ServiceLandingMobileAppDevelopment() {
               { q: 'How long does app development take?', a: 'MVP: 12-16 weeks. Full-featured app: 16-24 weeks. We break it into phases so you can start using it sooner.' },
               { q: 'What about updates and App Store approval?', a: 'We handle everything: building, testing, submitting to App Store and Google Play, and managing updates.' },
               { q: 'Can the app work offline?', a: 'Yes. All our apps can work offline. Data syncs when you\'re back online — critical for Ghana connectivity.' },
-              { q: 'What\'s the cost?', a: 'Depends on complexity. MVPs: GHS 20,000-40,000. Full apps: GHS 40,000-150,000+. We quote after understanding requirements.' },
+              { q: 'What\'s the cost?', a: 'Depends entirely on complexity and scope. We don\'t publish fixed prices — we scope your app first, then send a custom quote.' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--bg-soft)' }}>
                 <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--color-text-heading)' }}>{item.q}</h4>

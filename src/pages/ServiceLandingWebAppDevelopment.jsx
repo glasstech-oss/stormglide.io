@@ -75,7 +75,7 @@ export default function ServiceLandingWebAppDevelopment() {
             <div>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Custom Software Advantages</h3>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {['Built around YOUR process', 'Works offline (critical in Ghana)', 'Local payment integration', 'One-time cost, no subscriptions', 'Grows with your business'].map((item, i) => (
+                {['Built around YOUR process', 'Works offline (critical in Ghana)', 'Local payment integration', 'Priced for exactly what you need', 'Grows with your business'].map((item, i) => (
                   <li key={i} style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>
                     <CheckCircle size={20} color="var(--sg-accent)" style={{ flexShrink: 0 }} />
                     {item}
@@ -115,7 +115,7 @@ export default function ServiceLandingWebAppDevelopment() {
               { q: 'How long does development take?', a: 'MVP: 8-12 weeks. Full-featured: 12-24 weeks. We provide timeline after understanding requirements.' },
               { q: 'What about offline capability?', a: 'Yes, all our apps can work offline. Data syncs automatically when you go back online — critical for Ghana connectivity.' },
               { q: 'Can I integrate with payment systems?', a: 'Absolutely. We integrate Paystack, MTN MoMo, Vodafone Cash, and any other payment gateway you need.' },
-              { q: 'How much does it cost?', a: 'Depends on complexity. MVPs start at GHS 15,000-30,000. Full apps: GHS 30,000-100,000+. We quote after understanding scope.' },
+              { q: 'How much does it cost?', a: 'Depends entirely on complexity and scope. We don\'t publish fixed prices — we scope your project first, then send a custom quote.' },
               { q: 'What if I need changes later?', a: 'Easy. You own the code. We provide documentation, training, and ongoing support for any updates.' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--glass-bg)' }}>

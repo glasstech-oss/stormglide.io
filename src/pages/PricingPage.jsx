@@ -9,36 +9,13 @@ import { revealItem } from '../lib/reveal'
 
 const PLANS = [
   {
-    id: 'deploy',
-    name: 'Deploy',
-    tagline: 'Start fast with a proven product',
-    badge: null,
-    price: 'From $800',
-    period: 'one-time setup',
-    desc: 'Get one of our existing products — Nexus HRM, CargoScan, or Nexus MFG — deployed, branded, and configured for your business within days.',
-    color: 'var(--color-accent-blue)',
-    icon: Zap,
-    cta: 'Get started',
-    ctaLink: '/contact',
-    features: [
-      'One Stormglide product deployment',
-      'Custom branding & domain setup',
-      'Data migration assistance',
-      'Staff training (up to 5 users)',
-      '3 months post-launch support',
-      'Bug fixes included',
-    ],
-    products: ['Nexus HRM', 'CargoScan', 'Nexus MFG', 'Glasstech'],
-    notIncluded: ['Custom feature development', 'SLA guarantee', 'Dedicated account manager'],
-  },
-  {
     id: 'build',
     name: 'Build',
     tagline: 'Custom software for your exact workflow',
     badge: 'Most popular',
-    price: 'From $3,000',
-    period: 'per project',
-    desc: "We design and build a system from scratch — tailored to how your business actually operates. Not a template. Not a SaaS subscription. Yours.",
+    price: 'Custom quote',
+    period: 'scoped to your project',
+    desc: "We design and build a system from scratch — tailored to how your business actually operates, priced for exactly what you need. Not a template. Yours.",
     color: 'var(--sg-accent)',
     icon: Code2,
     cta: 'Start a project',
@@ -57,12 +34,36 @@ const PLANS = [
     highlight: true,
   },
   {
+    id: 'deploy',
+    name: 'Deploy',
+    tagline: 'Start fast with a proven product',
+    badge: null,
+    price: 'Custom quote',
+    period: 'scoped to your business',
+    desc: 'Get one of our existing products — Nexus HRM, CargoScan, or Nexus MFG — deployed, branded, and configured for your business within days.',
+    color: 'var(--color-accent-blue)',
+    icon: Zap,
+    cta: 'Get started',
+    ctaLink: '/contact',
+    features: [
+      'One Stormglide product deployment',
+      'Custom branding & domain setup',
+      'Data migration assistance',
+      'Staff training (up to 5 users)',
+      '3 months post-launch support',
+      'Bug fixes included',
+    ],
+    products: ['Nexus HRM', 'CargoScan', 'Nexus MFG', 'Glasstech'],
+    notIncluded: ['Custom feature development', 'SLA guarantee', 'Dedicated account manager'],
+    compact: true,
+  },
+  {
     id: 'scale',
     name: 'Scale',
     tagline: 'Enterprise systems with a dedicated team',
     badge: null,
-    price: 'Custom',
-    period: 'contact for quote',
+    price: 'Custom quote',
+    period: 'scoped to your organization',
     desc: 'For organizations that need multi-system builds, third-party integrations, strict SLAs, and a dedicated team managing their technology stack.',
     color: 'var(--color-success)',
     icon: Building2,
@@ -89,7 +90,7 @@ const FAQS = [
   },
   {
     q: 'What happens if I need changes after the project ends?',
-    a: "All projects include 3–6 months of support. After that, we offer a monthly maintenance retainer (usually $200–$600/month depending on system complexity). Bug fixes within the support window are always free.",
+    a: "All projects include 3–6 months of support. After that, we offer a monthly maintenance retainer, scoped and quoted based on your system's complexity. Bug fixes within the support window are always free.",
   },
   {
     q: 'How accurate are your project timelines?',
@@ -105,7 +106,7 @@ const FAQS = [
   },
   {
     q: 'What if I already have an existing system I want improved?',
-    a: "We can audit, refactor, or extend existing systems. We start with a paid technical audit ($300–$500) that gives you a clear picture of what's there, what's risky, and what needs to change — before we commit to a build scope.",
+    a: "We can audit, refactor, or extend existing systems. We start with a paid technical audit — quoted upfront — that gives you a clear picture of what's there, what's risky, and what needs to change — before we commit to a build scope.",
   },
 ]
 
@@ -122,42 +123,42 @@ const INDUSTRY_EXAMPLES = [
     icon: Users, color: 'var(--color-accent-blue)',
     industry: 'Retail / Wholesale',
     system: 'E-commerce site + inventory + wholesale portal',
-    tier: 'Build', price: '$4,000–$8,000', weeks: '8–12 wks',
+    tier: 'Build', weeks: '8–12 wks',
     example: 'Lollarod Enterprise (live)',
   },
   {
     icon: GraduationCap, color: 'var(--sg-accent)',
     industry: 'Schools & Education',
     system: 'Admissions + student records + fee management',
-    tier: 'Build', price: '$3,500–$6,000', weeks: '8–10 wks',
+    tier: 'Build', weeks: '8–10 wks',
     example: 'Multi-school deployment ready',
   },
   {
     icon: UtensilsCrossed, color: 'var(--color-danger)',
     industry: 'Restaurants & Food',
     system: 'POS + kitchen orders + inventory + reports',
-    tier: 'Build', price: '$3,000–$5,500', weeks: '6–9 wks',
-    example: 'Works offline, no monthly fees',
+    tier: 'Build', weeks: '6–9 wks',
+    example: 'Works offline, built for real service speed',
   },
   {
     icon: Stethoscope, color: 'var(--color-success)',
     industry: 'Clinics & Pharmacy',
     system: 'Patient records + dispensing + NHIS billing',
-    tier: 'Build', price: '$4,500–$9,000', weeks: '10–14 wks',
+    tier: 'Build', weeks: '10–14 wks',
     example: 'NHIS-compatible out of the box',
   },
   {
     icon: Truck, color: 'var(--color-warning)',
     industry: 'Logistics & Delivery',
     system: 'Order dispatch + driver tracking + COD reconciliation',
-    tier: 'Build', price: '$4,000–$7,000', weeks: '8–12 wks',
+    tier: 'Build', weeks: '8–12 wks',
     example: 'Includes driver mobile app',
   },
   {
     icon: Home, color: 'var(--color-success)',
     industry: 'Interior Design / Real Estate',
     system: 'Portfolio site + project CRM + invoicing + client portal',
-    tier: 'Build', price: '$3,500–$7,000', weeks: '8–12 wks',
+    tier: 'Build', weeks: '8–12 wks',
     example: 'Westline Future (live)',
   },
 ]
@@ -249,8 +250,15 @@ export default function PricingPage() {
                     WebkitBackdropFilter: 'var(--glass-blur)',
                     overflow: 'hidden',
                     boxShadow: plan.highlight
-                      ? `0 16px 48px ${plan.color}30, inset 0 1px 0 var(--glass-highlight)`
+                      ? `0 24px 64px ${plan.color}38, inset 0 1px 0 var(--glass-highlight)`
                       : 'var(--shadow-sm)',
+                    // the recommended plan leads visually: scaled up and lifted
+                    // above the row; the entry-level plan sits smaller and
+                    // muted beneath it, present but clearly secondary
+                    transform: plan.highlight ? 'scale(1.045)' : 'none',
+                    marginTop: plan.highlight ? '-0.75rem' : plan.compact ? '1.25rem' : '0',
+                    zIndex: plan.highlight ? 2 : 1,
+                    opacity: plan.compact ? 0.82 : 1,
                   }}
                 >
                   {plan.badge && (
@@ -382,9 +390,9 @@ export default function PricingPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>REAL EXAMPLES</div>
-            <WordReveal as="h2" text="What does your project actually cost?" style={{ letterSpacing: '-0.02em', marginBottom: '0.75rem' }} />
+            <WordReveal as="h2" text="What does a project like yours look like?" style={{ letterSpacing: '-0.02em', marginBottom: '0.75rem' }} />
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.975rem', maxWidth: '480px', margin: '0 auto', lineHeight: 1.75 }}>
-              Here's what typical projects in each industry look like — scope, timeline, and ballpark cost.
+              Here's what typical projects in each industry look like — scope, tier, and timeline.
             </p>
           </motion.div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.25rem' }}>
@@ -408,8 +416,8 @@ export default function PricingPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.875rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', padding: '0.625rem 0.875rem', background: `${ex.color}08`, border: `1px solid ${ex.color}18`, borderRadius: '10px' }}>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem', color: ex.color, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Estimate</div>
-                      <div style={{ fontWeight: 800, fontSize: '1rem', color: ex.color, fontFamily: 'var(--font-display)' }}>{ex.price}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem', color: ex.color, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Tier</div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: ex.color, fontFamily: 'var(--font-display)' }}>{ex.tier}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', padding: '0.625rem 0.875rem', background: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)', borderRadius: '10px' }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem', color: 'var(--color-text-secondary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Timeline</div>
@@ -426,7 +434,7 @@ export default function PricingPage() {
           </div>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} style={{ textAlign: 'center', marginTop: '2.5rem' }}>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
-              These are starting estimates. Final cost depends on feature scope, integrations, and user count. We give you a fixed price before we start.
+              These are typical timelines for similar work. Final scope and price depend on your specific features, integrations, and user count — we give you a fixed quote before we start.
             </p>
             <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-accent-blue)', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
               Get a quote for your project <ArrowRight size={15} />

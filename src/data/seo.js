@@ -267,12 +267,12 @@ export const seoRoutes = [
   },
   {
     path: '/sano-health',
-    title: 'Digital Health Platform for African Clinics | SANO Health',
-    description: 'SANO Health supports patient, appointment, treatment, and health-monitoring workflows for clinics and communities across Africa.',
+    title: 'Health Monitoring & Clinic Management Platform | SANO Health',
+    description: 'SANO Health pairs an offline-first mobile health-monitoring tool for patients and community health workers with a practice-management module for clinics.',
     h1: 'Digital health tools designed for African care',
     kicker: 'SANO Health',
-    summary: 'A mobile health platform designed for accessible care, practical clinic workflows, and variable connectivity.',
-    topics: ['Patient and appointment management', 'Treatment and outcome tracking', 'Mobile health monitoring'],
+    summary: 'One platform, two sides: mobile health monitoring for communities, and patient/appointment management for clinics.',
+    topics: ['Mobile health monitoring', 'Community health worker tools', 'Patient and appointment management for clinics'],
     schemaType: 'SoftwareApplication',
   },
   {

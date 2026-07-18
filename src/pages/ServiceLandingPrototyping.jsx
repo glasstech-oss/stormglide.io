@@ -115,7 +115,7 @@ export default function ServiceLandingPrototyping() {
           <div style={{ marginTop: '3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {[
               { q: 'What\'s included in an MVP?', a: 'Core features to test your idea. Payment integration, user auth, analytics. Everything needed to launch and gather feedback.' },
-              { q: 'How much does an MVP cost?', a: 'Affordable: GHS 15,000-40,000 for web MVP. GHS 20,000-50,000 for app MVP. Based on complexity.' },
+              { q: 'How much does an MVP cost?', a: 'Depends on scope and complexity. We don\'t publish fixed prices — we scope your MVP first, then send a custom quote.' },
               { q: 'Can I raise funding with an MVP?', a: 'Yes. Investors love seeing working product and real user feedback. We help you prepare investor materials.' },
               { q: 'What happens after MVP launch?', a: 'We help you gather feedback, measure metrics, and plan next features. You decide whether to scale or pivot.' },
               { q: 'Can you help beyond the MVP?', a: 'Yes. Many startups evolve their MVP into full product. We provide scaling roadmap and ongoing development.' },

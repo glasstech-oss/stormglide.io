@@ -50,7 +50,7 @@ const FAQS = [
   { q: 'Do you work with clients outside Ghana?', a: 'Yes. We currently serve clients in Ghana and Guinea, and we work remotely with clients anywhere. We communicate over WhatsApp, email, and video.' },
   { q: 'What happens after launch?', a: "We provide ongoing support and maintenance for everything we build. We don't disappear. Bug fixes are free; new features are quoted separately." },
   { q: 'Can we start with one of your existing products?', a: 'Absolutely. Several products like Nexus HRM and Nexus MFG can be deployed and customized for your business within days.' },
-  { q: 'Do you own the code after delivery?', a: 'Yes. Every project we deliver, you own the source code and all assets outright. No vendor lock-in, no recurring licensing fees from us.' },
+  { q: 'Do you own the code after delivery?', a: 'Yes. Every project we deliver, you own the source code and all assets outright. No vendor lock-in — host it, modify it, or hand it to another developer, any time.' },
   { q: 'How does pricing work?', a: 'We quote a fixed price after scoping your project. No hourly billing, no surprise invoices. What we quote is what you pay — nothing more.' },
 ]
 
