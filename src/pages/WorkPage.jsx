@@ -333,7 +333,7 @@ export default function WorkPage() {
             flex: 0 0 auto;
             scroll-snap-align: start;
             border: 1px solid var(--glass-border) !important;
-            background: color-mix(in srgb, var(--glass-bg), var(--sg-local-tint) 6%) !important;
+            background: var(--glass-bg) !important;
             border-radius: 18px !important;
           }
 
@@ -361,7 +361,7 @@ export default function WorkPage() {
             min-height: 280px;
             background:
               radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--demo-color, var(--sg-accent)) 18%, transparent), transparent 42%),
-              color-mix(in srgb, var(--glass-bg), var(--sg-local-tint) 7%);
+              var(--glass-bg);
           }
 
           .sg-mobile-demo-icon {

@@ -1325,7 +1325,7 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
   border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--glass-bg-strong), var(--sg-local-tint) 8%);
+  background: var(--glass-bg-strong);
   backdrop-filter: var(--glass-blur-soft);
   -webkit-backdrop-filter: var(--glass-blur-soft);
   font-family: var(--font-mono);
@@ -1342,7 +1342,7 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
   width: 100%;
   border-radius: var(--radius);
   border: 1px solid var(--glass-border-bright);
-  background: color-mix(in srgb, var(--color-background) 72%, var(--sg-local-tint));
+  background: var(--color-surface);
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }

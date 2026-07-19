@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { getBoardKey, getSpatialPosition } from './spatialBoard'
 
 /**
- * Global singletons (Navbar, WhatsAppFloat, ScrollProgress, GradientMesh) need to read
+ * Global singletons (Navbar, WhatsAppFloat, ScrollProgress) need to read
  * "the scroll position of whichever panel is currently visible" — but scrolling now
  * happens inside individual board panels (or the depth overlay), not the document.
  * This is a tiny pub-sub registry each panel/overlay registers its own scroll node into.

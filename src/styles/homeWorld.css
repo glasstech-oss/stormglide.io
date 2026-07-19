@@ -16,10 +16,7 @@
   overflow: hidden;
   display: grid;
   place-items: center;
-  background:
-    radial-gradient(90% 60% at 50% 112%, color-mix(in srgb, var(--sg-wall-violet) 16%, transparent), transparent 60%),
-    radial-gradient(70% 45% at 12% -6%, color-mix(in srgb, var(--sg-wall-coral) 12%, transparent), transparent 60%),
-    transparent;
+  background: var(--color-background);
 }
 
 .sg-world-station {
@@ -91,7 +88,6 @@ html[data-sg-appearance='light'] .w-orange { color: #E06A0F; }
   font-style: normal;
   color: #E06A0F;
 }
-html[data-sg-appearance='dark'] .sg-world-chaos em { color: #F07F23; }
 
 /* ── debris chips ── */
 .sg-world-debris {
@@ -210,7 +206,6 @@ html[data-sg-appearance='dark'] .sg-world-chaos em { color: #F07F23; }
 .sg-world-core-grid strong.tone-blue { color: var(--sg-accent); }
 .sg-world-core-grid strong.tone-green { color: var(--sg-accent-2); }
 .sg-world-core-grid strong.tone-orange { color: #E06A0F; }
-html[data-sg-appearance='dark'] .sg-world-core-grid strong.tone-orange { color: #F07F23; }
 
 .sg-world-core-caption {
   margin-top: 1.6rem;
@@ -347,7 +342,6 @@ html[data-sg-appearance='dark'] .sg-world-core-grid strong.tone-orange { color: 
 .sg-world-proof-grid strong.tone-blue { color: var(--sg-accent); }
 .sg-world-proof-grid strong.tone-green { color: var(--sg-accent-2); }
 .sg-world-proof-grid strong.tone-orange { color: #E06A0F; }
-html[data-sg-appearance='dark'] .sg-world-proof-grid strong.tone-orange { color: #F07F23; }
 .sg-world-proof-grid small {
   font-size: 0.78rem;
   line-height: 1.45;

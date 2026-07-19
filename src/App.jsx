@@ -7,9 +7,6 @@ import { AdminProvider } from './context/AdminContext'
 import BrandLoader from './components/common/BrandLoader'
 import RouteSEO from './components/common/RouteSEO'
 import { trackPageview } from './lib/analytics'
-import GradientMesh from './components/common/GradientMesh'
-import AmbientGlow from './components/common/AmbientGlow'
-import GlassFootprints from './components/common/GlassFootprints'
 import SquircleDefs from './components/common/SquircleDefs'
 import Navbar from './components/layout/Navbar'
 import WhatsAppFloat from './components/layout/WhatsAppFloat'
@@ -37,43 +34,6 @@ const ClientProject = lazy(() => import('./pages/client/ClientProject'))
 const ClientInvoices = lazy(() => import('./pages/client/ClientInvoices'))
 const ClientSupportTickets = lazy(() => import('./pages/client/ClientSupportTickets'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
-
-/* ── Drives the pointer-reactive glass specular highlight + mesh parallax ── */
-function GlassPointerTracker() {
-  useEffect(() => {
-    if (window.matchMedia('(pointer: coarse)').matches) return undefined
-
-    let frame = 0
-    const root = document.documentElement
-
-    const handleMove = event => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        const xPct = (event.clientX / window.innerWidth) * 100
-        const yPct = (event.clientY / window.innerHeight) * 100
-        root.style.setProperty('--sg-pointer-x-n', `${xPct / 100 - 0.5}`)
-        root.style.setProperty('--sg-pointer-y-n', `${yPct / 100 - 0.5}`)
-
-        const surface = event.target.closest('.card, .btn-primary, .btn-secondary')
-        if (surface) {
-          const rect = surface.getBoundingClientRect()
-          const localX = ((event.clientX - rect.left) / rect.width) * 100
-          const localY = ((event.clientY - rect.top) / rect.height) * 100
-          surface.style.setProperty('--sg-pointer-x', `${localX}%`)
-          surface.style.setProperty('--sg-pointer-y', `${localY}%`)
-        }
-      })
-    }
-
-    window.addEventListener('pointermove', handleMove, { passive: true })
-    return () => {
-      window.removeEventListener('pointermove', handleMove)
-      cancelAnimationFrame(frame)
-    }
-  }, [])
-
-  return null
-}
 
 /* ── Page loading skeleton ── */
 function PageLoader() {
@@ -220,19 +180,6 @@ function SiteRoutes({ location, includeTopLevel }) {
   )
 }
 
-/* Each panel sits over a different region of the wallpaper (GradientMesh's
-   diagonal coral→magenta→violet→blue→cyan flow) — glass on that panel picks
-   up a faint matching tint (see --sg-local-tint usage in index.css) so the
-   glass and the world read as one material instead of two separate layers. */
-const PANEL_TINT = {
-  '/': 'var(--sg-wall-coral)',
-  '/services': 'var(--sg-wall-magenta)',
-  '/products': 'var(--sg-wall-violet)',
-  '/work': 'var(--sg-wall-blue)',
-  '/pricing': 'var(--sg-wall-cyan)',
-  '/contact': 'color-mix(in srgb, var(--sg-wall-blue), var(--sg-wall-cyan))',
-}
-
 /* ── One persistently-mounted board panel (one of the 6 main destinations) ── */
 function BoardPanel({ path, index, visited }) {
   const ref = useRef(null)
@@ -268,7 +215,6 @@ function BoardPanel({ path, index, visited }) {
         // above the fold; scroll anchoring would "compensate" by nudging
         // scrollTop every tick, making the page drift on its own.
         overflowAnchor: 'none',
-        '--sg-local-tint': PANEL_TINT[path],
       }}
     >
       {visited && (
@@ -334,14 +280,6 @@ function Board({ activeX, instant, visitedPanels }) {
 
   return (
     <div className="sg-board" style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1 }}>
-      {/* The mesh and the panels are two separate tracks (sharing the same
-          camera transform) so GlassFootprints can sit between them, screen-fixed
-          — behind the glass panels (so their backdrop-filter blurs it, like real
-          condensation seen through frosted glass) but above the flat wallpaper. */}
-      <motion.div className="sg-board-mesh-track" style={trackStyle}>
-        <GradientMesh />
-      </motion.div>
-      <GlassFootprints />
       <motion.div className="sg-board-track" style={trackStyle}>
         {BOARD_PATHS.map((path, index) => (
           <BoardPanel key={path} path={path} index={index} visited={visitedPanels.has(path)} />
@@ -455,13 +393,6 @@ function SiteContent() {
     setLastBoardX(currentPos.x)
   }
 
-  // Navbar/WhatsAppFloat are global singletons living outside the board, so
-  // --sg-local-tint set on a BoardPanel div doesn't cascade up to them — mirror
-  // the active panel's tint onto the document root for anything above the board.
-  useEffect(() => {
-    document.documentElement.style.setProperty('--sg-local-tint', PANEL_TINT[boardKey] || 'var(--sg-accent)')
-  }, [boardKey])
-
   const isOverlayActive = !currentPos || currentPos.depth > 0
   const scrollNode = useActivePanelNode()
 
@@ -469,7 +400,6 @@ function SiteContent() {
     <>
       <Navbar />
       <ScrollProgress activeNode={scrollNode} />
-      <AmbientGlow />
       {isDesktopBoard ? (
         <>
           <Board activeX={lastBoardX} instant={instant} visitedPanels={visitedPanels} />
@@ -477,13 +407,6 @@ function SiteContent() {
         </>
       ) : (
         <Suspense fallback={<PageLoader />}>
-          <div style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
-            <GradientMesh />
-          </div>
-          {/* z-index:auto (no explicit stacking level) + DOM order before the routed
-              content below is what puts footprints behind the page but above the
-              mesh — see the comment on .sg-glass-footprints in index.css. */}
-          <GlassFootprints />
           <div style={{ perspective: '2200px', overflowX: 'clip', position: 'relative' }}>
             <AnimatePresence mode="popLayout" initial={false} custom={{ move }}>
               <motion.div
@@ -531,7 +454,6 @@ export default function App() {
       <ThemeProvider>
         <AdminProvider>
           <BrowserRouter>
-            <GlassPointerTracker />
             <SquircleDefs />
             <SiteContent />
           </BrowserRouter>

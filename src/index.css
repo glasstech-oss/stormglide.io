@@ -2,78 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Site is permanently off-white/light — no dark mode, no wallpaper, no glass
+   blur. Flat, solid surfaces; color is used only where it communicates
+   something (brand accent, success/warning/danger), not as ambient decoration. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --font-display: 'Space Grotesk';
   --font-body: 'Manrope';
   --font-mono: 'Space Mono';
 
-  --color-background: #0A1120;
-  --color-surface: rgba(255,255,255,0.06);
-  --color-surface-alt: rgba(255,255,255,0.09);
-  --color-border-subtle: rgba(255,255,255,0.14);
-  --color-accent-blue: #4D8DFF;
-  --color-accent-cyan: #4D8DFF;
-  --color-accent-violet: #2FB673;
-  --color-accent-coral: #ff6b6b;
-  --color-accent-gold: #febc2e;
-  --color-text-heading: #f6f8fc;
-  --color-text-primary: #e1e6f0;
-  --color-text-secondary: rgba(230,235,246,0.66);
-  --color-success: #3ddc97;
-  --color-warning: #febc2e;
-  --color-danger: #ff6b6b;
+  --color-background: #FAF9F6;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F3F2ED;
+  --color-border-subtle: rgba(22,35,63,0.12);
+  --color-accent-blue: #2563EB;
+  --color-accent-cyan: #2563EB;
+  --color-accent-violet: #128A57;
+  --color-accent-coral: #D6483F;
+  --color-accent-gold: #B7791F;
+  --color-text-heading: #16233F;
+  --color-text-primary: #33415E;
+  --color-text-secondary: rgba(22,35,63,0.62);
+  --color-success: #1AA15A;
+  --color-warning: #B7791F;
+  --color-danger: #D6483F;
 
   --ink-950: var(--color-text-heading);
   --ink-900: var(--color-text-heading);
   --ink-700: var(--color-text-primary);
   --ink-500: var(--color-text-secondary);
   --ink-400: var(--color-text-secondary);
-  --ink-300: rgba(230,235,246,0.4);
+  --ink-300: rgba(22,35,63,0.4);
   --ink-100: var(--color-border-subtle);
   --ink-050: var(--color-surface);
   --bg-white: var(--color-background);
   --bg-soft: var(--color-surface);
   --bg-subtle: var(--color-surface-alt);
-  --bg-dark: #050510;
-  --bg-dark-2: rgba(255,255,255,0.06);
+  --bg-dark: var(--color-background);
+  --bg-dark-2: var(--color-surface-alt);
 
   --blue: var(--color-accent-blue);
-  --blue-dark: #2563EB;
-  --blue-light: rgba(77,141,255,0.1);
+  --blue-dark: #1D4FC4;
+  --blue-light: rgba(37,99,235,0.1);
   --violet: var(--color-accent-violet);
   --green: var(--color-success);
   --amber: var(--color-warning);
   --red: var(--color-danger);
 
-  /* Wallpaper tokens — the vivid, saturated color field the glass refracts.
-     Deliberately separate from --sg-accent (UI elements) so buttons/badges
-     stay on-brand while the background can be as bold as real glass needs. */
-  --sg-wall-coral: #E07A2E;
-  --sg-wall-magenta: #35548F;
-  --sg-wall-violet: #2C6BD9;
-  --sg-wall-blue: #1F7A4F;
-  --sg-wall-cyan: #4FA3E8;
-
-  /* Clear liquid-glass surface tokens (Apple Liquid Glass "clear" variant):
-     low fill + low blur = see-through center; the material is defined by
-     the bright inner edge-glow (light collecting at the rim) and specular top rim. */
-  --glass-tint: 255,255,255;
-  --glass-bg: rgba(var(--glass-tint), 0.07);
-  --glass-bg-strong: rgba(var(--glass-tint), 0.12);
-  --glass-border: rgba(var(--glass-tint), 0.28);
-  --glass-border-bright: rgba(var(--glass-tint), 0.62);
-  --glass-highlight: rgba(var(--glass-tint), 0.55);
-  --glass-rim: rgba(0,0,0,0.3);
-  --glass-edge-glow: inset 0 0 26px -10px rgba(var(--glass-tint), 0.55);
-  --glass-edge-glow-strong: inset 0 0 34px -10px rgba(var(--glass-tint), 0.7);
-  --glass-blur: blur(8px) saturate(200%);
-  --glass-blur-soft: blur(5px) saturate(180%);
-  --glass-blur-strong: blur(14px) saturate(210%);
-  --sg-pointer-x: 50%;
-  --sg-pointer-y: 50%;
-  --sg-pointer-x-n: 0;
-  --sg-pointer-y-n: 0;
+  /* Flat surface tokens — no blur, no translucency. "glass-*" names kept so
+     .card/.btn/.badge/.input across the site don't need per-file edits. */
+  --glass-bg: var(--color-surface);
+  --glass-bg-strong: var(--color-surface-alt);
+  --glass-border: var(--color-border-subtle);
+  --glass-border-bright: rgba(22,35,63,0.24);
+  --glass-highlight: transparent;
+  --glass-rim: transparent;
+  --glass-edge-glow: none;
+  --glass-edge-glow-strong: none;
+  --glass-blur: none;
+  --glass-blur-soft: none;
+  --glass-blur-strong: none;
 
   --radius: 20px;
   --radius-lg: 28px;
@@ -81,62 +69,25 @@
   --border-radius: var(--radius);
   --border-radius-lg: var(--radius-lg);
   --section-padding: 110px;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.18);
-  --shadow-sm: 0 12px 34px rgba(0,0,0,0.28), inset 0 1px 0 var(--glass-highlight);
-  --shadow-md: 0 22px 64px rgba(0,0,0,0.34), inset 0 1px 0 var(--glass-highlight);
-  --shadow-lg: 0 32px 96px rgba(0,0,0,0.4), inset 0 1px 0 var(--glass-highlight);
+  --shadow-xs: 0 1px 2px rgba(22,35,63,0.06);
+  --shadow-sm: 0 8px 20px rgba(22,35,63,0.08);
+  --shadow-md: 0 14px 36px rgba(22,35,63,0.1);
+  --shadow-lg: 0 22px 56px rgba(22,35,63,0.12);
   /* Outer-only shadow, same numbers as --shadow-sm/md above — used via
      filter: drop-shadow() on clip-path'd (squircle) elements, since clip-path
      crops a plain outer box-shadow away but drop-shadow follows the clipped
      shape correctly. */
-  --shadow-sm-outer: 0 12px 34px rgba(0,0,0,0.28);
-  --shadow-md-outer: 0 22px 64px rgba(0,0,0,0.34);
-  --shadow-lg-outer: 0 32px 96px rgba(0,0,0,0.4);
+  --shadow-sm-outer: var(--shadow-sm);
+  --shadow-md-outer: var(--shadow-md);
+  --shadow-lg-outer: var(--shadow-lg);
 
   --sg-accent: var(--blue);
   --sg-accent-dark: var(--blue-dark);
   --sg-accent-2: var(--violet);
   --sg-accent-3: var(--green);
   --sg-border: var(--color-border-subtle);
-  --sg-spotlight-color: rgba(77,141,255,0.3);
+  --sg-spotlight-color: rgba(37,99,235,0.16);
   --sg-spotlight-flash: var(--blue);
-
-  /* Adaptive glass tint — overridden per board panel (see App.jsx BoardPanel)
-     to whichever wallpaper hue sits behind it; falls back to the accent color
-     for glass outside the board (the depth overlay, off-board routes). */
-  --sg-local-tint: var(--sg-accent);
-}
-
-/* Light appearance — a distinct glass recipe, not a recolor. Real light-mode
-   glass (macOS/visionOS) needs real fill opacity to read against a pale
-   backdrop, and dark low-alpha borders/shadows for edge definition instead
-   of a bright rim highlight — a bright-white rim is invisible on white. */
-html[data-sg-appearance='light'] {
-  color-scheme: light;
-
-  --sg-wall-coral: #F5B57E;
-  --sg-wall-magenta: #9DB4E4;
-  --sg-wall-violet: #7FA4EF;
-  --sg-wall-blue: #86CBA5;
-  --sg-wall-cyan: #A7D6F2;
-
-  --glass-tint: 255,255,255;
-  --glass-bg: rgba(var(--glass-tint), 0.58);
-  --glass-bg-strong: rgba(var(--glass-tint), 0.72);
-  --glass-border: rgba(20,18,40,0.1);
-  --glass-border-bright: rgba(20,18,40,0.22);
-  --glass-highlight: rgba(255,255,255,0.85);
-  --glass-rim: rgba(20,18,40,0.14);
-  --glass-edge-glow: inset 0 0 22px -12px rgba(255,255,255,0.9);
-  --glass-edge-glow-strong: inset 0 0 30px -12px rgba(255,255,255,1);
-
-  --shadow-xs: 0 1px 2px rgba(30,20,60,0.06);
-  --shadow-sm: 0 12px 28px rgba(30,20,60,0.1), inset 0 1px 0 var(--glass-highlight);
-  --shadow-md: 0 20px 50px rgba(30,20,60,0.14), inset 0 1px 0 var(--glass-highlight);
-  --shadow-lg: 0 28px 78px rgba(30,20,60,0.18), inset 0 1px 0 var(--glass-highlight);
-  --shadow-sm-outer: 0 12px 28px rgba(30,20,60,0.1);
-  --shadow-md-outer: 0 20px 50px rgba(30,20,60,0.14);
-  --shadow-lg-outer: 0 28px 78px rgba(30,20,60,0.18);
 }
 
 html {
@@ -310,38 +261,6 @@ svg {
   will-change: transform;
 }
 
-.sg-glass-footprints {
-  /* Deliberately no z-index: this must sit behind the glass panels (so their
-     backdrop-filter blurs it, like a mark seen through frosted glass) but above
-     the flat wallpaper — DOM placement (see App.jsx's Board/mobile branches)
-     handles that ordering; z-index:auto here just needs to not override it. */
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100svh;
-  pointer-events: none;
-  opacity: 0.72;
-  mix-blend-mode: screen;
-  filter: blur(0.2px) saturate(115%);
-}
-
-html[data-sg-appearance='light'] .sg-glass-footprints {
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-}
-
-@media (max-width: 768px) {
-  .sg-glass-footprints {
-    opacity: 0.48;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sg-glass-footprints {
-    display: none;
-  }
-}
-
 .btn-primary,
 .btn-secondary {
   position: relative;
@@ -358,104 +277,29 @@ html[data-sg-appearance='light'] .sg-glass-footprints {
   line-height: 1;
   cursor: pointer;
   text-decoration: none;
-  backdrop-filter: var(--glass-blur-soft);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
   overflow: hidden;
   isolation: isolate;
   transition: transform 220ms cubic-bezier(.2,.8,.2,1), border-color 200ms ease, background 200ms ease, color 200ms ease, box-shadow 220ms ease, filter 200ms ease;
 }
 
-.btn-primary::before,
-.btn-secondary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0) 55%);
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.btn-primary::after,
-.btn-secondary::after,
-.card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: radial-gradient(180px 180px at var(--sg-pointer-x) var(--sg-pointer-y), rgba(255,255,255,0.55), transparent 68%);
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  transition: opacity 320ms ease;
-  animation: sgWaterShimmer 11s ease-in-out infinite;
-}
-
-html[data-sg-appearance='light'] .btn-primary::after,
-html[data-sg-appearance='light'] .btn-secondary::after,
-html[data-sg-appearance='light'] .card::after {
-  mix-blend-mode: soft-light;
-}
-
-/* Ambient "light on water" idle motion — a slow drift/breathe so glass feels
-   alive before you ever touch it. Pauses on hover so the pointer-tracked
-   glint (driven by --sg-pointer-x/-y, set in App.jsx) can take over cleanly. */
-@keyframes sgWaterShimmer {
-  0%   { opacity: 0.16; transform: translate3d(-2%, -1%, 0) scale(0.96); }
-  35%  { opacity: 0.32; transform: translate3d(1.5%, 1%, 0) scale(1.04); }
-  65%  { opacity: 0.2;  transform: translate3d(-1%, 1.5%, 0) scale(1.0); }
-  100% { opacity: 0.16; transform: translate3d(-2%, -1%, 0) scale(0.96); }
-}
-
-.btn-primary:hover::after,
-.btn-secondary:hover::after,
-.card:hover::after {
-  opacity: 1;
-  transform: none;
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn-primary::after,
-  .btn-secondary::after,
-  .card::after {
-    animation: none;
-    opacity: 0.18;
-  }
-}
-
 .btn-primary {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--sg-accent) 30%, transparent), color-mix(in srgb, var(--sg-accent-2) 18%, transparent));
-  border-color: color-mix(in srgb, var(--sg-accent) 55%, var(--glass-border-bright));
-  color: var(--color-text-heading);
-  box-shadow: 0 14px 38px color-mix(in srgb, var(--sg-accent) 26%, transparent), inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 var(--glass-rim), var(--glass-edge-glow);
-}
-
-.btn-primary::before {
-  background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.5) 42%, rgba(255,255,255,0.65) 48%, rgba(255,255,255,0.5) 54%, transparent 76%);
-  background-size: 260% 100%;
-  background-position: 140% 0;
-  opacity: 1;
-  animation: sgSheenSweep 6s ease-in-out infinite;
-  animation-delay: 1.4s;
-}
-
-@keyframes sgSheenSweep {
-  0%, 55% { background-position: 140% 0; }
-  85%, 100% { background-position: -60% 0; }
+  background: var(--sg-accent);
+  border-color: var(--sg-accent);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary {
-  background: color-mix(in srgb, var(--glass-bg), var(--sg-local-tint) 8%);
-  border-color: color-mix(in srgb, var(--glass-border), var(--sg-local-tint) 10%);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
   color: var(--color-text-heading);
-  box-shadow: var(--shadow-sm), inset 0 -1px 0 var(--glass-rim), var(--glass-edge-glow);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover,
 .btn-secondary:hover {
   transform: translateY(-2px);
-  filter: brightness(1.1);
+  filter: brightness(1.06);
 }
 
 .btn-primary:active,
@@ -476,51 +320,24 @@ html[data-sg-appearance='light'] .card::after {
 
 .card {
   position: relative;
-  /* Adaptive tint: a faint hint of the wallpaper hue behind this panel,
-     kept subtle (8%) so it reads as "this glass belongs here" without
-     ever competing with text contrast. */
-  background: color-mix(in srgb, var(--glass-bg), var(--sg-local-tint) 8%);
-  border: 1px solid color-mix(in srgb, var(--glass-border), var(--sg-local-tint) 10%);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  /* Continuous-curvature "squircle" corners (see SquircleDefs.jsx). clip-path
-     crops a plain outer box-shadow away, so the outer glow moves to
-     filter: drop-shadow() below (which follows the clipped shape correctly)
-     — box-shadow here stays inset-only, which clip-path doesn't affect. */
+  /* Continuous-curvature "squircle" corners (see SquircleDefs.jsx). */
   clip-path: url(#sg-squircle);
-  box-shadow: inset 0 -1px 0 var(--glass-rim), inset 0 1px 0 var(--glass-highlight), var(--glass-edge-glow);
+  box-shadow: none;
   filter: drop-shadow(var(--shadow-sm-outer));
   color: var(--color-text-primary);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   overflow: hidden;
   isolation: isolate;
   transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), background 220ms ease, filter 220ms ease;
 }
 
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(165deg, rgba(255,255,255,0.1), rgba(255,255,255,0) 40%);
-  pointer-events: none;
-}
-
 .card:hover {
-  border-color: color-mix(in srgb, var(--sg-accent) 55%, var(--glass-border-bright));
-  box-shadow: inset 0 -1px 0 var(--glass-rim), inset 0 1px 0 var(--glass-highlight), var(--glass-edge-glow-strong);
+  border-color: var(--glass-border-bright);
   filter: drop-shadow(var(--shadow-md-outer));
-  background: color-mix(in srgb, var(--glass-bg-strong), var(--sg-local-tint) 10%);
+  background: var(--glass-bg-strong);
   transform: translateY(-4px);
-}
-
-@keyframes sgBorderShimmer {
-  0%, 100% { border-color: var(--glass-border); }
-  50% { border-color: var(--glass-border-bright); }
-}
-
-.card {
-  animation: sgBorderShimmer 7s ease-in-out infinite;
 }
 
 .section-label {
@@ -687,27 +504,6 @@ select.input {
   }
 }
 
-/* Camera-pan performance mode: while the board camera is animating
-   (html[data-sg-panning], set by Board in App.jsx), suspend the expensive
-   per-card compositing — backdrop blurs and infinite shimmer keyframes.
-   The pan reads as motion anyway; nobody perceives the glass blur mid-flight. */
-html[data-sg-panning] .card,
-html[data-sg-panning] .btn-primary,
-html[data-sg-panning] .btn-secondary,
-html[data-sg-panning] .sg-navbar {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-html[data-sg-panning] .card::before,
-html[data-sg-panning] .card::after,
-html[data-sg-panning] .btn-primary::after,
-html[data-sg-panning] .btn-secondary::after {
-  animation-play-state: paused !important;
-}
-html[data-sg-panning] .sg-glass-footprints {
-  visibility: hidden;
-}
-
 /* brand pinned to the viewport top-left (nav itself is the bottom dock) */
 .sg-brand-pin {
   position: fixed;
@@ -727,19 +523,14 @@ html[data-sg-panning] .sg-glass-footprints {
 }
 
 /* ── site-wide surface texture: fine engineering dot-grid on the void ──
-   Subtle by design: it reads as drafting paper up close and as clean white
-   (or clean navy in dark mode) at a glance. Sits on the board panels so the
-   camera pans carry it, reinforcing the "one continuous world" feel. */
+   Subtle by design: reads as drafting paper up close, clean off-white at a
+   glance. Sits on the board panels so the camera pans carry it, reinforcing
+   the "one continuous world" feel. */
 .sg-board-panel,
 .sg-depth-overlay {
   background-image:
     radial-gradient(color-mix(in srgb, var(--color-text-heading) 7%, transparent) 1px, transparent 1.5px);
   background-size: 26px 26px;
-}
-html[data-sg-appearance='dark'] .sg-board-panel,
-html[data-sg-appearance='dark'] .sg-depth-overlay {
-  background-image:
-    radial-gradient(color-mix(in srgb, var(--color-text-heading) 9%, transparent) 1px, transparent 1.5px);
 }
 
 /* ── View Transitions: sub-page navigation only (product/work detail pages)
