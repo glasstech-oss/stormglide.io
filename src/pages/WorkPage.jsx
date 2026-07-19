@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { ArrowRight, Users, Heart, Package, Factory, Layers, MoveUpRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Users, Heart, Package, Layers, MoveUpRight, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { SITE_URL } from '../data/seo'
 import NexusHRMDemo from '../components/demos/NexusHRMDemo'
 import SANODemo from '../components/demos/SANODemo'
 import CargoScanDemo from '../components/demos/CargoScanDemo'
-import NexusMFGDemo from '../components/demos/NexusMFGDemo'
 import GlasstechDemo from '../components/demos/GlasstechDemo'
 import { getProductPath } from '../data/products'
 import { CLIENT_WORK, getWorkPath } from '../data/clientWork'
@@ -18,7 +17,6 @@ const TABS = [
   { id: 'nexus-hrm', label: 'Nexus HRM',   icon: Users,   color: 'var(--color-accent-blue)', component: NexusHRMDemo,  tagline: 'HR & payroll management' },
   { id: 'sano',      label: 'SANO Health', icon: Heart,   color: 'var(--color-success)', component: SANODemo,      tagline: 'AI health monitoring' },
   { id: 'cargoscan', label: 'CargoScan',   icon: Package, color: 'var(--color-warning)', component: CargoScanDemo, tagline: 'Freight & CBM tools' },
-  { id: 'nexus-mfg', label: 'Nexus MFG',  icon: Factory, color: 'var(--color-success)', component: NexusMFGDemo,  tagline: 'Production management' },
   { id: 'glasstech', label: 'Glasstech',  icon: Layers,  color: 'var(--color-accent-violet)', component: GlasstechDemo, tagline: 'Product catalog & quoting' },
 ]
 

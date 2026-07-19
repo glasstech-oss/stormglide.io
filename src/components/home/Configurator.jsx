@@ -29,7 +29,7 @@ const STEP3 = [
 
 function getRecommendation(needs, timeline) {
   if (needs.includes('hr')) return { name: 'Nexus HRM', desc: 'Nexus HRM is the perfect fit — it covers payroll, leave, and performance tracking for businesses your size. We can customize it to your exact workflow.' }
-  if (needs.includes('production')) return { name: 'Nexus MFG', desc: 'Nexus MFG will give your production floor real-time visibility and control. Built for African manufacturers, deployed and working.' }
+  if (needs.includes('production')) return { name: 'Custom Production System', desc: "We'll design and build a production management system around your exact floor — order tracking, materials, scheduling, and quality control, built for how your team actually works." }
   if (needs.includes('health')) return { name: 'SANO Health', desc: 'SANO is built for African healthcare contexts. Offline-first, mobile-first, and designed around how community health actually works.' }
   if (needs.includes('logistics')) return { name: 'CargoScan', desc: 'CargoScan will solve your freight calculation and shipment tracking immediately. Start using it within days, not months.' }
   if (needs.length > 1) return { name: 'Custom Integrated Solution', desc: "Your needs span multiple areas — we'd build a custom integrated system that connects all these workflows in one platform. This is exactly what we do." }

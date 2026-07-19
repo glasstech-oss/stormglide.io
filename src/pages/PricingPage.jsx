@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Factory, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope } from 'lucide-react'
+import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Sparkles, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import WordReveal from '../components/common/WordReveal'
@@ -40,7 +40,7 @@ const PLANS = [
     badge: null,
     price: 'Custom quote',
     period: 'scoped to your business',
-    desc: 'Get one of our existing products — Nexus HRM, CargoScan, or Nexus MFG — deployed, branded, and configured for your business within days.',
+    desc: 'Get one of our existing products — Nexus HRM, CargoScan, or LOÙ Beauty Hub — deployed, branded, and configured for your business within days.',
     color: 'var(--color-accent-blue)',
     icon: Zap,
     cta: 'Get started',
@@ -53,7 +53,7 @@ const PLANS = [
       '3 months post-launch support',
       'Bug fixes included',
     ],
-    products: ['Nexus HRM', 'CargoScan', 'Nexus MFG', 'Glasstech'],
+    products: ['Nexus HRM', 'CargoScan', 'LOÙ Beauty Hub', 'Glasstech'],
     notIncluded: ['Custom feature development', 'SLA guarantee', 'Dedicated account manager'],
     compact: true,
   },
@@ -113,7 +113,7 @@ const FAQS = [
 const PRODUCTS_BRIEF = [
   { slug: 'nexus-hrm', name: 'Nexus HRM', icon: Users, color: 'var(--color-accent-blue)', desc: 'HR & payroll' },
   { slug: 'cargoscan', name: 'CargoScan', icon: Package, color: 'var(--color-warning)', desc: 'Freight tools' },
-  { slug: 'nexus-mfg', name: 'Nexus MFG', icon: Factory, color: 'var(--color-success)', desc: 'Production mgmt' },
+  { slug: 'cosmetology-booking', name: 'LOÙ Beauty Hub', icon: Sparkles, color: '#B06A5C', desc: 'Spa booking' },
   { slug: 'sano', name: 'SANO Health', icon: Heart, color: 'var(--color-success)', desc: 'Health monitoring' },
   { slug: 'glasstech', name: 'Glasstech', icon: Layers, color: 'var(--color-accent-violet)', desc: 'Product catalog' },
 ]

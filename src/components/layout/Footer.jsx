@@ -10,7 +10,7 @@ const PRODUCTS = [
   { name: 'Nexus Dental', slug: 'nexus-dental', color: '#00BFA5' },
   { name: 'SANO Health',  slug: 'sano',         color: 'var(--color-success)' },
   { name: 'CargoScan',    slug: 'cargoscan',    color: 'var(--color-warning)' },
-  { name: 'Nexus MFG',    slug: 'nexus-mfg',   color: 'var(--color-success)' },
+  { name: 'LOÙ Beauty Hub', slug: 'cosmetology-booking', color: '#B06A5C' },
   { name: 'Glasstech',    slug: 'glasstech',    color: 'var(--color-accent-violet)' },
 ]
 

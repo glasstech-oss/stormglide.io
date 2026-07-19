@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Users, Heart, Package, Factory, Layers, CheckCircle2, Stethoscope } from 'lucide-react'
+import { ArrowRight, Users, Heart, Package, Layers, CheckCircle2, Stethoscope, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { getProductPath, products } from '../data/products'
@@ -14,9 +14,11 @@ const PRODUCT_SHOTS = {
   sano: '/images/mockups/mobile.webp',
   'nexus-dental': '/images/mockups/dental.webp',
   cargoscan: '/images/mockups/website.webp',
+  glasstech: '/images/mockups/glasstech.webp',
+  'cosmetology-booking': '/images/mockups/cosmetology.webp',
 }
 
-const ICONS = { Users, Heart, Package, Factory, Layers, Stethoscope }
+const ICONS = { Users, Heart, Package, Layers, Stethoscope, Sparkles }
 
 function ProductCard({ product, i }) {
   const Icon = ICONS[product.icon]
@@ -145,7 +147,7 @@ export default function ProductsPage() {
               Software built for African businesses — and already running
             </h1>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '520px', lineHeight: 1.75 }}>
-              Six products across HR, health, logistics, and manufacturing — each solving a real problem we saw first-hand.
+              Six products across HR, health, logistics, and beauty & wellness — each solving a real problem we saw first-hand.
             </p>
             <Link to="/work" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', marginTop: '1rem', color: 'var(--sg-accent)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>
               Want to try them live, or see real client systems? Visit our Work page <ArrowRight size={14} />
