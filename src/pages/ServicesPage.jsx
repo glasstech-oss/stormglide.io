@@ -1,7 +1,5 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, CheckCircle2, MoveUpRight, Stethoscope, MapPin, Cloud, Truck, CreditCard, Cpu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
@@ -89,7 +87,7 @@ export default function ServicesPage() {
     [],
   )
 
-  useLenis('/services', scroller =>
+  useLenis('/services', (scroller, { gsap, ScrollTrigger }) =>
     gsap.context(() => {
       // Pin/scrub is a desktop-board feature — pins assume a tall scroll
       // runway and don't degrade gracefully on narrow viewports, so this

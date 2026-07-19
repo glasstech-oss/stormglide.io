@@ -1,7 +1,5 @@
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowRight, Users, Heart, Package, Factory, Layers, CheckCircle2, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
@@ -105,7 +103,7 @@ export default function ProductsPage() {
   const sectionRef = useRef(null)
   const trackRef = useRef(null)
 
-  useLenis('/products', scroller =>
+  useLenis('/products', (scroller, { gsap, ScrollTrigger }) =>
     gsap.context(() => {
       // Horizontal card track, pinned + scrubbed — side-by-side motion helps
       // comparison here the way it doesn't for a plain vertical list. Desktop

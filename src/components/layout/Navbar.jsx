@@ -5,7 +5,6 @@ import { ArrowRight, House, Info, LayoutGrid, Menu, MonitorSmartphone, Package, 
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import BrandLogo from '../common/BrandLogo'
-import AppearanceToggle from './AppearanceToggle'
 import { useActivePanelNode } from '../../lib/panelRegistry'
 import { prefetchBoardPage } from '../../lib/boardPages'
 
@@ -74,8 +73,6 @@ export default function Navbar() {
             Let's build <ArrowRight size={14} />
           </Link>
         </Magnetic>
-
-        <AppearanceToggle />
 
         {/* IG-style icon tab bar (mobile only) */}
         <div className="sg-dock-tabs" role="navigation" aria-label="Primary">

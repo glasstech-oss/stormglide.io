@@ -51,7 +51,7 @@ export const visualVariants = {
 // a distinct recipe: light glass needs a pale, warm base for the vivid wallpaper
 // to sit on, and dark (not white) text/ink since the backdrop is now light.
 export const lightColors = {
-  background: '#FFFFFF',
+  background: '#FAF9F6',
   surface: 'rgba(22,35,63,0.03)',
   surfaceAlt: 'rgba(22,35,63,0.05)',
   border: 'rgba(22,35,63,0.14)',

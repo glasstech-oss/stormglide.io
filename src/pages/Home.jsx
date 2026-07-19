@@ -1,5 +1,4 @@
 import { useRef } from 'react'
-import gsap from 'gsap'
 import Footer from '../components/layout/Footer'
 import HomeWorld from '../components/home/HomeWorld'
 import ProductShowcase from '../components/home/ProductShowcase'
@@ -12,7 +11,7 @@ import '../styles/home.css'
 // view — no scrub, just a one-time trigger (see useLenis.js for the Lenis +
 // ScrollTrigger wiring this depends on).
 function useSectionReveal(refs) {
-  useLenis('/', scroller =>
+  useLenis('/', (scroller, { gsap }) =>
     gsap.context(() => {
       refs.forEach(ref => {
         if (!ref.current) return

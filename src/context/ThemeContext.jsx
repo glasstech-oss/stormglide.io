@@ -118,15 +118,16 @@ function applyThemeToDOM(theme, variant, appearance) {
   setVars(root, vars)
 }
 
+// The site is permanently light/off-white — no dark mode.
+const appearance = 'light'
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useLocalStorage('theme', defaultTheme)
-  const [storedAppearance, setStoredAppearance] = useLocalStorage('appearance', 'light')
-  const appearance = storedAppearance === 'dark' ? 'dark' : 'light'
   const activeVariant = getVisualVariant(defaultVisualVariantId)
 
   useEffect(() => {
     applyThemeToDOM(theme, activeVariant, appearance)
-  }, [theme, activeVariant, appearance])
+  }, [theme, activeVariant])
 
   function updateTheme(key, value) {
     setTheme(prev => ({ ...prev, [key]: value }))
@@ -134,14 +135,6 @@ export function ThemeProvider({ children }) {
 
   function resetTheme() {
     setTheme(defaultTheme)
-  }
-
-  function setAppearance(next) {
-    setStoredAppearance(next === 'light' ? 'light' : 'dark')
-  }
-
-  function toggleAppearance() {
-    setAppearance(appearance === 'light' ? 'dark' : 'light')
   }
 
   return (
@@ -152,8 +145,6 @@ export function ThemeProvider({ children }) {
       visualVariant: activeVariant.id,
       activeVariant,
       appearance,
-      setAppearance,
-      toggleAppearance,
     }}>
       {children}
     </ThemeContext.Provider>
