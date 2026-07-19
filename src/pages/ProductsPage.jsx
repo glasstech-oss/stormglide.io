@@ -12,10 +12,10 @@ import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/vie
 // real interface shots on the product cards — the products page was the one
 // page describing software without showing any
 const PRODUCT_SHOTS = {
-  'nexus-hrm': '/images/mockups/webapp.png',
-  sano: '/images/mockups/mobile.png',
-  'nexus-dental': '/images/mockups/dental.png',
-  cargoscan: '/images/mockups/website.png',
+  'nexus-hrm': '/images/mockups/webapp.webp',
+  sano: '/images/mockups/mobile.webp',
+  'nexus-dental': '/images/mockups/dental.webp',
+  cargoscan: '/images/mockups/website.webp',
 }
 
 const ICONS = { Users, Heart, Package, Factory, Layers, Stethoscope }

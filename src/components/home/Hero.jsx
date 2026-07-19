@@ -83,7 +83,7 @@ export default function Hero() {
               <small>operations.stormglide.io</small>
             </span>
             <img
-              src="/images/mockups/webapp.png"
+              src="/images/mockups/webapp.webp"
               width="1024"
               height="662"
               alt="Business operations dashboard built by Stormglide"
