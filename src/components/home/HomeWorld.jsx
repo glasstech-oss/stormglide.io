@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useActivePanelNode } from '../../lib/panelRegistry'
 import { useTheme } from '../../context/ThemeContext'
+import { LIVE_PRODUCT_COUNT } from '../../data/products'
 import '../../styles/homeWorld.css'
 
 /* Manual scroll-progress tracker, deliberately not framer-motion's useScroll.
@@ -72,8 +73,8 @@ const DEBRIS = [
 ]
 
 const PROOF_STATS = [
-  { value: '5', label: 'Products live, in production', tone: 'blue' },
-  { value: '3+', label: 'Countries running our systems', tone: 'green' },
+  { value: String(LIVE_PRODUCT_COUNT), label: 'Products live, in production', tone: 'blue' },
+  { value: '2', label: 'Countries running our systems — Ghana & Guinea', tone: 'green' },
   { value: '24h', label: 'Response on every enquiry', tone: 'orange' },
 ]
 

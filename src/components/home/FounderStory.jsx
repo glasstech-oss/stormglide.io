@@ -96,7 +96,7 @@ export default function FounderStory() {
             {[
               { label: 'Founded', value: '2021', desc: 'Building software for Africa' },
               { label: 'Team', value: 'Africa-First', desc: 'Based in Accra, Ghana' },
-              { label: 'Customers', value: '100+', desc: 'Across 8 countries' },
+              { label: 'Customers', value: 'Real Businesses', desc: 'Across Ghana & Guinea' },
               { label: 'Philosophy', value: 'Your Success', desc: 'We grow when you grow' }
             ].map((item, idx) => (
               <motion.div

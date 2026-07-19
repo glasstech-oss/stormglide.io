@@ -30,14 +30,14 @@ export default function ServiceLandingWebsiteDevelopment() {
               </a>
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', border: '1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)', borderRadius: 'var(--radius)', background: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)', color: 'var(--color-text-secondary)', padding: '0.72rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.03em' }}>
-              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ SERVING GHANA SINCE 2021</span> • 50+ businesses • Fast loading
+              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ SERVING GHANA SINCE 2021</span> • Custom-built • Fast loading
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Problems Section */}
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
+      <section id="why-us" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="The Problem" title="Why Most Websites Fail" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>

@@ -257,12 +257,12 @@ export const seoRoutes = [
   },
   {
     path: '/cargoscan',
-    title: 'Cargo and Logistics Software for Africa | CargoScan',
-    description: 'CargoScan helps freight and logistics teams calculate CBM, estimate shipment costs, track cargo, and generate shareable reports for African trade routes.',
+    title: 'Freight Cost Calculator & GPS Cargo Tracking | CargoScan',
+    description: 'CargoScan pairs instant CBM and freight-cost calculation with GPS fleet tracking, so freight and logistics teams can quote and track shipments in one platform.',
     h1: 'Faster cargo calculations and shipment workflows',
     kicker: 'CargoScan logistics software',
-    summary: 'A focused logistics platform for freight teams that need accurate calculations and clearer shipment information.',
-    topics: ['CBM calculation', 'Freight cost estimation', 'Shipment reports and tracking'],
+    summary: 'A focused logistics platform for freight teams — instant cost estimation, plus GPS tracking once cargo is moving.',
+    topics: ['CBM and freight cost calculation', 'GPS shipment and fleet tracking', 'Shipment reports and history'],
     schemaType: 'SoftwareApplication',
   },
   {

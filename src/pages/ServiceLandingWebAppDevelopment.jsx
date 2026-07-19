@@ -29,7 +29,7 @@ export default function ServiceLandingWebAppDevelopment() {
               </a>
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', border: '1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)', borderRadius: 'var(--radius)', background: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)', color: 'var(--color-text-secondary)', padding: '0.72rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.03em' }}>
-              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ 50+ APPS IN PRODUCTION</span> • Works offline • Local payments
+              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ REAL APPS IN PRODUCTION</span> • Works offline • Local payments
             </div>
           </motion.div>
         </div>
@@ -87,13 +87,13 @@ export default function ServiceLandingWebAppDevelopment() {
         </div>
       </section>
 
-      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
+      <section id="examples" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <SectionHeader label="Examples" title="Apps We've Built" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))', gap: '2rem' }}>
             {[
-              { name: 'Nexus HRM', type: 'HR & Payroll', users: '50+ companies', features: 'Automated payroll, Paystack integration, leave tracking, performance management' },
-              { name: 'CargoScan', type: 'Logistics Tracking', users: '30+ operators', features: 'Real-time GPS, offline tracking, driver management, offline syncing' },
+              { name: 'Nexus HRM', type: 'HR & Payroll', users: 'HR teams', features: 'Automated payroll, Paystack integration, leave tracking, performance management' },
+              { name: 'CargoScan', type: 'Logistics Tracking', users: 'Freight & logistics teams', features: 'Real-time GPS, offline tracking, driver management, offline syncing' },
               { name: 'Custom Inventory', type: 'Inventory Management', users: 'Manufacturing', features: 'Multi-location tracking, low-stock alerts, purchase orders' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--bg-soft)' }}>

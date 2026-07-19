@@ -131,7 +131,7 @@ export const CLIENT_WORK = [
   {
     name: 'Nexus Dental System',
     category: 'Healthcare',
-    url: 'https://nexuspharmasystem.web.app',
+    url: 'https://nexusdental--nexusdentalsystem.us-east4.hosted.app',
     RegionIcon: MapPin, region: 'Ghana',
     color: 'var(--color-success)',
     year: '2025',
@@ -166,3 +166,5 @@ export const CLIENT_WORK = [
 export function getWorkPath(slug) {
   return `/work/${slug}`
 }
+
+export const CLIENT_WORK_COUNT = CLIENT_WORK.length

@@ -118,3 +118,5 @@ const productLandingPaths = {
 export function getProductPath(productId) {
   return productLandingPaths[productId] || `/products/${productId}`
 }
+
+export const LIVE_PRODUCT_COUNT = products.filter(p => p.status === 'live').length

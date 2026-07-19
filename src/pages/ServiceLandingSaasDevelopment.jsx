@@ -1,16 +1,12 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, TrendingUp, Users, Zap, BarChart3, Lock, Globe, Smartphone } from 'lucide-react'
+import { ArrowRight, TrendingUp, Users, Zap, BarChart3, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
 
 export default function ServiceLandingSaasDevelopment() {
   return (
-    <PageLayout
-      title="SaaS Product Development | Custom SaaS Solutions | Stormglide"
-      description="Build scalable SaaS products from concept to market. We develop multi-tenant platforms with subscription management, analytics, and enterprise features."
-      keywords="SaaS development, SaaS product development, software as a service, multi-tenant platform, subscription software"
-    >
+    <PageLayout>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
@@ -93,8 +89,8 @@ export default function ServiceLandingSaasDevelopment() {
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
             {[
               { title: 'We Build & Operate', desc: 'We don\'t just hand off code. We deploy, monitor, and optimize. Your success is our success. We care about uptime and performance.' },
-              { title: 'Proven SaaS Track Record', desc: 'We\'ve built 3 active SaaS products (Nexus-HRM, CargoScan, SANO). We know what works: scalability, reliability, user retention.' },
-              { title: 'Compliance & Security', desc: 'GDPR-ready, secure data handling, encrypted storage. Your customers\' data is protected. Compliance built-in from day one.' },
+              { title: 'Proven SaaS Track Record', desc: 'We\'ve built and run live SaaS products, including Nexus HRM, CargoScan, and SANO Health. We know what works: scalability, reliability, user retention.' },
+              { title: 'Security by Default', desc: 'Encrypted data storage, role-based access control, and privacy-conscious data handling. Compliance built in from day one, scoped to your requirements.' },
               { title: 'Fast Iteration', desc: 'Ship MVPs in weeks, not months. Iterate based on user feedback. Move fast, break nothing.' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '1.5rem 2rem', border: '1px solid var(--color-border)', borderRadius: '12px', background: 'var(--bg-soft)' }}>

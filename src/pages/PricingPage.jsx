@@ -4,7 +4,7 @@ import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, Chev
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import WordReveal from '../components/common/WordReveal'
-import { getProductPath } from '../data/products'
+import { getProductPath, LIVE_PRODUCT_COUNT } from '../data/products'
 import { revealItem } from '../lib/reveal'
 
 const PLANS = [
@@ -357,7 +357,7 @@ export default function PricingPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '2.5rem', display: 'flex', gap: '3rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: '1 1 280px' }}>
               <div className="section-label">READY TO DEPLOY</div>
-              <WordReveal as="h3" text="5 products. Ready in days." style={{ fontSize: '1.3rem', letterSpacing: '-0.01em', marginBottom: '0.625rem' }} />
+              <WordReveal as="h3" text={`${LIVE_PRODUCT_COUNT} products. Ready in days.`} style={{ fontSize: '1.3rem', letterSpacing: '-0.01em', marginBottom: '0.625rem' }} />
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', lineHeight: 1.7 }}>
                 Each of these products is already built, tested, and running in real businesses. Choose one, we configure it for you, and you're live within the week.
               </p>

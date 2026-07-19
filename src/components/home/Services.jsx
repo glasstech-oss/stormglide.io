@@ -215,7 +215,7 @@ export default function Services() {
           {primaryServices.length > 0 && (
             <ServiceTier
               title="Our SaaS Products"
-              subtitle="Production-ready software serving 100+ customers across Africa"
+              subtitle="Production-ready software, live and in use across Ghana & Guinea"
               services={primaryServices}
               isPrimary={true}
             />

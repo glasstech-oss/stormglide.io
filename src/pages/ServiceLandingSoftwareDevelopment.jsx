@@ -1,16 +1,12 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle, Code, Zap, Users, TrendingUp, Smartphone, Lock } from 'lucide-react'
+import { ArrowRight, Code, Zap, Users, TrendingUp, Smartphone, Lock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
 
 export default function ServiceLandingSoftwareDevelopment() {
   return (
-    <PageLayout
-      title="Custom Software Development Company | Stormglide"
-      description="Expert software development services for web apps, SaaS, and business systems. We build reliable digital products for African and global businesses."
-      keywords="custom software development, software development company, web application development, SaaS development, business systems"
-    >
+    <PageLayout>
 
       {/* Hero */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)', overflow: 'hidden', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
@@ -34,7 +30,7 @@ export default function ServiceLandingSoftwareDevelopment() {
               </a>
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', border: '1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)', borderRadius: 'var(--radius)', background: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)', color: 'var(--color-text-secondary)', padding: '0.72rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.03em' }}>
-              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ 50+ PROJECTS SHIPPED</span> • Nexus-HRM • CargoScan • SANO
+              <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ REAL PRODUCTS IN PRODUCTION</span> • Nexus HRM • CargoScan • SANO Health
             </div>
           </motion.div>
         </div>

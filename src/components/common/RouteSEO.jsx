@@ -6,10 +6,28 @@ import {
   getSeoForPath,
   SITE_URL,
 } from '../../data/seo'
+import { CLIENT_WORK } from '../../data/clientWork'
+
+function getWorkCaseRoute(pathname) {
+  const match = pathname.match(/^\/work\/([^/]+)\/?$/)
+  if (!match) return null
+  const work = CLIENT_WORK.find(item => item.slug === match[1])
+  if (!work) return null
+  return {
+    path: `/work/${work.slug}`,
+    title: `${work.name} Case Study — ${work.category} | Stormglide`,
+    description: work.desc,
+    h1: work.scope,
+    kicker: work.name,
+    summary: work.desc,
+    topics: work.what,
+    schemaType: 'WebPage',
+  }
+}
 
 export default function RouteSEO() {
   const location = useLocation()
-  const route = getSeoForPath(location.pathname)
+  const route = getWorkCaseRoute(location.pathname) || getSeoForPath(location.pathname)
   const privateRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/client')
 
   if (privateRoute || !route) {

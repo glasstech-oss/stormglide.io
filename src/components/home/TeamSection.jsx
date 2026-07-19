@@ -122,7 +122,7 @@ export default function TeamSection() {
               margin: 0,
             }}
           >
-            We're a small team based in <strong>Accra, Ghana</strong>. We've collectively built software for 50+ African businesses across logistics, healthcare, manufacturing, and retail. We don't just code — we understand operations.
+            We're a small team based in <strong>Accra, Ghana</strong>. We've built real systems for businesses across logistics, healthcare, manufacturing, and retail. We don't just code — we understand operations.
           </p>
         </motion.div>
       </div>

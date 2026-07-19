@@ -8,6 +8,8 @@ import { useTheme } from '../context/ThemeContext'
 import { useAdmin } from '../context/AdminContext'
 import { revealItem } from '../lib/reveal'
 import { submitLead } from '../lib/crm'
+import { LIVE_PRODUCT_COUNT } from '../data/products'
+import { CLIENT_WORK_COUNT } from '../data/clientWork'
 
 const API_BASE = 'https://us-central1-stormglideio.cloudfunctions.net/api'
 
@@ -22,10 +24,10 @@ const PILLARS = [
 ]
 
 const STATS = [
-  { value: '5',    label: 'Products live'      },
-  { value: '3+',   label: 'Countries served'   },
-  { value: '10+',  label: 'Systems shipped'    },
-  { value: '4 wk', label: 'Avg. delivery time' },
+  { value: String(LIVE_PRODUCT_COUNT),   label: 'Products live'      },
+  { value: 'Ghana & Guinea',             label: 'Countries served'   },
+  { value: String(CLIENT_WORK_COUNT),    label: 'Systems shipped'    },
+  { value: '24h',                        label: 'Response time'      },
 ]
 
 const SECURITY_POINTS = [
@@ -157,7 +159,7 @@ export default function ContactPage() {
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
               <MapPin size={14} />
-              <span>Accra, Ghana — operating in 3+ countries</span>
+              <span>Accra, Ghana — operating across Ghana & Guinea</span>
             </div>
           </motion.div>
         </div>

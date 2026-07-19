@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, CheckCircle2, MoveUpRight, Stethoscope, MapPin, Cloud, Truck, CreditCard, Cpu } from 'lucide-react'
+import { ArrowRight, Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, CheckCircle2, MoveUpRight, Stethoscope, MapPin, Cloud, Truck, CreditCard, Cpu, Rocket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { services } from '../data/services'
 import { useLenis } from '../lib/useLenis'
 
-const ICONS = { Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, Stethoscope, Cloud, Truck, CreditCard, Cpu }
+const ICONS = { Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, Stethoscope, Cloud, Truck, CreditCard, Cpu, Rocket }
 
 const WHY_US = [
   'Every website ships with a full admin backoffice, built in from day one.',
