@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Sparkles, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope } from 'lucide-react'
+import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Sparkles, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope, Calculator } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import WordReveal from '../components/common/WordReveal'
@@ -229,6 +229,32 @@ export default function PricingPage() {
             </div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Price estimator CTA */}
+      <div style={{ padding: '3rem 2rem 0' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          style={{
+            maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem',
+            padding: '1.75rem 2rem', borderRadius: 'var(--border-radius-lg)',
+            background: 'linear-gradient(120deg, color-mix(in srgb, var(--sg-accent) 10%, transparent), color-mix(in srgb, var(--color-accent-violet) 8%, transparent))',
+            border: '1.5px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: 46, height: 46, borderRadius: '12px', background: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--sg-accent) 28%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Calculator size={21} color="var(--sg-accent)" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--color-text-heading)', marginBottom: '0.2rem' }}>Not sure what your project costs?</div>
+              <div style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)' }}>Try the price estimator — pick a project type, tell us what you need, see a real number in under a minute.</div>
+            </div>
+          </div>
+          <Link to="/price-estimator" className="btn-primary" style={{ textDecoration: 'none', gap: '0.5rem', flexShrink: 0 }}>
+            Try the Price Estimator <ArrowRight size={15} />
+          </Link>
+        </motion.div>
       </div>
 
       {/* Pricing cards */}

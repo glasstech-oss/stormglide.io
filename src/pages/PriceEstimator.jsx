@@ -1,89 +1,129 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Check, Globe, Building2, ShoppingCart, CalendarClock, LayoutDashboard, Megaphone, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Check, Globe, Building2, ShoppingCart, CalendarClock, Package, Zap, Sparkles, Loader2, ArrowUpRight } from 'lucide-react'
 import PageLayout from '../components/layout/PageLayout'
 import { submitLead } from '../lib/crm'
+import { useTheme } from '../context/ThemeContext'
 
-// Same category structure/pricing as our reference estimator (gotechpluz.com),
-// adapted to how Stormglide actually scopes work — currency and ranges kept
-// as-is per direct request, categories renamed/regrouped where they map more
-// naturally onto our own product/service lines.
+// Grounded in what we've actually delivered (see src/data/clientWork.js) and
+// realistic Ghana SME software-project pricing — not a copied rate card.
+// Categories map to real project shapes, and each links to a live example
+// where we have one, so a visitor can see exactly what that price bought.
 const PACKAGES = [
   {
-    id: 'starter-web', name: 'Starter Web', icon: Globe, color: 'var(--sg-accent)',
-    audience: 'Individuals & small businesses', min: 2100, max: 4200,
-    tags: ['1–3 Pages', 'Mobile-Friendly', 'Contact Form', 'WhatsApp Integration'],
+    id: 'website', name: 'Business Website', icon: Globe, color: 'var(--sg-accent)',
+    audience: 'Get found online, take enquiries', min: 3000, max: 7000,
+    example: 'Like Westline Future\'s site',
+    tags: ['5–8 pages', 'Mobile-friendly', 'WhatsApp button', 'Contact form'],
   },
   {
-    id: 'standard-business', name: 'Standard Business', icon: Building2, color: 'var(--sg-accent-2)',
-    audience: 'Growing businesses', min: 4900, max: 8400,
-    tags: ['5–8 Pages', 'Blog', 'SEO Setup', 'Maps', 'Chat Integration'],
+    id: 'ecommerce', name: 'Online Store', icon: ShoppingCart, color: 'var(--color-warning)',
+    audience: 'Sell online, accept MoMo & card payments', min: 8000, max: 18000,
+    example: 'Like Lollarod Enterprise',
+    tags: ['Product catalog', 'Paystack / MoMo checkout', 'Admin dashboard'],
   },
   {
-    id: 'premium-corporate', name: 'Premium Corporate', icon: Sparkles, color: 'var(--color-accent-violet)',
-    audience: 'Established brands', min: 9800, max: 16800,
-    tags: ['10+ Pages', 'Advanced UI/UX', 'Careers Page', 'SEO', 'Security'],
+    id: 'booking', name: 'Booking & Scheduling System', icon: CalendarClock, color: 'var(--color-danger)',
+    audience: 'Salons, clinics, consultants, service businesses', min: 9000, max: 20000,
+    example: 'Like BarberManager',
+    tags: ['Live time-slot booking', 'SMS confirmations', 'Staff portal'],
   },
   {
-    id: 'ecommerce', name: 'Ecommerce Website', icon: ShoppingCart, color: 'var(--color-warning)',
-    audience: 'Online stores', min: 8400, max: 21000,
-    tags: ['Storefront', 'Product Pages', 'Admin Dashboard', 'Stock Tracking'],
+    id: 'pos-inventory', name: 'Sales & Inventory System', icon: Package, color: 'var(--color-accent-violet)',
+    audience: 'Restaurants, retail, wholesale', min: 14000, max: 32000,
+    example: 'Like Kyekye Cuisine',
+    tags: ['POS / order flow', 'Kitchen or stock dashboard', 'Multi-role staff access'],
   },
   {
-    id: 'booking-system', name: 'Booking System Website', icon: CalendarClock, color: 'var(--color-danger)',
-    audience: 'Service businesses', min: 7000, max: 14000,
-    tags: ['Booking-ready structure', 'Admin Panel'],
+    id: 'custom-system', name: 'Custom Business System', icon: Building2, color: 'var(--sg-accent-2)',
+    audience: 'HR, payroll, logistics, health records — built from scratch', min: 22000, max: 60000,
+    example: 'Like Nexus HRM',
+    tags: ['Fully bespoke', 'Multi-branch ready', 'Reports & dashboards'],
   },
   {
-    id: 'saas-mvp', name: 'SaaS MVP', icon: LayoutDashboard, color: 'var(--sg-accent)',
-    audience: 'Startups & tech platforms', min: 14000, max: 56000,
-    tags: ['Dashboards', 'Authentication', 'APIs', 'Scalable Architecture'],
-  },
-  {
-    id: 'landing-page', name: 'Landing Page', icon: Megaphone, color: 'var(--sg-accent-2)',
-    audience: 'Promotions & campaigns', min: 1500, max: 2800,
-    tags: ['1-page design', 'CTA', 'Analytics'],
+    id: 'deploy-product', name: 'Deploy an Existing Product', icon: Zap, color: 'var(--color-success)',
+    audience: 'Nexus HRM, CargoScan, LOÙ Beauty Hub — live in days, not months', min: 6000, max: 14000,
+    tags: ['Branded & configured for you', 'Staff training included', 'Fastest way to go live'],
   },
 ]
 
 const CUSTOM_APP = {
-  id: 'custom-app', name: 'Custom App Development', icon: Sparkles, color: 'var(--color-accent-violet)',
-  audience: "Something that doesn't fit a template", min: null, max: null,
-  tags: ['Describe what you need', "We scope it", 'Fixed-price quote back within 48 hours'],
+  id: 'custom-app', name: 'Something Else', icon: Sparkles, color: 'var(--color-accent-coral)',
+  audience: "Doesn't fit a template? Tell us what you need", min: null, max: null,
+  tags: ['Describe what you need', 'We scope it', 'Fixed-price quote back within 48 hours'],
 }
 
+// What actually drives cost on a Ghanaian SME project, beyond the base
+// build — each one is a real capability we've shipped before (see
+// clientWork.js), not a generic web-agency upsell.
+const SCOPE_FACTORS = [
+  { id: 'multi-branch', label: 'Multiple branches or locations', desc: 'One system, several sites — like Westline Future\'s 3-country setup', price: 2500 },
+  { id: 'payments', label: 'Mobile Money / card payments', desc: 'Paystack, MTN MoMo, or both, built into checkout or invoicing', price: 1200 },
+  { id: 'offline', label: 'Needs to work without steady internet', desc: 'Keeps running when the connection drops, syncs when it\'s back', price: 1800 },
+  { id: 'whatsapp', label: 'WhatsApp order / booking alerts', desc: 'Customers and staff notified automatically, no app required', price: 900 },
+  { id: 'staff-roles', label: 'Multiple staff logins with different access levels', desc: 'Admin, staff, and manager views — everyone sees only what they need', price: 1500 },
+  { id: 'reports', label: 'Sales / performance reports dashboard', desc: 'Real numbers on demand, not a manual month-end spreadsheet', price: 1400 },
+]
+
 const ADD_ONS = [
-  { id: 'rush', label: 'Priority / rush delivery', desc: 'Move to the front of the queue', price: 1200 },
-  { id: 'branding', label: 'Logo & brand identity', desc: 'Logo, color system, brand guide', price: 800 },
-  { id: 'copywriting', label: 'Content & copywriting', desc: 'We write the copy for every page', price: 600 },
-  { id: 'payments', label: 'Payment gateway integration', desc: 'Paystack / Stripe / mobile money', price: 900 },
-  { id: 'multilang', label: 'Multi-language support', desc: 'English + one additional language', price: 1200 },
-  { id: 'support', label: '+3 months post-launch support', desc: 'Bug fixes & small tweaks included', price: 500 },
+  { id: 'rush', label: 'Priority / rush delivery', desc: 'Move to the front of the queue', price: 1500 },
+  { id: 'branding', label: 'Logo & brand identity', desc: 'Logo, color system, brand guide', price: 1000 },
+  { id: 'copywriting', label: 'Content & copywriting', desc: 'We write the copy for every page', price: 700 },
+  { id: 'multilang', label: 'Multi-language support', desc: 'English + one additional language (e.g. Twi, Ewe, Ga)', price: 1200 },
+  { id: 'support', label: '+3 months post-launch support', desc: 'Bug fixes & small tweaks included', price: 600 },
 ]
 
 const TIMELINES = ['Urgent — under 1 month', 'Normal — 1–3 months', 'Planning ahead — 3–6 months', 'No fixed deadline']
 
+// Same chaos the rest of the site names by name (see HomeWorld's debris:
+// WhatsApp, Excel, paper, notebooks) — asking it here instead of a generic
+// "tell us about your business" box gives our team something concrete to
+// work from, and shows the visitor we already know their situation.
+const CURRENT_SETUPS = [
+  'WhatsApp & phone calls',
+  'Excel / spreadsheets',
+  'Paper & notebooks',
+  'An existing system that isn\'t working well',
+  'Nothing formal yet',
+]
+
 const gh = (n) => `GH₵${Math.round(n).toLocaleString()}`
 
-const STEPS = ['Package', 'Add-Ons', 'Details', 'Review']
+const STEPS = ['Package', 'What You Need', 'Details', 'Review']
 
 export default function PriceEstimator() {
+  const { theme } = useTheme()
+  const whatsappPhone = theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')
   const [step, setStep] = useState(0)
   const [pkgId, setPkgId] = useState(null)
-  const [complexity, setComplexity] = useState(0.5)
+  const [scopeFactors, setScopeFactors] = useState(new Set())
   const [addOns, setAddOns] = useState(new Set())
-  const [form, setForm] = useState({ name: '', email: '', phone: '', organization: '', timeline: TIMELINES[1], details: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', organization: '', currentSetup: '', timeline: TIMELINES[1], details: '' })
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
 
   const pkg = pkgId === CUSTOM_APP.id ? CUSTOM_APP : PACKAGES.find(p => p.id === pkgId)
   const isCustom = pkgId === CUSTOM_APP.id
 
-  const basePrice = pkg && !isCustom ? pkg.min + (pkg.max - pkg.min) * complexity : null
+  const scopeFactorsTotal = useMemo(
+    () => SCOPE_FACTORS.filter(f => scopeFactors.has(f.id)).reduce((sum, f) => sum + f.price, 0),
+    [scopeFactors],
+  )
   const addOnsTotal = useMemo(
     () => ADD_ONS.filter(a => addOns.has(a.id)).reduce((sum, a) => sum + a.price, 0),
     [addOns],
   )
+  // A plain, explainable build-up from what you actually picked — not an
+  // abstract slider between "basic" and "advanced" with no visible logic.
+  const basePrice = pkg && !isCustom ? pkg.min + scopeFactorsTotal : null
   const total = basePrice !== null ? basePrice + addOnsTotal : null
+
+  function toggleScopeFactor(id) {
+    setScopeFactors(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   function toggleAddOn(id) {
     setAddOns(prev => {
@@ -95,13 +135,13 @@ export default function PriceEstimator() {
 
   function selectPackage(id) {
     setPkgId(id)
-    setComplexity(0.5)
+    setScopeFactors(new Set())
     setAddOns(new Set())
     setStep(1)
   }
 
   function goNext() {
-    // Custom app skips the add-ons step — there's no base price to add onto.
+    // Custom app skips the scope/add-ons step — there's no base price to add onto.
     if (step === 0 && isCustom) return setStep(2)
     setStep(s => Math.min(s + 1, 3))
   }
@@ -112,6 +152,7 @@ export default function PriceEstimator() {
 
   async function handleSubmit() {
     setStatus('sending')
+    const factorList = SCOPE_FACTORS.filter(f => scopeFactors.has(f.id))
     const addOnList = ADD_ONS.filter(a => addOns.has(a.id))
     try {
       await submitLead({
@@ -123,14 +164,17 @@ export default function PriceEstimator() {
         budget: isCustom ? 'Custom quote' : `${gh(total)} (est.)`,
         timeline: form.timeline,
         details: [
+          form.currentSetup ? `Currently running this on: ${form.currentSetup}` : null,
           form.details,
+          !isCustom && factorList.length ? `Needs: ${factorList.map(f => f.label).join(', ')}` : null,
           !isCustom && addOnList.length ? `Add-ons: ${addOnList.map(a => a.label).join(', ')}` : null,
         ].filter(Boolean).join('\n\n'),
         source: 'price_estimator',
         product: pkg.id,
         configuratorSelections: {
           package: pkg.id,
-          complexity: isCustom ? null : complexity,
+          currentSetup: form.currentSetup || null,
+          scopeFactors: isCustom ? [] : factorList.map(f => f.id),
           addOns: isCustom ? [] : addOnList.map(a => a.id),
           estimatedTotal: isCustom ? null : Math.round(total),
         },
@@ -142,6 +186,11 @@ export default function PriceEstimator() {
   }
 
   if (status === 'sent') {
+    const waMessage = encodeURIComponent(
+      isCustom
+        ? `Hi Stormglide, I just submitted a custom project request${form.name ? ` (${form.name})` : ''}. Looking forward to your quote.`
+        : `Hi Stormglide, I just submitted a price estimate for ${pkg.name} (~${gh(total)})${form.name ? ` — ${form.name}` : ''}.`,
+    )
     return (
       <PageLayout>
         <div style={{ minHeight: '60vh', display: 'grid', placeItems: 'center', padding: '4rem 2rem' }}>
@@ -150,11 +199,19 @@ export default function PriceEstimator() {
               <Check size={28} color="var(--color-success)" />
             </div>
             <h1 style={{ fontSize: '1.6rem', marginBottom: '0.75rem' }}>Got it — we're on it.</h1>
-            <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+            <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7, marginBottom: '2rem' }}>
               {isCustom
-                ? "We've received your project description. We'll scope it and reply with a fixed-price quote within 48 hours."
-                : `We've received your ${pkg.name} estimate request. We'll follow up shortly to confirm scope and next steps.`}
+                ? "We've received your project description. Expect a WhatsApp message or call from our team within 48 hours with a fixed-price quote."
+                : `We've received your ${pkg.name} estimate — around ${gh(total)} based on what you told us. Expect a WhatsApp message or call within 24 hours to confirm scope and lock in a final price.`}
             </p>
+            <a
+              href={`https://wa.me/${whatsappPhone}?text=${waMessage}`}
+              target="_blank" rel="noopener noreferrer"
+              className="btn-secondary"
+              style={{ textDecoration: 'none', gap: '0.5rem', display: 'inline-flex' }}
+            >
+              Message us on WhatsApp now <ArrowUpRight size={15} />
+            </a>
           </motion.div>
         </div>
       </PageLayout>
@@ -169,8 +226,8 @@ export default function PriceEstimator() {
           <h1 style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>
             Get a real estimate in under a minute
           </h1>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', maxWidth: '520px', marginBottom: '1.75rem' }}>
-            Pick a project type, adjust it to your needs, and see a price range instantly.
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', maxWidth: '560px', marginBottom: '1.75rem' }}>
+            Pick a project type, tell us what you actually need it to do, and see a price build up in front of you — no hidden slider, no guesswork.
           </p>
 
           {/* Step indicator */}
@@ -183,7 +240,7 @@ export default function PriceEstimator() {
                   fontWeight: i === step ? 700 : 500, fontSize: '0.85rem',
                 }}>
                   <span style={{
-                    width: 22, height: 22, borderRadius: '50%', display: 'grid', placeItems: 'center',
+                    width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.7rem', fontWeight: 700,
                     background: i <= step ? 'var(--sg-accent)' : 'var(--color-surface-alt)',
                     color: i <= step ? '#FFFFFF' : 'var(--color-text-secondary)',
@@ -203,7 +260,7 @@ export default function PriceEstimator() {
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="package" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <h2 style={{ fontSize: '1.15rem', marginBottom: '1.25rem' }}>Choose your package</h2>
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '1.25rem' }}>What are you trying to build?</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
                 {[...PACKAGES, CUSTOM_APP].map(p => {
                   const Icon = p.icon
@@ -218,7 +275,7 @@ export default function PriceEstimator() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '9px', background: `${p.color}14`, border: `1.5px solid ${p.color}28`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '9px', background: `${p.color}14`, border: `1.5px solid ${p.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <Icon size={17} color={p.color} />
                         </div>
                         <div>
@@ -226,10 +283,13 @@ export default function PriceEstimator() {
                           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{p.audience}</div>
                         </div>
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: '1.05rem', color: p.color, marginBottom: '0.75rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1.05rem', color: p.color, marginBottom: '0.15rem' }}>
                         {p.min === null ? 'Custom quote' : `${gh(p.min)} – ${gh(p.max)}`}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                      {p.example && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginBottom: '0.75rem' }}>{p.example}</div>
+                      )}
+                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginTop: p.example ? 0 : '0.75rem' }}>
                         {p.tags.map(t => (
                           <span key={t} style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border-subtle)', color: 'var(--color-text-secondary)' }}>{t}</span>
                         ))}
@@ -243,21 +303,44 @@ export default function PriceEstimator() {
 
           {step === 1 && pkg && !isCustom && (
             <motion.div key="addons" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <h2 style={{ fontSize: '1.15rem', marginBottom: '0.25rem' }}>Adjust complexity — {pkg.name}</h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>Project scope & complexity</p>
-              <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                <input
-                  type="range" min="0" max="1" step="0.01" value={complexity}
-                  onChange={e => setComplexity(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: pkg.color }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                  <span>Basic ({gh(pkg.min)})</span>
-                  <span>Advanced ({gh(pkg.max)})</span>
-                </div>
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '0.25rem' }}>What does your {pkg.name.toLowerCase()} actually need to do?</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+                Base price starts at {gh(pkg.min)}. Tick what applies — the price below updates as you go.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.875rem', marginBottom: '2.25rem' }}>
+                {SCOPE_FACTORS.map(f => {
+                  const checked = scopeFactors.has(f.id)
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => toggleScopeFactor(f.id)}
+                      className="card"
+                      style={{ textAlign: 'left', cursor: 'pointer', padding: '1.1rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', borderColor: checked ? pkg.color : undefined }}
+                    >
+                      <div style={{
+                        width: 20, height: 20, borderRadius: '5px', flexShrink: 0, marginTop: '2px',
+                        border: `1.5px solid ${checked ? pkg.color : 'var(--color-border-subtle)'}`,
+                        background: checked ? pkg.color : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {checked && <Check size={13} color="#FFFFFF" />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{f.label}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.3rem' }}>{f.desc}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: pkg.color }}>+{gh(f.price)}</div>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
 
-              <h2 style={{ fontSize: '1.15rem', marginBottom: '1.25rem' }}>Add-ons</h2>
+              <div className="card" style={{ padding: '1.1rem 1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${pkg.color}0A` }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Running estimate</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: pkg.color }}>{gh(basePrice)}</span>
+              </div>
+
+              <h2 style={{ fontSize: '1.15rem', marginBottom: '1.25rem' }}>Optional extras</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.875rem' }}>
                 {ADD_ONS.map(a => {
                   const checked = addOns.has(a.id)
@@ -272,7 +355,7 @@ export default function PriceEstimator() {
                         width: 20, height: 20, borderRadius: '5px', flexShrink: 0, marginTop: '2px',
                         border: `1.5px solid ${checked ? 'var(--sg-accent)' : 'var(--color-border-subtle)'}`,
                         background: checked ? 'var(--sg-accent)' : 'transparent',
-                        display: 'grid', placeItems: 'center',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {checked && <Check size={13} color="#FFFFFF" />}
                       </div>
@@ -296,6 +379,29 @@ export default function PriceEstimator() {
                 <input className="input" type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                 <input className="input" placeholder="Phone / WhatsApp" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                 <input className="input" placeholder="Business name (optional)" value={form.organization} onChange={e => setForm({ ...form, organization: e.target.value })} />
+              </div>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>How are you running this today?</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {CURRENT_SETUPS.map(s => {
+                    const active = form.currentSetup === s
+                    return (
+                      <button
+                        key={s} type="button"
+                        onClick={() => setForm({ ...form, currentSetup: active ? '' : s })}
+                        style={{
+                          padding: '0.5rem 0.9rem', borderRadius: '999px', cursor: 'pointer',
+                          fontSize: '0.82rem', fontWeight: 600,
+                          border: `1.5px solid ${active ? 'var(--sg-accent)' : 'var(--color-border-subtle)'}`,
+                          background: active ? 'var(--sg-accent)' : 'var(--color-surface)',
+                          color: active ? '#FFFFFF' : 'var(--color-text-primary)',
+                        }}
+                      >
+                        {s}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '0.4rem' }}>Timeline</label>
@@ -331,10 +437,14 @@ export default function PriceEstimator() {
                 </div>
                 {!isCustom && (
                   <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>Base ({gh(pkg.min)}–{gh(pkg.max)} range) at chosen complexity</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', marginBottom: '0.4rem' }}>
-                      <span>Base estimate</span><span>{gh(basePrice)}</span>
+                      <span>Base ({pkg.name})</span><span>{gh(pkg.min)}</span>
                     </div>
+                    {SCOPE_FACTORS.filter(f => scopeFactors.has(f.id)).map(f => (
+                      <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.3rem' }}>
+                        <span>{f.label}</span><span>+{gh(f.price)}</span>
+                      </div>
+                    ))}
                     {ADD_ONS.filter(a => addOns.has(a.id)).map(a => (
                       <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.3rem' }}>
                         <span>{a.label}</span><span>+{gh(a.price)}</span>
@@ -345,6 +455,7 @@ export default function PriceEstimator() {
                 <div style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', paddingTop: '1rem', borderTop: '1px solid var(--color-border-subtle)' }}>
                   {form.name} · {form.email}{form.phone ? ` · ${form.phone}` : ''}
                   <br />Timeline: {form.timeline}
+                  {form.currentSetup && <><br />Currently on: {form.currentSetup}</>}
                 </div>
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>
