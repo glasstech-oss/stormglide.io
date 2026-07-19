@@ -14,9 +14,30 @@
   height: 100vh;
   height: 100svh;
   overflow: hidden;
+  background: var(--color-background);
+}
+
+/* Direct parent of the stations/debris — perspective has to live here
+   (not on .sg-world-stage) since it only foreshortens direct children's
+   3D transforms. Also carries the velocity-driven whole-scene motion blur,
+   separate from each station's own depth-of-field. */
+.sg-world-flight {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  background: var(--color-background);
+  /* perspective value itself is set inline from HomeWorld.jsx's
+     PERSPECTIVE constant, so the station depth math and the CSS
+     foreshortening can't drift out of sync */
+}
+
+/* Darkens toward the edges as scroll speed rises, JS-driven opacity keeps
+   it invisible at rest. */
+.sg-world-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(12, 16, 28, 0.85) 100%);
 }
 
 .sg-world-station {
@@ -25,7 +46,7 @@
   display: grid;
   place-items: center;
   text-align: center;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
 }
 
 /* ── station: hero ── */
@@ -93,6 +114,7 @@ html[data-sg-appearance='light'] .w-orange { color: #E06A0F; }
 .sg-world-debris {
   position: absolute;
   transform: translate(-50%, -50%);
+  will-change: transform, opacity;
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-background) 88%, var(--sg-accent));

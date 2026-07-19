@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, useVelocity } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -98,6 +98,15 @@ const CORE_STATS = [
 
 const RAIL = ['Surface', 'The chaos', 'The thesis', 'The proof', 'The system']
 
+// Max out-of-focus blur applied to a station while it's entering/exiting.
+const BLUR_MAX = 10
+
+// Applied inline on .sg-world-flight below — real depth via translateZ
+// instead of a manual scale approximation, so stations actually
+// foreshorten and keep moving all the way through exit instead of freezing
+// at hold and just fading.
+const PERSPECTIVE = 1300
+
 /* piecewise-linear map with clamping (same semantics as range-form useTransform) */
 function mapRange(v, input, output) {
   if (v <= input[0]) return output[0]
@@ -124,11 +133,21 @@ function Station({ progress, enter, hold, exit, stay = false, first = false, chi
   const inR = first ? [hold, exit] : stay ? [enter, enter + 0.06] : [enter, enter + 0.06, hold, exit]
   const outO = first ? [1, 0] : stay ? [0, 1] : [0, 1, 1, 0]
   const opacity = useTransform(progress, v => mapRange(v, inR, outO))
-  const inS = first ? [hold, exit] : [enter, hold]
-  const outS = first ? [1, 1.35] : [0.72, 1]
-  const scale = useTransform(progress, v => mapRange(v, inS, outS))
+  // Real depth: negative z is "far" (small via perspective foreshortening),
+  // 0 is arrived, positive z is "flown past the camera." Uses the exact
+  // same breakpoints as opacity so the station keeps approaching all the
+  // way through the fully-visible hold plateau and keeps receding through
+  // exit, instead of snapping still at a fixed scale — continuous motion
+  // reads as a camera flying through, not a slideshow cross-fade.
+  const outZ = first ? [0, 950] : stay ? [-950, 0] : [-950, -280, 0, 650]
+  const z = useTransform(progress, v => mapRange(v, inR, outZ))
+  const transform = useTransform(z, zv => `translateZ(${zv.toFixed(1)}px)`)
+  // Depth-of-field: out of focus while entering/exiting, sharp at hold —
+  // reuses opacity's own breakpoints so blur and fade always agree.
+  const outB = outO.map(o => (1 - o) * BLUR_MAX)
+  const filter = useTransform(progress, v => `blur(${mapRange(v, inR, outB).toFixed(2)}px)`)
   return (
-    <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, scale }}>
+    <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter }}>
       {children}
     </motion.div>
   )
@@ -144,7 +163,29 @@ export default function HomeWorld() {
   // board layout) this is null, meaning "the window scrolls" — both are
   // handled by useRunwayProgress.
   const activePanelNode = useActivePanelNode()
-  const scrollYProgress = useRunwayProgress(runwayRef, activePanelNode)
+  const rawProgress = useRunwayProgress(runwayRef, activePanelNode)
+  // Springs the raw scroll-tied value so the whole flight has a touch of
+  // inertia instead of moving in lockstep with every pixel of scroll —
+  // overdamped on purpose (no bounce/overshoot on a progress value).
+  const scrollYProgress = useSpring(rawProgress, { stiffness: 400, damping: 50, mass: 0.5 })
+
+  // How fast the visitor is actually scrolling right now — drives a global
+  // motion-blur + vignette on top of each station's own depth-of-field, so
+  // a fast flick genuinely feels like accelerating through the world and
+  // settles back to clean/sharp the moment scrolling slows or stops.
+  // Deliberately measured off rawProgress, not the already-sprung
+  // scrollYProgress — chaining a velocity+spring off a value that's
+  // itself mid-spring compounds two independent lag curves, so the effect
+  // keeps "catching up" long after the visitor's hand has actually
+  // stopped. Reading the raw scroll signal keeps this tied to what the
+  // visitor is doing right now.
+  const rawVelocity = useVelocity(rawProgress)
+  const velocity = useSpring(rawVelocity, { stiffness: 260, damping: 34, mass: 0.25 })
+  const speedFilter = useTransform(velocity, v => {
+    const speed = Math.min(16, Math.abs(v) * 4)
+    return speed > 0.15 ? `blur(${speed.toFixed(2)}px)` : 'none'
+  })
+  const vignetteOpacity = useTransform(velocity, v => Math.min(0.55, Math.abs(v) * 0.15))
 
   const depthText = useTransform(scrollYProgress, v =>
     String(Math.round(v * 8000)).padStart(4, '0'),
@@ -168,32 +209,38 @@ export default function HomeWorld() {
   return (
     <section className="sg-world" ref={runwayRef}>
       <div className="sg-world-stage">
-        {/* debris drifts past between the hero and the thesis */}
-        {DEBRIS.map(d => (
-          <Debris key={d.tag + d.x} d={d} progress={scrollYProgress} />
-        ))}
+        <motion.div className="sg-world-flight" style={{ filter: speedFilter, perspective: `${PERSPECTIVE}px` }}>
+          {/* debris drifts past between the hero and the thesis */}
+          {DEBRIS.map(d => (
+            <Debris key={d.tag + d.x} d={d} progress={scrollYProgress} />
+          ))}
 
-        <Station progress={scrollYProgress} enter={0} hold={0.16} exit={0.26} first className="is-hero">
-          <HeroStation whatsappPhone={whatsappPhone} />
-        </Station>
+          <Station progress={scrollYProgress} enter={0} hold={0.16} exit={0.26} first className="is-hero">
+            <HeroStation whatsappPhone={whatsappPhone} />
+          </Station>
 
-        <Station progress={scrollYProgress} enter={0.2} hold={0.3} exit={0.38} className="is-chaos">
-          <p className="sg-world-chaos">
-            Right now, your business is <em>floating in pieces.</em>
-          </p>
-        </Station>
+          <Station progress={scrollYProgress} enter={0.2} hold={0.3} exit={0.38} className="is-chaos">
+            <p className="sg-world-chaos">
+              Right now, your business is <em>floating in pieces.</em>
+            </p>
+          </Station>
 
-        <Station progress={scrollYProgress} enter={0.34} hold={0.46} exit={0.56}>
-          <ThesisStation />
-        </Station>
+          <Station progress={scrollYProgress} enter={0.34} hold={0.46} exit={0.56}>
+            <ThesisStation />
+          </Station>
 
-        <Station progress={scrollYProgress} enter={0.5} hold={0.6} exit={0.68}>
-          <ProofStation />
-        </Station>
+          <Station progress={scrollYProgress} enter={0.5} hold={0.6} exit={0.68}>
+            <ProofStation />
+          </Station>
 
-        <Station progress={scrollYProgress} enter={0.72} hold={0.88} exit={1} stay>
-          <CoreStation />
-        </Station>
+          <Station progress={scrollYProgress} enter={0.72} hold={0.88} exit={1} stay>
+            <CoreStation />
+          </Station>
+        </motion.div>
+
+        {/* darkens toward the edges as scroll speed increases — settles
+            away completely at rest */}
+        <motion.div className="sg-world-vignette" aria-hidden="true" style={{ opacity: vignetteOpacity }} />
 
         {/* HUD */}
         <div className="sg-world-hud" aria-hidden="true">
@@ -225,17 +272,26 @@ function Debris({ d, progress }) {
   const opacity = useTransform(progress, v =>
     mapRange(v, [start, start + 0.05, end - 0.05, end], [0, 1, 1, 0]),
   )
-  const scale = useTransform(progress, v => mapRange(v, [start, end], [0.5, 1.7]))
+  // Single function-form transform (not separate x/y/scale/rotate motion
+  // values) so the outward drift, spin, and scale all read from the same
+  // progress sample — a raw `transform` string on a motion.div takes over
+  // from framer's shorthand props entirely, so it has to carry everything,
+  // including the element's own centering translate.
+  const transform = useTransform(progress, v => {
+    const scale = mapRange(v, [start, end], [0.5, 1.7])
+    // How far the piece has drifted outward from center, in units of its
+    // own placement offset — 1 = original spot, >1 = flung further out as
+    // it streaks past the camera.
+    const drift = mapRange(v, [start, end], [0.55, 1.85])
+    const x = (d.x * drift).toFixed(2)
+    const y = (d.y * drift).toFixed(2)
+    const rot = (d.r * drift).toFixed(1)
+    return `translate(-50%, -50%) translate(${x}vw, ${y}vh) rotate(${rot}deg) scale(${scale.toFixed(3)})`
+  })
   return (
     <motion.div
       className="sg-world-debris"
-      style={{
-        opacity,
-        scale,
-        left: `${50 + d.x}%`,
-        top: `${50 + d.y}%`,
-        rotate: d.r,
-      }}
+      style={{ opacity, transform, left: '50%', top: '50%' }}
     >
       <small>{d.tag}</small>
       {d.text}
