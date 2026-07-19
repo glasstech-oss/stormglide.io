@@ -167,7 +167,7 @@ H2: FAQ
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "Customer Service",
-    "email": "hello@stormglide.io",
+    "email": "john@stormglide.io",
     "telephone": "+233530828898"
   },
   "founder": {
