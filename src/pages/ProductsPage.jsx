@@ -149,6 +149,9 @@ export default function ProductsPage() {
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '520px', lineHeight: 1.75 }}>
               Six products across HR, health, logistics, and manufacturing — each solving a real problem we saw first-hand.
             </p>
+            <Link to="/work" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', marginTop: '1rem', color: 'var(--sg-accent)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>
+              Want to try them live, or see real client systems? Visit our Work page <ArrowRight size={14} />
+            </Link>
           </motion.div>
         </div>
       </div>

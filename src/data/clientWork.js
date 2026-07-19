@@ -124,6 +124,39 @@ export const CLIENT_WORK = [
     ],
     stack: ['React', 'Firebase'],
   },
+  {
+    name: 'Nexus Dental System',
+    category: 'Healthcare',
+    url: 'https://nexuspharmasystem.web.app',
+    RegionIcon: MapPin, region: 'Ghana',
+    color: 'var(--color-success)',
+    year: '2025',
+    scope: 'Dental practice management platform',
+    desc: 'A practice-management system for dental clinics — patient records, appointment scheduling, treatment plans, and day-to-day clinic operations in one connected platform.',
+    what: [
+      'Patient records & dental history',
+      'Appointment scheduling',
+      'Treatment plan management',
+      'Inventory & operations tracking',
+    ],
+    stack: ['React', 'Firebase'],
+  },
+  {
+    name: 'Cosmetology & Spa Management System',
+    category: 'Beauty & Personal Care',
+    url: 'https://cosmetology--cosmetologysystem.us-east4.hosted.app',
+    RegionIcon: MapPin, region: 'Ghana',
+    color: 'var(--color-accent-violet)',
+    year: '2025',
+    scope: 'Spa operations platform',
+    desc: 'A modern spa and cosmetology management platform handling appointment flow, customer records, service catalogs, and day-to-day operational control.',
+    what: [
+      'Spa & appointment scheduling',
+      'Customer records',
+      'Service catalog & workflow',
+    ],
+    stack: ['Next.js', 'Firebase'],
+  },
 ].map(item => ({ ...item, slug: slugify(item.name) }))
 
 export function getWorkPath(slug) {

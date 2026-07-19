@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import gsap from 'gsap'
-import { ArrowRight, Users, Heart, Package, Factory, Layers, MoveUpRight, CheckCircle2, Globe2, MonitorPlay } from 'lucide-react'
+import { ArrowRight, Users, Heart, Package, Factory, Layers, MoveUpRight, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { SITE_URL } from '../data/seo'
@@ -13,7 +12,6 @@ import NexusMFGDemo from '../components/demos/NexusMFGDemo'
 import GlasstechDemo from '../components/demos/GlasstechDemo'
 import { getProductPath } from '../data/products'
 import { CLIENT_WORK, getWorkPath } from '../data/clientWork'
-import { useLenis } from '../lib/useLenis'
 import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/viewTransition'
 
 const TABS = [
@@ -24,102 +22,9 @@ const TABS = [
   { id: 'glasstech', label: 'Glasstech',  icon: Layers,  color: 'var(--color-accent-violet)', component: GlasstechDemo, tagline: 'Product catalog & quoting' },
 ]
 
-const LIVE_SYSTEMS = [
-  {
-    id: 'nexus-dental-live',
-    name: 'Nexus Dental System',
-    industry: 'Healthcare',
-    type: 'Dental operations platform',
-    url: 'https://nexuspharmasystem.web.app',
-    color: 'var(--color-success)',
-    status: 'Live system',
-    desc: 'A practice-management system visitors can open inside Stormglide to see patient, appointment, inventory, and operations thinking in action.',
-    highlights: ['Clinic operations', 'Patient workflow', 'Inventory logic'],
-  },
-  {
-    id: 'barber-manager-live',
-    name: 'Barber Shop Management System',
-    industry: 'Beauty & Personal Care',
-    type: 'Booking and staff portal',
-    url: 'https://barberingsalonmanager.web.app/login',
-    color: 'var(--color-warning)',
-    status: 'Live login preview',
-    desc: 'A booking system built for shops that need clients, staff, services, slots, reminders, and daily operations in one place.',
-    highlights: ['Client booking', 'Staff portal', 'Service catalog'],
-  },
-  {
-    id: 'cosmetology-live',
-    name: 'Cosmetology & Spa Management System',
-    industry: 'Beauty & Personal Care',
-    type: 'Spa operations platform',
-    url: 'https://cosmetology--cosmetologysystem.us-east4.hosted.app',
-    color: 'var(--color-accent-violet)',
-    status: 'Live system',
-    desc: 'A modern spa and cosmetology management platform for appointment flow, customer care, services, and operational control.',
-    highlights: ['Spa scheduling', 'Customer records', 'Service workflow'],
-  },
-  {
-    id: 'lollarod-live',
-    name: 'Lollarod Enterprise',
-    industry: 'Retail & E-commerce',
-    type: 'Commerce and backoffice',
-    url: 'https://lollarodenterprisenew.com',
-    color: 'var(--color-success)',
-    status: 'Client site',
-    desc: 'A public storefront and operations system for interior products, wholesale pricing, orders, and internal sales workflows.',
-    highlights: ['Product catalog', 'Checkout', 'Admin backoffice'],
-  },
-  {
-    id: 'westline-live',
-    name: 'Westline Future',
-    industry: 'Interior Design',
-    type: 'Website and client portal',
-    url: 'https://westlinedecor.com',
-    color: 'var(--sg-accent)',
-    status: 'Client site',
-    desc: 'A design-company platform combining portfolio presentation, client project access, invoicing, and operational management.',
-    highlights: ['Project portfolio', 'Client portal', 'Payments'],
-  },
-  {
-    id: 'green-gold-live',
-    name: 'Green Gold Gardens',
-    industry: 'Landscaping',
-    type: 'Catalog, CRM, and payroll',
-    url: 'https://greengoldgardensgh.com',
-    color: 'var(--sg-accent)',
-    status: 'Client site',
-    desc: 'A plant, landscaping, and services platform for customers and internal teams moving beyond WhatsApp-based operations.',
-    highlights: ['Live catalog', 'CRM', 'Payroll'],
-  },
-  {
-    id: 'jaybesin-live',
-    name: 'Jaybesin Logistics',
-    industry: 'Logistics',
-    type: 'Tracking and sourcing portal',
-    url: 'https://jaybesinlogistics.com',
-    color: 'var(--color-accent-blue)',
-    status: 'Client site',
-    desc: 'A logistics platform with shipment tracking, live rates, sourcing marketplace, and agent-management workflows.',
-    highlights: ['Shipment tracking', 'Rates', 'Marketplace'],
-  },
-  {
-    id: 'kyekye-live',
-    name: 'Kyekye Cuisine',
-    industry: 'Hospitality',
-    type: 'Restaurant operations system',
-    url: 'https://kyekyecuisine.web.app',
-    color: 'var(--color-danger)',
-    status: 'Client site',
-    desc: 'A restaurant platform with QR ordering, kitchen queue, payment, delivery, pickup, and staff dashboards.',
-    highlights: ['QR ordering', 'Kitchen queue', 'Paystack'],
-  },
-]
-
-const SYSTEM_INDUSTRIES = ['All industries', ...Array.from(new Set(LIVE_SYSTEMS.map(system => system.industry)))]
-
 const clientWorkSchema = {
   '@context': 'https://schema.org',
-  '@graph': [...CLIENT_WORK, ...LIVE_SYSTEMS].map(item => ({
+  '@graph': CLIENT_WORK.map(item => ({
     '@type': 'Product',
     '@id': `${item.url}#${item.id || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
     name: item.name,
@@ -133,55 +38,11 @@ const clientWorkSchema = {
 
 export default function WorkPage() {
   const [activeTab, setActiveTab] = useState(TABS[0].id)
-  const [activeIndustry, setActiveIndustry] = useState(SYSTEM_INDUSTRIES[0])
-  const [activeSystemId, setActiveSystemId] = useState(LIVE_SYSTEMS[0].id)
   const vtNavigate = useViewTransitionNavigate()
 
   const active = TABS.find(t => t.id === activeTab)
   const ActiveIcon = active.icon
   const ActiveComponent = active.component
-  const visibleSystems = activeIndustry === SYSTEM_INDUSTRIES[0]
-    ? LIVE_SYSTEMS
-    : LIVE_SYSTEMS.filter(system => system.industry === activeIndustry)
-  const activeSystem = visibleSystems.find(system => system.id === activeSystemId) || visibleSystems[0] || LIVE_SYSTEMS[0]
-  const ActiveRegionIcon = activeSystem.industry === 'Healthcare' ? Heart : activeSystem.industry === 'Logistics' ? Package : activeSystem.industry === 'Interior Design' ? Layers : activeSystem.industry === 'Hospitality' ? Globe2 : Factory
-
-  const selectIndustry = industry => {
-    setActiveIndustry(industry)
-    const firstSystem = industry === SYSTEM_INDUSTRIES[0]
-      ? LIVE_SYSTEMS[0]
-      : LIVE_SYSTEMS.find(system => system.industry === industry)
-    if (firstSystem) setActiveSystemId(firstSystem.id)
-  }
-
-  useLenis('/work', scroller =>
-    gsap.context(() => {
-      // Desktop only (see useLenis.js) — each case-study card pins briefly
-      // while its real "what we built" bullets and stack tags stagger in.
-      // Mobile/narrow keeps the plain whileInView fade already on the cards.
-      const mm = gsap.matchMedia()
-      mm.add('(min-width: 920px)', () => {
-        gsap.utils.toArray('.sg-client-card').forEach(card => {
-          const bullets = card.querySelectorAll('.sg-client-built-list > div')
-          const tags = card.querySelectorAll('.sg-client-stack-tag')
-          if (!bullets.length) return
-
-          gsap.timeline({
-            scrollTrigger: {
-              trigger: card,
-              scroller,
-              pin: true,
-              scrub: 0.6,
-              start: 'top top',
-              end: `+=${60 + bullets.length * 40}%`,
-            },
-          })
-            .from(bullets, { opacity: 0, x: -12, stagger: 0.15 })
-            .from(tags, { opacity: 0, y: 8, stagger: 0.08 }, '-=0.3')
-        })
-      })
-    }),
-  )
 
   return (
     <PageLayout>
@@ -310,109 +171,6 @@ export default function WorkPage() {
         </div>
       </div>
 
-      {/* Live systems browser */}
-      <section className="sg-live-browser-section">
-        <div className="sg-live-browser-shell">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="sg-live-browser-heading"
-          >
-            <div>
-              <div className="section-label">LIVE SYSTEMS BROWSER</div>
-              <h2>Test real systems by industry</h2>
-            </div>
-            <p>
-              Browse live work inside Stormglide. We load one system at a time so the page stays fast, and visitors can still open the full app when they want the native experience.
-            </p>
-          </motion.div>
-
-          <div className="sg-industry-filters" aria-label="Filter live systems by industry">
-            {SYSTEM_INDUSTRIES.map(industry => (
-              <button
-                key={industry}
-                type="button"
-                className={activeIndustry === industry ? 'is-active' : ''}
-                onClick={() => selectIndustry(industry)}
-              >
-                {industry}
-              </button>
-            ))}
-          </div>
-
-          <div className="sg-live-browser-grid">
-            <aside className="sg-system-list" aria-label="Live systems">
-              {visibleSystems.map(system => {
-                const isActive = system.id === activeSystem.id
-                return (
-                  <button
-                    key={system.id}
-                    type="button"
-                    className={isActive ? 'is-active' : ''}
-                    style={{ '--system-color': system.color }}
-                    onClick={() => setActiveSystemId(system.id)}
-                  >
-                    <span className="sg-system-list-kicker">{system.industry}</span>
-                    <span className="sg-system-list-name">{system.name}</span>
-                    <span className="sg-system-list-type">{system.type}</span>
-                  </button>
-                )
-              })}
-            </aside>
-
-            <div className="sg-system-browser-card card" style={{ '--system-color': activeSystem.color }}>
-              <div className="sg-browser-topbar">
-                <div className="sg-browser-lights" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <div className="sg-browser-address">
-                  <MonitorPlay size={14} />
-                  <span>{activeSystem.url.replace(/^https?:\/\//, '')}</span>
-                </div>
-                <a href={activeSystem.url} target="_blank" rel="noreferrer">
-                  Open full site <MoveUpRight size={13} />
-                </a>
-              </div>
-
-              <div className="sg-system-summary">
-                <div className="sg-system-icon">
-                  <ActiveRegionIcon size={20} />
-                </div>
-                <div>
-                  <span>{activeSystem.status}</span>
-                  <h3>{activeSystem.name}</h3>
-                  <p>{activeSystem.desc}</p>
-                  <div className="sg-system-tags">
-                    {activeSystem.highlights.map(item => <em key={item}>{item}</em>)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="sg-iframe-wrap">
-                <iframe
-                  key={activeSystem.id}
-                  title={`${activeSystem.name} live preview`}
-                  src={activeSystem.url}
-                  loading="lazy"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                />
-              </div>
-              <div className="sg-mobile-browser-fallback">
-                <span>Mobile system preview</span>
-                <p>These systems are real apps. For the best mobile experience, launch the selected system full-screen.</p>
-                <a href={activeSystem.url} target="_blank" rel="noreferrer">
-                  Launch {activeSystem.name} <MoveUpRight size={14} />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Client Work Showcase */}
       <div style={{ padding: '4rem 2rem 6rem', background: 'var(--glass-bg)', position: 'relative', overflow: 'hidden', marginTop: '3rem' }}>
         {/* Background glow */}
@@ -528,254 +286,7 @@ export default function WorkPage() {
       </div>
 
       <style>{`
-        .sg-live-browser-section {
-          padding: 4rem 2rem 1rem;
-        }
-
-        .sg-live-browser-shell {
-          max-width: 1280px;
-          margin: 0 auto;
-        }
-
-        .sg-live-browser-heading {
-          display: flex;
-          align-items: end;
-          justify-content: space-between;
-          gap: 2rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .sg-live-browser-heading h2 {
-          font-size: clamp(1.75rem, 3.4vw, 2.5rem);
-          margin-top: 0.8rem;
-          max-width: 520px;
-        }
-
-        .sg-live-browser-heading p {
-          color: var(--color-text-secondary);
-          line-height: 1.75;
-          max-width: 470px;
-        }
-
-        .sg-industry-filters {
-          display: flex;
-          gap: 0.65rem;
-          flex-wrap: wrap;
-          margin-bottom: 1.25rem;
-        }
-
-        .sg-industry-filters button {
-          border: 1px solid var(--glass-border);
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--glass-bg), var(--sg-local-tint) 5%);
-          color: var(--color-text-secondary);
-          padding: 0.58rem 0.9rem;
-          cursor: pointer;
-          backdrop-filter: var(--glass-blur-soft);
-          -webkit-backdrop-filter: var(--glass-blur-soft);
-          transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
-        }
-
-        .sg-industry-filters button:hover,
-        .sg-industry-filters button.is-active {
-          color: var(--color-text-heading);
-          border-color: color-mix(in srgb, var(--sg-accent) 48%, var(--glass-border));
-          background: color-mix(in srgb, var(--glass-bg-strong), var(--sg-accent) 10%);
-          transform: translateY(-1px);
-        }
-
-        .sg-live-browser-grid {
-          display: grid;
-          grid-template-columns: minmax(240px, 0.31fr) minmax(0, 1fr);
-          gap: 1.25rem;
-          align-items: stretch;
-        }
-
-        .sg-system-list {
-          display: grid;
-          gap: 0.75rem;
-          align-content: start;
-        }
-
-        .sg-system-list button {
-          border: 1px solid color-mix(in srgb, var(--system-color) 18%, var(--glass-border));
-          border-radius: 20px;
-          background: color-mix(in srgb, var(--glass-bg), var(--system-color) 4%);
-          color: var(--color-text-primary);
-          padding: 1rem;
-          text-align: left;
-          cursor: pointer;
-          box-shadow: inset 0 1px 0 var(--glass-highlight);
-          backdrop-filter: var(--glass-blur-soft);
-          -webkit-backdrop-filter: var(--glass-blur-soft);
-          transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-        }
-
-        .sg-system-list button:hover,
-        .sg-system-list button.is-active {
-          transform: translateX(4px);
-          border-color: color-mix(in srgb, var(--system-color) 60%, var(--glass-border-bright));
-          background: color-mix(in srgb, var(--glass-bg-strong), var(--system-color) 10%);
-        }
-
-        .sg-system-list-kicker,
-        .sg-system-list-type {
-          display: block;
-          color: color-mix(in srgb, var(--color-text-heading) 38%, transparent);
-          font-family: var(--font-mono);
-          font-size: 0.62rem;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-
-        .sg-system-list-name {
-          display: block;
-          color: var(--color-text-heading);
-          font-weight: 800;
-          line-height: 1.2;
-          margin: 0.38rem 0 0.26rem;
-        }
-
-        .sg-system-browser-card {
-          --sg-local-tint: var(--system-color);
-          min-width: 0;
-          padding: 0;
-          border-radius: 30px;
-          clip-path: none;
-        }
-
-        .sg-browser-topbar {
-          display: grid;
-          grid-template-columns: auto minmax(0, 1fr) auto;
-          align-items: center;
-          gap: 0.85rem;
-          border-bottom: 1px solid color-mix(in srgb, var(--system-color) 20%, var(--glass-border));
-          padding: 0.9rem 1rem;
-          background: color-mix(in srgb, var(--glass-bg-strong), var(--system-color) 7%);
-        }
-
-        .sg-browser-lights {
-          display: inline-flex;
-          gap: 0.42rem;
-        }
-
-        .sg-browser-lights span {
-          width: 0.68rem;
-          height: 0.68rem;
-          border-radius: 999px;
-          background: var(--color-danger);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
-        }
-
-        .sg-browser-lights span:nth-child(2) { background: var(--color-warning); }
-        .sg-browser-lights span:nth-child(3) { background: var(--color-success); }
-
-        .sg-browser-address {
-          min-width: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.45rem;
-          border: 1px solid color-mix(in srgb, var(--color-text-heading) 10%, transparent);
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--color-background) 58%, transparent);
-          color: color-mix(in srgb, var(--color-text-heading) 54%, transparent);
-          font-family: var(--font-mono);
-          font-size: 0.72rem;
-          padding: 0.46rem 0.75rem;
-        }
-
-        .sg-browser-address span {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .sg-browser-topbar a {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          color: var(--system-color);
-          font-weight: 800;
-          font-size: 0.78rem;
-          text-decoration: none;
-          white-space: nowrap;
-        }
-
-        .sg-system-summary {
-          display: grid;
-          grid-template-columns: auto minmax(0, 1fr);
-          gap: 1rem;
-          padding: 1.25rem;
-          border-bottom: 1px solid color-mix(in srgb, var(--system-color) 18%, var(--glass-border));
-        }
-
-        .sg-system-icon {
-          width: 48px;
-          height: 48px;
-          display: grid;
-          place-items: center;
-          border-radius: 16px;
-          color: var(--system-color);
-          background: color-mix(in srgb, var(--system-color) 14%, transparent);
-          border: 1px solid color-mix(in srgb, var(--system-color) 28%, transparent);
-        }
-
-        .sg-system-summary span {
-          color: var(--system-color);
-          font-family: var(--font-mono);
-          font-size: 0.66rem;
-          font-weight: 800;
-          letter-spacing: 0.11em;
-          text-transform: uppercase;
-        }
-
-        .sg-system-summary h3 {
-          margin: 0.28rem 0 0.48rem;
-          font-size: clamp(1.25rem, 2.4vw, 1.75rem);
-        }
-
-        .sg-system-summary p {
-          color: var(--color-text-secondary);
-          line-height: 1.7;
-          max-width: 760px;
-        }
-
-        .sg-system-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-top: 0.9rem;
-        }
-
-        .sg-system-tags em {
-          border: 1px solid color-mix(in srgb, var(--system-color) 25%, var(--glass-border));
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--system-color) 9%, transparent);
-          color: color-mix(in srgb, var(--color-text-heading) 72%, transparent);
-          font-style: normal;
-          font-size: 0.72rem;
-          font-weight: 700;
-          padding: 0.28rem 0.62rem;
-        }
-
-        .sg-iframe-wrap {
-          position: relative;
-          overflow: hidden;
-          background: color-mix(in srgb, var(--color-background) 84%, #000 16%);
-          min-height: 620px;
-        }
-
-        .sg-iframe-wrap iframe {
-          display: block;
-          width: 100%;
-          height: min(72vh, 720px);
-          min-height: 620px;
-          border: 0;
-          background: #fff;
-        }
-
-        .sg-mobile-demo-summary,
-        .sg-mobile-browser-fallback {
+        .sg-mobile-demo-summary {
           display: none;
         }
 
@@ -882,8 +393,7 @@ export default function WorkPage() {
             line-height: 1.7;
           }
 
-          .sg-mobile-demo-summary a,
-          .sg-mobile-browser-fallback a {
+          .sg-mobile-demo-summary a {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -900,70 +410,6 @@ export default function WorkPage() {
           }
 
           .client-grid { grid-template-columns: 1fr !important; }
-          .sg-live-browser-section { padding: 3rem 1rem 0; }
-          .sg-live-browser-heading { display: block; }
-          .sg-live-browser-heading p { margin-top: 1rem; }
-          .sg-live-browser-grid { grid-template-columns: 1fr; }
-          .sg-system-list {
-            display: flex;
-            overflow-x: auto;
-            padding-bottom: 0.35rem;
-            scroll-snap-type: x mandatory;
-          }
-          .sg-system-list button {
-            min-width: min(78vw, 310px);
-            scroll-snap-align: start;
-          }
-          .sg-system-list button:hover,
-          .sg-system-list button.is-active {
-            transform: translateY(-2px);
-          }
-          .sg-browser-topbar {
-            grid-template-columns: auto 1fr;
-          }
-          .sg-browser-topbar a {
-            grid-column: 1 / -1;
-            justify-content: center;
-            min-height: 42px;
-            border: 1px solid color-mix(in srgb, var(--system-color) 32%, var(--glass-border));
-            border-radius: 999px;
-            background: color-mix(in srgb, var(--system-color) 12%, transparent);
-          }
-          .sg-system-summary {
-            grid-template-columns: 1fr;
-            padding: 1.15rem;
-          }
-
-          .sg-iframe-wrap {
-            display: none;
-          }
-
-          .sg-mobile-browser-fallback {
-            display: grid;
-            gap: 0.8rem;
-            padding: 1.15rem;
-            border-top: 1px solid color-mix(in srgb, var(--system-color) 18%, var(--glass-border));
-            background: color-mix(in srgb, var(--color-background) 62%, transparent);
-          }
-
-          .sg-mobile-browser-fallback span {
-            color: var(--system-color);
-            font-family: var(--font-mono);
-            font-size: 0.66rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-          }
-
-          .sg-mobile-browser-fallback p {
-            color: var(--color-text-secondary);
-            line-height: 1.65;
-          }
-
-          .sg-mobile-browser-fallback a {
-            --sg-accent: var(--system-color);
-            width: 100%;
-          }
 
           .sg-client-card-body {
             padding: 1.25rem !important;
@@ -986,40 +432,6 @@ export default function WorkPage() {
           }
         }
 
-        @media (max-width: 480px) {
-          .sg-live-browser-heading h2 {
-            font-size: clamp(1.55rem, 9vw, 2.1rem);
-          }
-
-          .sg-industry-filters {
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            margin-left: -1rem;
-            margin-right: -1rem;
-            padding: 0 1rem 0.5rem;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-          }
-
-          .sg-industry-filters button {
-            flex: 0 0 auto;
-            scroll-snap-align: start;
-          }
-
-          .sg-system-browser-card {
-            border-radius: 24px;
-          }
-
-          .sg-browser-topbar {
-            padding: 0.8rem;
-            gap: 0.6rem;
-          }
-
-          .sg-browser-address {
-            font-size: 0.64rem;
-            padding: 0.42rem 0.58rem;
-          }
-        }
       `}</style>
     </PageLayout>
   )
