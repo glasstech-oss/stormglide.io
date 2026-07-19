@@ -94,7 +94,7 @@ export default function WorkPage() {
               <p style={{ fontSize: '0.82rem', color: 'var(--ink-400)', lineHeight: 1.65, marginBottom: '0.875rem' }}>
                 Want something like this for your business?
               </p>
-              <Link to="/contact" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
+              <Link to="/price-estimator" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
                 Start a project <ArrowRight size={13} />
               </Link>
             </div>

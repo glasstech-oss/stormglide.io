@@ -316,6 +316,16 @@ export const seoRoutes = [
     schemaType: 'CollectionPage',
   },
   {
+    path: '/price-estimator',
+    title: 'Price Estimator | Stormglide',
+    description: 'Get an instant price estimate for your website, e-commerce store, booking system, or SaaS MVP — or describe a custom app and get a fixed-price quote back within 48 hours.',
+    h1: 'Get a real estimate in under a minute',
+    kicker: 'Price estimator',
+    summary: 'Pick a project type, adjust it to your needs, and see a price range instantly — or describe a custom app for a fixed-price quote.',
+    topics: ['Instant project estimates', 'Add-ons and complexity adjustment', 'Custom app development requests'],
+    schemaType: 'WebPage',
+  },
+  {
     path: '/pricing',
     title: 'Custom Business System Pricing Ghana | Stormglide',
     description: 'Clear pricing for customer portals, booking systems, inventory & operations dashboards, and full business management systems built by Stormglide in Accra, Ghana.',

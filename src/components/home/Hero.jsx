@@ -47,7 +47,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.28 }}
           >
-            <Link to="/contact" className="btn-primary">
+            <Link to="/price-estimator" className="btn-primary">
               Start a project <ArrowRight size={16} />
             </Link>
             <a

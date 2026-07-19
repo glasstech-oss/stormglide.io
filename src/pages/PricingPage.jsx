@@ -19,7 +19,7 @@ const PLANS = [
     color: 'var(--sg-accent)',
     icon: Code2,
     cta: 'Start a project',
-    ctaLink: '/contact',
+    ctaLink: '/price-estimator',
     features: [
       'Full custom development',
       'System design & architecture',

@@ -191,6 +191,29 @@ const emailInvoice = (to, inv) => sendEmail(to,
   </div>`
 );
 
+// Separate from ADMIN_EMAIL (which also gates admin login, see
+// getAllowedAdminEmails below) — this is just where lead/estimator
+// notifications and the daily analytics digest go.
+const LEAD_NOTIFY_EMAIL = process.env.LEAD_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || 'admin@stormglide.io';
+
+const emailNewLead = (lead) => sendEmail(
+  LEAD_NOTIFY_EMAIL,
+  `New ${lead.source === 'price_estimator' ? 'estimate request' : 'lead'} — ${lead.name}`,
+  `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0d1117;color:#fff;border-radius:16px;padding:32px">
+    <div style="font-size:22px;font-weight:700;margin-bottom:16px;color:#22D3EE">Stormglide.io — New Lead</div>
+    <div style="padding:16px;border-radius:8px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);margin-bottom:20px">
+      <h3 style="margin:0 0 4px;color:#fff">${lead.name}</h3>
+      <p style="margin:0;color:#9ca3af;font-size:13px">${lead.email}${lead.phone ? ' · ' + lead.phone : ''}</p>
+    </div>
+    ${lead.organization ? `<p style="color:#9ca3af;margin:0 0 8px"><strong style="color:#fff">Organization:</strong> ${lead.organization}</p>` : ''}
+    ${lead.missionScope ? `<p style="color:#9ca3af;margin:0 0 8px"><strong style="color:#fff">Project:</strong> ${lead.missionScope}</p>` : ''}
+    ${lead.budget ? `<p style="color:#9ca3af;margin:0 0 8px"><strong style="color:#fff">Estimated budget:</strong> ${lead.budget}</p>` : ''}
+    ${lead.timeline ? `<p style="color:#9ca3af;margin:0 0 8px"><strong style="color:#fff">Timeline:</strong> ${lead.timeline}</p>` : ''}
+    ${lead.details ? `<p style="color:#9ca3af;margin:16px 0 0;white-space:pre-wrap">${lead.details}</p>` : ''}
+    <p style="color:#6b7280;font-size:11px;margin-top:24px">Source: ${lead.source || 'unknown'} · <a href="${process.env.FRONTEND_URL || 'https://stormglide.io'}" style="color:#22D3EE">View in Mission Control</a></p>
+  </div>`
+);
+
 const emailAlert = (alert) => sendEmail(
   process.env.ADMIN_EMAIL || 'admin@stormglide.io',
   `[${(alert.severity || '').toUpperCase()}] ${alert.title}`,
@@ -1036,7 +1059,7 @@ app.post('/v1/crm/lead', async (req, res) => {
     return res.status(400).json({ message: 'Name and email are required.' });
   }
   try {
-    const ref = await db.collection('leads').add({
+    const lead = {
       name,
       email,
       organization: organization || null,
@@ -1050,7 +1073,9 @@ app.post('/v1/crm/lead', async (req, res) => {
       timeline: timeline || null,
       status: 'NEW',
       createdAt: now(),
-    });
+    };
+    const ref = await db.collection('leads').add(lead);
+    emailNewLead({ id: ref.id, ...lead }).catch((e) => console.warn('Lead email failed:', e.message));
     return res.json({ id: ref.id, name, email });
   } catch (err) {
     console.error('Lead creation error:', err);
@@ -2401,6 +2426,81 @@ exports.checkDomainExpiry = functions.pubsub.schedule('0 0 * * *').onRun(async (
         clientDoc.data().companyName
       );
     }
+  }
+  return null;
+});
+
+// Daily visits + growth-trend digest — yesterday vs the day before, and vs
+// the same weekday the prior week (single-day GA4 numbers are noisy day to
+// day; the week-over-week comparison is what actually reads as a trend).
+// No-ops (like everything else GA4-dependent here) until GA4_PROPERTY_ID +
+// GA4_SERVICE_ACCOUNT_KEY_BASE64 are set.
+exports.dailyAnalyticsDigest = functions.pubsub.schedule('0 7 * * *').timeZone('UTC').onRun(async () => {
+  const propertyId = process.env.GA4_PROPERTY_ID;
+  const client = getGaClient();
+  if (!propertyId || !client) {
+    console.warn('GA4 not configured — daily digest skipped');
+    return null;
+  }
+
+  const property = `properties/${propertyId}`;
+  const metrics = [{ name: 'sessions' }, { name: 'totalUsers' }, { name: 'screenPageViews' }];
+
+  try {
+    const [yesterday] = await client.runReport({ property, dateRanges: [{ startDate: 'yesterday', endDate: 'yesterday' }], metrics });
+    const [dayBefore] = await client.runReport({ property, dateRanges: [{ startDate: '2daysAgo', endDate: '2daysAgo' }], metrics });
+    const [lastWeek] = await client.runReport({ property, dateRanges: [{ startDate: '8daysAgo', endDate: '8daysAgo' }], metrics });
+    const [topPages] = await client.runReport({
+      property,
+      dateRanges: [{ startDate: 'yesterday', endDate: 'yesterday' }],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [{ name: 'screenPageViews' }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 5,
+    });
+
+    const val = (report, i) => Number(report?.rows?.[0]?.metricValues?.[i]?.value || 0);
+    const pct = (curr, prev) => (prev === 0 ? (curr > 0 ? '+∞' : '0') : `${curr >= prev ? '+' : ''}${Math.round(((curr - prev) / prev) * 100)}%`);
+
+    const sessions = val(yesterday, 0), users = val(yesterday, 1), views = val(yesterday, 2);
+    const sessionsPrevDay = val(dayBefore, 0), sessionsPrevWeek = val(lastWeek, 0);
+
+    const dateLabel = new Date(Date.now() - 86400000).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    const pagesHtml = (topPages?.rows || []).map((r) => (
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <span style="color:#9ca3af">${r.dimensionValues[0].value}</span>
+        <span style="color:#fff;font-weight:600">${r.metricValues[0].value}</span>
+      </div>`
+    )).join('') || '<p style="color:#6b7280;font-size:12px">No pageview data.</p>';
+
+    await sendEmail(
+      LEAD_NOTIFY_EMAIL,
+      `Daily visits — ${dateLabel}: ${sessions} sessions (${pct(sessions, sessionsPrevDay)} vs prev day)`,
+      `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0d1117;color:#fff;border-radius:16px;padding:32px">
+        <div style="font-size:22px;font-weight:700;margin-bottom:4px;color:#22D3EE">Stormglide.io — Daily Traffic</div>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 24px">${dateLabel}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+          <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${sessions}</div>
+            <div style="font-size:11px;color:#9ca3af">Sessions</div>
+          </div>
+          <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${users}</div>
+            <div style="font-size:11px;color:#9ca3af">Users</div>
+          </div>
+          <div style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${views}</div>
+            <div style="font-size:11px;color:#9ca3af">Pageviews</div>
+          </div>
+        </div>
+        <p style="color:#9ca3af;margin:0 0 6px"><strong style="color:#fff">${pct(sessions, sessionsPrevDay)}</strong> vs the day before</p>
+        <p style="color:#9ca3af;margin:0 0 20px"><strong style="color:#fff">${pct(sessions, sessionsPrevWeek)}</strong> vs the same day last week</p>
+        <div style="margin-bottom:8px;font-size:12px;font-weight:700;letter-spacing:1px;color:#6b7280;text-transform:uppercase">Top pages yesterday</div>
+        ${pagesHtml}
+      </div>`
+    );
+  } catch (err) {
+    console.error('Daily analytics digest error:', err);
   }
   return null;
 });

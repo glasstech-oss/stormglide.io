@@ -17,6 +17,7 @@ import { OVERLAY_KEY, setPanelNode, useActivePanelNode } from './lib/panelRegist
 /* ── Lazy-loaded sub-pages (the 6 board pages live in ./lib/boardPages.js) ── */
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const WorkDetail = lazy(() => import('./pages/WorkDetail'))
+const PriceEstimator = lazy(() => import('./pages/PriceEstimator'))
 const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
 const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
 const SANOLanding   = lazy(() => import('./pages/ProductLandingSANO'))
@@ -164,6 +165,7 @@ function SiteRoutes({ location, includeTopLevel }) {
       <Route path="/products/nexus-dental" element={<Navigate to="/nexus-dental" replace />} />
       <Route path="/products/:slug" element={<ProductDetail />} />
       <Route path="/work/:slug" element={<WorkDetail />} />
+      <Route path="/price-estimator" element={<PriceEstimator />} />
       <Route path="/about"          element={<Navigate to="/contact" replace />} />
       <Route path="/admin/*" element={<AdminDeprecatedRedirect />} />
       <Route path="/client/login" element={<ClientLogin />} />

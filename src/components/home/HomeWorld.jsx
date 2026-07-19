@@ -262,7 +262,7 @@ function HeroStation({ whatsappPhone }) {
         that runs customers, staff, inventory, payments and reports.
       </motion.p>
       <motion.div {...heroRise(3)} className="sg-world-actions">
-        <Link to="/contact" className="btn-primary">
+        <Link to="/price-estimator" className="btn-primary">
           Start a project <ArrowRight size={16} />
         </Link>
         <a
