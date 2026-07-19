@@ -1,24 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { ArrowRight, Users, Heart, Package, Layers, MoveUpRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, MoveUpRight, CheckCircle2, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { SITE_URL } from '../data/seo'
-import NexusHRMDemo from '../components/demos/NexusHRMDemo'
-import SANODemo from '../components/demos/SANODemo'
-import CargoScanDemo from '../components/demos/CargoScanDemo'
-import GlasstechDemo from '../components/demos/GlasstechDemo'
-import { getProductPath } from '../data/products'
 import { CLIENT_WORK, getWorkPath } from '../data/clientWork'
 import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/viewTransition'
-
-const TABS = [
-  { id: 'nexus-hrm', label: 'Nexus HRM',   icon: Users,   color: 'var(--color-accent-blue)', component: NexusHRMDemo,  tagline: 'HR & payroll management' },
-  { id: 'sano',      label: 'SANO Health', icon: Heart,   color: 'var(--color-success)', component: SANODemo,      tagline: 'AI health monitoring' },
-  { id: 'cargoscan', label: 'CargoScan',   icon: Package, color: 'var(--color-warning)', component: CargoScanDemo, tagline: 'Freight & CBM tools' },
-  { id: 'glasstech', label: 'Glasstech',  icon: Layers,  color: 'var(--color-accent-violet)', component: GlasstechDemo, tagline: 'Product catalog & quoting' },
-]
 
 const clientWorkSchema = {
   '@context': 'https://schema.org',
@@ -35,12 +23,10 @@ const clientWorkSchema = {
 }
 
 export default function WorkPage() {
-  const [activeTab, setActiveTab] = useState(TABS[0].id)
+  const [activeSlug, setActiveSlug] = useState(CLIENT_WORK[0].slug)
   const vtNavigate = useViewTransitionNavigate()
 
-  const active = TABS.find(t => t.id === activeTab)
-  const ActiveIcon = active.icon
-  const ActiveComponent = active.component
+  const active = CLIENT_WORK.find(c => c.slug === activeSlug)
 
   return (
     <PageLayout>
@@ -54,55 +40,50 @@ export default function WorkPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div className="section-label">OUR WORK</div>
             <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.04em', marginBottom: '1rem', maxWidth: '580px' }}>
-              Live demos. Real client systems.
+              Real client systems, live.
             </h1>
             <p style={{ color: 'var(--ink-400)', fontSize: '1.05rem', maxWidth: '520px', lineHeight: 1.8 }}>
-              Click around the demos — these are working versions of our actual products. Then see the real client sites we've shipped for paying customers.
+              Browse the actual sites we've shipped for paying customers, right here — or open any of them in a new tab.
             </p>
           </motion.div>
         </div>
       </div>
 
-      {/* Product demos */}
+      {/* Live site browser */}
       <div className="sg-work-demo-section" style={{ maxWidth: '1280px', margin: '0 auto', padding: '4rem 2rem 2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div className="section-label">INTERACTIVE DEMOS</div>
-            <h2 style={{ fontSize: '1.4rem', letterSpacing: '-0.028em', marginBottom: 0 }}>Our own products — try them live</h2>
-          </div>
-          <Link to="/products" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'var(--blue)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>
-            View all 5 products <ArrowRight size={14} />
-          </Link>
+        <div style={{ marginBottom: '2rem' }}>
+          <div className="section-label">BROWSE LIVE</div>
+          <h2 style={{ fontSize: '1.4rem', letterSpacing: '-0.028em', marginBottom: 0 }}>Click through the sites we've built</h2>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '2rem', alignItems: 'start' }} className="work-grid">
           {/* Sidebar tabs */}
           <div className="sg-work-demo-sidebar" style={{ position: 'sticky', top: '88px' }}>
             <div className="sg-work-demo-tabs" style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              {TABS.map(tab => {
-                const Icon = tab.icon
-                const isActive = activeTab === tab.id
+              {CLIENT_WORK.map(c => {
+                const Icon = c.RegionIcon
+                const isActive = activeSlug === c.slug
                 return (
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    key={c.slug}
+                    onClick={() => setActiveSlug(c.slug)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '0.75rem',
                       padding: '0.75rem 1rem', borderRadius: '10px', cursor: 'pointer',
-                      border: isActive ? `1.5px solid ${tab.color}40` : '1.5px solid transparent',
-                      background: isActive ? `${tab.color}08` : 'none',
+                      border: isActive ? `1.5px solid ${c.color}40` : '1.5px solid transparent',
+                      background: isActive ? `${c.color}08` : 'none',
                       textAlign: 'left', transition: 'all 0.15s',
                       fontFamily: 'var(--font-body)',
                     }}
                     onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-soft)' }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'none' }}
                   >
-                    <div style={{ width: 32, height: 32, borderRadius: '8px', background: `${tab.color}14`, border: `1px solid ${tab.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon size={15} color={tab.color} />
+                    <div style={{ width: 32, height: 32, borderRadius: '8px', background: `${c.color}14`, border: `1px solid ${c.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon size={15} color={c.color} />
                     </div>
-                    <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: isActive ? 600 : 500, color: isActive ? 'var(--ink-900)' : 'var(--ink-400)' }}>{tab.label}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--ink-300)', marginTop: '0.1rem' }}>{tab.tagline}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: isActive ? 600 : 500, color: isActive ? 'var(--ink-900)' : 'var(--ink-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--ink-300)', marginTop: '0.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.category}</div>
                     </div>
                   </button>
                 )
@@ -111,29 +92,29 @@ export default function WorkPage() {
 
             <div className="sg-work-demo-cta-card" style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'var(--bg-soft)', border: '1.5px solid var(--ink-100)', borderRadius: 'var(--radius-lg)' }}>
               <p style={{ fontSize: '0.82rem', color: 'var(--ink-400)', lineHeight: 1.65, marginBottom: '0.875rem' }}>
-                Want the full version with your data and branding?
+                Want something like this for your business?
               </p>
-              <Link to={getProductPath(activeTab)} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
-                View {active.label} <ArrowRight size={13} />
+              <Link to="/contact" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: active.color, fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}>
+                Start a project <ArrowRight size={13} />
               </Link>
             </div>
           </div>
 
-          {/* Demo panel */}
+          {/* Browser panel */}
           <div className="sg-work-demo-panel">
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{ width: 36, height: 36, borderRadius: '9px', background: `${active.color}14`, border: `1.5px solid ${active.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ActiveIcon size={17} color={active.color} />
+                <active.RegionIcon size={17} color={active.color} />
               </div>
               <div>
-                <h2 style={{ fontSize: '1.1rem', marginBottom: '0.1rem' }}>{active.label}</h2>
-                <p style={{ fontSize: '0.78rem', color: 'var(--ink-400)' }}>{active.tagline}</p>
+                <h2 style={{ fontSize: '1.1rem', marginBottom: '0.1rem' }}>{active.name}</h2>
+                <p style={{ fontSize: '0.78rem', color: 'var(--ink-400)' }}>{active.scope}</p>
               </div>
             </div>
 
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeTab}
+                key={activeSlug}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -144,23 +125,47 @@ export default function WorkPage() {
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-danger)' }} />
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-warning)' }} />
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-success)' }} />
-                    <div style={{ flex: 1, background: 'var(--bg-subtle)', border: '1px solid var(--ink-100)', borderRadius: '6px', padding: '0.25rem 0.75rem', marginLeft: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-300)' }}>
-                      app.stormglide.io/demo/{activeTab}
-                    </div>
+                    <a
+                      href={active.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'var(--bg-subtle)', border: '1px solid var(--ink-100)', borderRadius: '6px', padding: '0.25rem 0.75rem', marginLeft: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-300)', textDecoration: 'none' }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.url.replace(/^https?:\/\//, '')}</span>
+                      <ExternalLink size={11} style={{ flexShrink: 0 }} />
+                    </a>
                   </div>
                   <div className="sg-demo-frame-body">
-                    <ActiveComponent />
+                    {active.noEmbed ? (
+                      <div className="sg-embed-blocked">
+                        <div className="sg-mobile-demo-icon" style={{ '--demo-color': active.color }}>
+                          <active.RegionIcon size={22} />
+                        </div>
+                        <p>This site doesn't allow embedded previews — open it directly instead.</p>
+                        <a href={active.url} target="_blank" rel="noreferrer">
+                          Open {active.name} <MoveUpRight size={14} />
+                        </a>
+                      </div>
+                    ) : (
+                      <iframe
+                        key={active.slug}
+                        src={active.url}
+                        title={`${active.name} — live site`}
+                        loading="lazy"
+                        style={{ width: '100%', height: '560px', border: 'none', display: 'block', background: 'var(--color-surface)' }}
+                      />
+                    )}
                   </div>
                   <div className="sg-mobile-demo-summary">
                     <div className="sg-mobile-demo-icon" style={{ '--demo-color': active.color }}>
-                      <ActiveIcon size={22} />
+                      <active.RegionIcon size={22} />
                     </div>
-                    <span>{active.tagline}</span>
-                    <h3>{active.label}</h3>
-                    <p>Mobile visitors get the clean product story first. Open the full product page for details, pricing context, and next steps.</p>
-                    <Link to={getProductPath(activeTab)}>
-                      View {active.label} <ArrowRight size={14} />
-                    </Link>
+                    <span>{active.category}</span>
+                    <h3>{active.name}</h3>
+                    <p>{active.scope}</p>
+                    <a href={active.url} target="_blank" rel="noreferrer">
+                      Visit {active.name} <MoveUpRight size={14} />
+                    </a>
                   </div>
                 </div>
               </motion.div>
@@ -286,6 +291,37 @@ export default function WorkPage() {
       <style>{`
         .sg-mobile-demo-summary {
           display: none;
+        }
+
+        .sg-embed-blocked {
+          display: grid;
+          justify-items: center;
+          text-align: center;
+          gap: 0.9rem;
+          padding: 3rem 2rem;
+          min-height: 400px;
+          align-content: center;
+          background: var(--bg-soft);
+        }
+
+        .sg-embed-blocked p {
+          color: var(--ink-400);
+          font-size: 0.9rem;
+          max-width: 32ch;
+          line-height: 1.6;
+        }
+
+        .sg-embed-blocked a {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.7rem 1.25rem;
+          border-radius: 999px;
+          background: var(--sg-accent);
+          color: #FFFFFF;
+          font-weight: 600;
+          font-size: 0.85rem;
+          text-decoration: none;
         }
 
         @media (max-width: 860px) {

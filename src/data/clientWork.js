@@ -18,6 +18,10 @@ export const CLIENT_WORK = [
     name: 'Lollarod Enterprise',
     category: 'Fine Home & Interior Products',
     url: 'https://lollarodenterprisenew.com',
+    // Sends X-Frame-Options: DENY — refuses to render inside our embedded
+    // browser, so the live-preview panel falls back to a "open in new tab"
+    // card for this one instead of a blank iframe.
+    noEmbed: true,
     RegionIcon: MapPin, region: 'Ghana',
     color: 'var(--color-success)',
     year: '2023',
