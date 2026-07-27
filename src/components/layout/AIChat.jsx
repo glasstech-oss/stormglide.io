@@ -1,55 +1,114 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ArrowUp, Loader2 } from 'lucide-react'
+import { X, ArrowUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { sendChatMessage } from '../../lib/aiChat'
 import BrandLogo from '../common/BrandLogo'
 
 const GREETING = "Hi — I'm Stormglide's AI assistant. Ask me anything about what we build, get a price estimate, book time with the team, or ask something completely unrelated — happy to help either way."
 
+// The assistant is instructed to hand out links using `[label](url)` markdown
+// syntax (WhatsApp, email, /work) since bubbles otherwise render as plain
+// text — this turns that syntax into real clickable elements.
+function renderContent(text) {
+  const nodes = []
+  const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g
+  let last = 0
+  let match
+  let key = 0
+  while ((match = linkRe.exec(text))) {
+    if (match.index > last) nodes.push(text.slice(last, match.index))
+    const [, label, url] = match
+    if (url.startsWith('/')) {
+      nodes.push(<Link key={key++} to={url} className="sg-ai-link">{label}</Link>)
+    } else {
+      nodes.push(<a key={key++} href={url} target="_blank" rel="noopener noreferrer" className="sg-ai-link">{label}</a>)
+    }
+    last = linkRe.lastIndex
+  }
+  if (last < text.length) nodes.push(text.slice(last))
+  return nodes
+}
+
 export default function AIChat() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING }])
   const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
+  const [netBusy, setNetBusy] = useState(false)
   const [error, setError] = useState(false)
+  // Real tokens stream in from the backend already, but network chunks land
+  // in uneven bursts — this replays them onto screen at a steady human-typing
+  // pace instead of having text jump in whole chunks. typingIndex tracks
+  // which message is mid-reveal; revealLen is how many of its characters are
+  // currently shown.
+  const [typingIndex, setTypingIndex] = useState(null)
+  const [revealLen, setRevealLen] = useState(0)
   const listRef = useRef(null)
+  const messagesRef = useRef(messages)
+  useEffect(() => { messagesRef.current = messages }, [messages])
 
   useEffect(() => {
     if (!listRef.current) return
     listRef.current.scrollTop = listRef.current.scrollHeight
-  }, [messages, sending])
+  }, [messages, revealLen])
+
+  // Advances revealLen toward the target message's full length. Speeds up
+  // when the backlog is large (e.g. the network delivered a big chunk at
+  // once) so long replies don't feel sluggish, but stays close to a natural
+  // typing cadence for the common case. typingIndex itself is only ever set
+  // by handleSend for the next reply — once fully revealed and the network
+  // is done, isRevealing (derived below, not stored) simply goes false.
+  useEffect(() => {
+    if (typingIndex === null) return
+    const id = setInterval(() => {
+      setRevealLen((len) => {
+        const target = messagesRef.current[typingIndex]?.content?.length || 0
+        if (len >= target) return len
+        const backlog = target - len
+        const step = backlog > 80 ? 6 : backlog > 24 ? 3 : 1
+        return Math.min(len + step, target)
+      })
+    }, 18)
+    return () => clearInterval(id)
+  }, [typingIndex])
+
+  const typingTarget = typingIndex !== null ? (messages[typingIndex]?.content?.length || 0) : 0
+  const isRevealing = typingIndex !== null && (netBusy || revealLen < typingTarget)
 
   async function handleSend(e) {
     e.preventDefault()
     const text = input.trim()
-    if (!text || sending) return
+    if (!text || netBusy || isRevealing) return
 
     const next = [...messages, { role: 'user', content: text }]
+    const assistantIndex = next.length
     setMessages([...next, { role: 'assistant', content: '' }])
+    setTypingIndex(assistantIndex)
+    setRevealLen(0)
     setInput('')
-    setSending(true)
+    setNetBusy(true)
     setError(false)
 
     try {
       await sendChatMessage(next, {
         onDelta: (partial) => {
-          setMessages(prev => {
+          setMessages((prev) => {
             const copy = [...prev]
-            copy[copy.length - 1] = { role: 'assistant', content: partial }
+            copy[assistantIndex] = { role: 'assistant', content: partial }
             return copy
           })
         },
       })
     } catch {
       setError(true)
-      setMessages(prev => {
-        const last = prev[prev.length - 1]
-        if (last?.role === 'assistant' && last.content) return prev
+      setMessages((prev) => {
         const copy = [...prev]
-        copy[copy.length - 1] = { role: 'assistant', content: "I'm having trouble connecting right now — try WhatsApp or the contact form, or give it another moment and try again." }
+        if (!copy[assistantIndex]?.content) {
+          copy[assistantIndex] = { role: 'assistant', content: "I'm having trouble connecting right now — try WhatsApp or the contact form, or give it another moment and try again." }
+        }
         return copy
       })
     } finally {
-      setSending(false)
+      setNetBusy(false)
     }
   }
 
@@ -57,7 +116,7 @@ export default function AIChat() {
     <>
       <button
         className={`sg-ai-fab${open ? ' is-open' : ''}`}
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen((o) => !o)}
         aria-label={open ? 'Close AI assistant' : 'Open AI assistant'}
         aria-expanded={open}
       >
@@ -75,15 +134,25 @@ export default function AIChat() {
 
         <div className="sg-ai-messages" ref={listRef}>
           {messages.map((m, i) => {
-            const isPendingReply = sending && i === messages.length - 1 && m.role === 'assistant' && !m.content
-            if (isPendingReply) {
+            const isTypingThis = typingIndex === i
+            const showDots = isTypingThis && revealLen === 0 && netBusy
+            if (showDots) {
               return (
                 <div key={i} className="sg-ai-bubble sg-ai-bubble-assistant sg-ai-typing">
-                  <Loader2 size={14} className="sg-ai-spin" /> Thinking…
+                  <span className="sg-ai-dot" />
+                  <span className="sg-ai-dot" />
+                  <span className="sg-ai-dot" />
                 </div>
               )
             }
-            return <div key={i} className={`sg-ai-bubble sg-ai-bubble-${m.role}`}>{m.content}</div>
+            const shown = isTypingThis ? m.content.slice(0, revealLen) : m.content
+            if (!shown) return null
+            return (
+              <div key={i} className={`sg-ai-bubble sg-ai-bubble-${m.role}`}>
+                {renderContent(shown)}
+                {isTypingThis && revealLen < m.content.length && <span className="sg-ai-cursor" />}
+              </div>
+            )
           })}
         </div>
 
@@ -91,12 +160,12 @@ export default function AIChat() {
           <input
             className="sg-ai-input"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type a message…"
             aria-label="Message"
-            disabled={sending}
+            disabled={netBusy || isRevealing}
           />
-          <button type="submit" className="sg-ai-send" disabled={sending || !input.trim()} aria-label="Send">
+          <button type="submit" className="sg-ai-send" disabled={netBusy || isRevealing || !input.trim()} aria-label="Send">
             <ArrowUp size={16} />
           </button>
         </form>
@@ -219,9 +288,34 @@ export default function AIChat() {
           color: #fff;
           border-bottom-right-radius: 4px;
         }
-        .sg-ai-typing { display: flex; align-items: center; gap: 0.4rem; color: var(--color-text-secondary); }
-        .sg-ai-spin { animation: sgAiSpin 0.8s linear infinite; }
-        @keyframes sgAiSpin { to { transform: rotate(360deg); } }
+
+        .sg-ai-link { color: var(--sg-accent); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+        .sg-ai-bubble-user .sg-ai-link { color: #fff; }
+
+        .sg-ai-cursor {
+          display: inline-block;
+          width: 2px;
+          height: 0.95em;
+          background: currentColor;
+          margin-left: 1px;
+          vertical-align: text-bottom;
+          animation: sgAiCursorBlink 0.85s steps(1) infinite;
+        }
+        @keyframes sgAiCursorBlink { 50% { opacity: 0; } }
+
+        .sg-ai-typing { display: flex; align-items: center; gap: 4px; padding: 0.7rem 0.9rem; }
+        .sg-ai-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--color-text-secondary);
+          opacity: 0.5;
+          animation: sgAiDotBounce 1.2s infinite ease-in-out;
+        }
+        .sg-ai-dot:nth-child(2) { animation-delay: 0.15s; }
+        .sg-ai-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes sgAiDotBounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+          30% { transform: translateY(-4px); opacity: 1; }
+        }
 
         .sg-ai-input-row {
           display: flex;
@@ -240,6 +334,7 @@ export default function AIChat() {
           color: var(--color-text-heading);
         }
         .sg-ai-input:focus-visible { outline: 2px solid var(--sg-accent); outline-offset: 1px; }
+        .sg-ai-input:disabled { opacity: 0.6; }
         .sg-ai-send {
           width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
           background: var(--sg-accent); color: #fff; border: none; cursor: pointer;
@@ -260,6 +355,7 @@ export default function AIChat() {
         @media (prefers-reduced-motion: reduce) {
           .sg-ai-fab, .sg-ai-panel { transition: none; }
           .sg-ai-fab:not(.is-open) { animation: none; }
+          .sg-ai-cursor, .sg-ai-dot { animation: none; }
         }
       `}</style>
     </>
