@@ -49,8 +49,11 @@ export default function RouteSEO() {
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={canonical} />
+      <link rel="alternate" hrefLang="en" href={canonical} />
+      <link rel="alternate" hrefLang="x-default" href={canonical} />
 
-      <meta property="og:locale" content="en_GH" />
+      <meta property="og:locale" content="en_US" />
+      <meta property="og:locale:alternate" content="en_GB" />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Stormglide Technologies" />
       <meta property="og:title" content={route.title} />

@@ -34,7 +34,10 @@ function metadataFor(route) {
     <meta data-sg-static-seo name="description" content="${description}" />
     <meta data-sg-static-seo name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link data-sg-static-seo rel="canonical" href="${canonical}" />
-    <meta data-sg-static-seo property="og:locale" content="en_GH" />
+    <link data-sg-static-seo rel="alternate" hreflang="en" href="${canonical}" />
+    <link data-sg-static-seo rel="alternate" hreflang="x-default" href="${canonical}" />
+    <meta data-sg-static-seo property="og:locale" content="en_US" />
+    <meta data-sg-static-seo property="og:locale:alternate" content="en_GB" />
     <meta data-sg-static-seo property="og:type" content="website" />
     <meta data-sg-static-seo property="og:site_name" content="Stormglide Technologies" />
     <meta data-sg-static-seo property="og:title" content="${title}" />

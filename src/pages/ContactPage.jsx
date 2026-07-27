@@ -154,7 +154,7 @@ export default function ContactPage() {
             <div className="section-label">ABOUT</div>
             <WordReveal
               as="h1"
-              text="A software company built by people who understand the African market"
+              text="A software company built by people who've actually run the businesses they build for"
               style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', marginBottom: '1rem', maxWidth: '640px' }}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
@@ -554,7 +554,7 @@ export default function ContactPage() {
 
               {[
                 { icon: Mail, label: 'Email', value: theme.contactEmail, href: `mailto:${theme.contactEmail}`, color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)', border: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)' },
-                { icon: MapPin, label: 'Location', value: 'Accra, Ghana', href: null, color: 'var(--color-accent-violet)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)', border: 'color-mix(in srgb, var(--color-success) 15%, transparent)' },
+                { icon: MapPin, label: 'Location', value: 'Accra, Ghana (GMT)', href: null, color: 'var(--color-accent-violet)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)', border: 'color-mix(in srgb, var(--color-success) 15%, transparent)' },
               ].map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 1.5rem', background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius)', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}>
                   <div style={{ width: 42, height: 42, borderRadius: '11px', background: item.bg, border: `1.5px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

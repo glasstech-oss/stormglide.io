@@ -29,7 +29,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
           >
-            Stop running your business on <em>WhatsApp and Excel.</em>
+            One system <em>instead of six tools.</em>
           </motion.h1>
 
           <motion.p
@@ -38,7 +38,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            We build the custom system that replaces them — customers, staff, inventory, payments and reports, in one dashboard.
+            Spreadsheets, chat groups, paper files, and three apps that don't talk to each other. We design, build, and run the single system that replaces all of it — customers, staff, inventory, payments, and reporting in one dashboard your team will actually use.
           </motion.p>
 
           <motion.div
@@ -47,17 +47,12 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.28 }}
           >
-            <Link to="/price-estimator" className="btn-primary">
-              Start a project <ArrowRight size={16} />
+            <Link to="/products" className="btn-primary">
+              See our products <ArrowRight size={16} />
             </Link>
-            <a
-              href={`https://wa.me/${whatsappPhone}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sg-home-text-link"
-            >
-              Chat on WhatsApp <ArrowUpRight size={15} />
-            </a>
+            <Link to="/price-estimator" className="sg-home-text-link">
+              Start a project <ArrowRight size={15} />
+            </Link>
           </motion.div>
 
           <motion.div
@@ -67,7 +62,16 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.38 }}
           >
             <MapPin size={14} />
-            Built in Accra, working across Africa
+            Built in Accra — working with clients across time zones
+            <span aria-hidden="true" style={{ opacity: 0.4 }}> · </span>
+            <a
+              href={`https://wa.me/${whatsappPhone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', color: 'inherit' }}
+            >
+              Chat on WhatsApp <ArrowUpRight size={12} />
+            </a>
           </motion.div>
         </div>
 

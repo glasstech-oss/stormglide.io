@@ -308,19 +308,23 @@ const heroRise = i => ({
 function HeroStation({ whatsappPhone }) {
   return (
     <div className="sg-world-hero">
-      <motion.p {...heroRise(0)} className="sg-world-kicker">BUSINESS SYSTEMS STUDIO &mdash; ACCRA</motion.p>
+      <motion.p {...heroRise(0)} className="sg-world-kicker">BUSINESS SYSTEMS STUDIO &mdash; LIVE IN PRODUCTION TODAY</motion.p>
       <motion.h1 {...heroRise(1)}>
-        Stop running your business on{' '}
-        <span className="w-blue">WhatsApp</span> <span className="w-and">and</span>{' '}
-        <span className="w-orange">Excel.</span>
+        One <span className="w-blue">system</span> instead of{' '}
+        <span className="w-orange">six tools.</span>
       </motion.h1>
       <motion.p {...heroRise(2)} className="sg-world-sub">
-        We build the website that earns trust &mdash; and the custom system behind it
-        that runs customers, staff, inventory, payments and reports.
+        Spreadsheets, chat groups, paper files, and three apps that don't talk to
+        each other. We design, build, and run the single system that replaces all
+        of it &mdash; customers, staff, inventory, payments, and reporting in one
+        dashboard your team will actually use.
       </motion.p>
       <motion.div {...heroRise(3)} className="sg-world-actions">
-        <Link to="/price-estimator" className="btn-primary">
-          Start a project <ArrowRight size={16} />
+        <Link to="/products" className="btn-primary">
+          See our products <ArrowRight size={16} />
+        </Link>
+        <Link to="/price-estimator" className="sg-home-text-link">
+          Start a project <ArrowRight size={15} />
         </Link>
         <a
           href={`https://wa.me/${whatsappPhone}`}

@@ -144,7 +144,7 @@ export default function ProductsPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <div className="section-label">OUR PRODUCTS</div>
             <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', marginBottom: '1rem', maxWidth: '600px' }}>
-              Software built for African businesses — and already running
+              Software already running real businesses today
             </h1>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.05rem', maxWidth: '520px', lineHeight: 1.75 }}>
               Six products across HR, health, logistics, and beauty & wellness — each solving a real problem we saw first-hand.
