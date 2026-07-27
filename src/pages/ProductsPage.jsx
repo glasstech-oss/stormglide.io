@@ -92,8 +92,17 @@ function ProductCard({ product, i }) {
             ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: product.color, fontSize: '0.85rem', fontWeight: 600 }}>
-            View full product <ArrowRight size={14} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: product.color, fontSize: '0.85rem', fontWeight: 600 }}>
+              View full product <ArrowRight size={14} />
+            </div>
+            <Link
+              to="/price-estimator"
+              onClick={e => e.stopPropagation()}
+              style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-secondary)', textDecoration: 'none', padding: '0.3rem 0.6rem', borderRadius: '999px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border-subtle)' }}
+            >
+              Get an instant estimate
+            </Link>
           </div>
         </div>
       </Link>
