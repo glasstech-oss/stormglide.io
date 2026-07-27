@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, X, ArrowUp, Loader2 } from 'lucide-react'
+import { X, ArrowUp, Loader2 } from 'lucide-react'
 import { sendChatMessage } from '../../lib/aiChat'
+import BrandLogo from '../common/BrandLogo'
 
 const GREETING = "Hi — I'm Stormglide's AI assistant. Ask me anything about what we build, get a price estimate, book time with the team, or ask something completely unrelated — happy to help either way."
 
@@ -60,12 +61,12 @@ export default function AIChat() {
         aria-label={open ? 'Close AI assistant' : 'Open AI assistant'}
         aria-expanded={open}
       >
-        {open ? <X size={22} /> : <Sparkles size={21} />}
+        {open ? <X size={22} /> : <BrandLogo markOnly className="sg-ai-fab-logo" />}
       </button>
 
       <div className={`sg-ai-panel${open ? ' is-open' : ''}`} role="dialog" aria-label="Stormglide AI assistant" aria-hidden={!open}>
         <div className="sg-ai-header">
-          <div className="sg-ai-header-icon"><Sparkles size={16} /></div>
+          <div className="sg-ai-header-icon"><BrandLogo markOnly className="sg-ai-header-logo" /></div>
           <div>
             <div className="sg-ai-header-title">Stormglide AI</div>
             <div className="sg-ai-header-sub">Ask anything — really</div>
@@ -123,6 +124,8 @@ export default function AIChat() {
         }
         .sg-ai-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(37,99,235,0.34); }
         .sg-ai-fab.is-open { background: var(--color-text-heading); }
+        .sg-ai-fab-logo.sg-brand-logo.is-mark { width: 24px; color: #fff; }
+        .sg-ai-fab-logo .sg-brand-logo-mark-accent { fill: #fff; opacity: 0.72; }
 
         .sg-ai-panel {
           position: fixed;
@@ -166,6 +169,8 @@ export default function AIChat() {
           display: flex; align-items: center; justify-content: center;
           color: var(--sg-accent); flex-shrink: 0;
         }
+        .sg-ai-header-logo.sg-brand-logo.is-mark { width: 18px; }
+        .sg-ai-header-logo .sg-brand-logo-mark-accent { opacity: 0.6; }
         .sg-ai-header-title { font-weight: 700; font-size: 0.88rem; color: var(--color-text-heading); }
         .sg-ai-header-sub { font-size: 0.72rem; color: var(--color-text-secondary); }
 
