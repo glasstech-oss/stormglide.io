@@ -1097,18 +1097,59 @@ app.put('/v1/crm/lead/:id/status', verifyToken, adminOnly, async (req, res) => {
 // advice, while knowing Stormglide's own products/pricing/contact details
 // cold and being able to actually create a booking (not just say "someone
 // will follow up" — it does the follow-up itself, via the leads pipeline).
-const CHAT_SYSTEM_PROMPT = `You are the AI assistant embedded on stormglide.io, a software company based in Accra, Ghana that designs, builds, and operates custom business systems worldwide.
+// Deliberately does NOT include the "100+ businesses" / "50+ systems" /
+// "10+ years" style figures still sitting in src/data/services.js and
+// src/data/differentiators.js — those are unverified and were stripped
+// from every other page in an earlier content-honesty pass; the chat
+// should not reintroduce them even though those two files still have them.
+const CHAT_SYSTEM_PROMPT = `You are the AI assistant embedded on stormglide.io, a software company based in Accra, Ghana that designs, builds, and operates custom business systems for clients across Ghana, West Africa, and beyond.
 
-Your personality: knowledgeable, direct, genuinely helpful — like a sharp colleague, not a sales script. You can hold a real conversation about anything the visitor brings up (general knowledge, technology trends, how to approach a technical problem, advice on their own stack) even when it has nothing to do with Stormglide. Give real, specific, useful answers, not deflections. If a question is outside what you can responsibly answer (medical, legal, financial advice), say so plainly.
+PERSONALITY: Talk like a sharp, genuinely helpful colleague, not a scripted sales bot. Be warm, direct, and specific. Use natural contractions, vary your sentence length and openings, and ask a real follow-up question when it would help you answer better instead of guessing. Never sound like a brochure. You're happy to have a real conversation about anything the visitor brings up — general coding questions, architecture advice, "what stack should I use", tech news, whatever — even when it has nothing to do with Stormglide. Give specific, useful answers, never a deflection just because it's off-topic. If something is outside what you can responsibly answer (medical, legal, financial advice), say so plainly rather than guessing.
 
-What you know about Stormglide, and should use naturally when relevant:
-- Products (all live in production today): Nexus HRM (HR & payroll), Nexus Dental (dental practice management), CargoScan (freight cost calculator + GPS shipment tracking), SANO Health (offline-first community + clinic health tool), Glasstech (product catalog & quote system for glass/aluminum works), LOÙ Beauty Hub (spa/cosmetology booking & management).
-- Services: custom websites & e-commerce, web apps & business systems, mobile apps, SaaS product development, UI/UX design, MVP/prototyping.
-- Rough pricing (GH₵, Ghanaian cedis) — always frame as estimates, the real price estimator at /price-estimator gives an exact range: Business Website 3,000–7,000. Online Store 8,000–18,000. Booking & Scheduling System 9,000–20,000. Sales & Inventory System 14,000–32,000. Custom Business System 22,000–60,000. Deploying an existing product (branded/configured for a client) 6,000–14,000.
-- Contact: john@stormglide.io, based in Accra (GMT), works with clients across time zones. WhatsApp is the fastest way to reach the team.
-- Real client work: Lollarod Enterprise, Westline Future, Green Gold Gardens, Jaybesin Logistics, Kyekye Cuisine, BarberManager, Bougie Hair & Beauty, Helyz Scents, EA_Dubea's Gift Hub, Packaging Ambassadors, The PoliBrand Agency, KenteHaul — all real, live systems, browsable at /work.
+DO NOT PUSH BOOKING: Most visitors are browsing, comparing options, or just asking questions — treat that as the default. Do NOT ask for a name/email and do NOT steer replies toward "let's get you booked in" unless the visitor has clearly said they want to start a project, get a formal quote, or talk to the team. Answer what they actually asked, fully, first. It's fine to mention /price-estimator or that the team can help once, briefly, when it's genuinely relevant — never as a recurring pitch tacked onto every reply.
 
-When a visitor wants to start a project, get a price estimate, or book time with the team: use the create_booking tool once you have their name and email (ask for whichever you're missing — don't invent details). You do not have a live calendar, so do not claim a specific slot is booked; instead capture their details and preferred time/timeframe, and tell them the team will confirm by email/WhatsApp within one business day. Keep replies concise — a few sentences, not an essay, unless the visitor is asking for real depth (e.g. a technical explanation).`;
+GIVE REAL RECOMMENDATIONS: When a visitor describes a business problem ("we track orders over WhatsApp", "we're a clinic buried in paper records", "customers need to book online"), actively recommend the specific Stormglide product, service, or comparable real client project that fits, and say briefly why — using the specifics below. Pick the 1-2 most relevant things, don't recite the full catalog.
+
+WHAT YOU KNOW COLD:
+
+Products (all live in production today):
+- Nexus HRM — full employee lifecycle: onboarding, payroll with tax calculations, leave/attendance, performance reviews, document storage, role-based access, multi-company/multi-tenant.
+- Nexus Dental — dental practice management: patient records & history, appointment scheduling & reminders, treatment plans, billing/invoicing, clinical notes/charting, multi-dentist/multi-chair.
+- CargoScan — instant CBM + freight-cost estimation by route, plus GPS shipment/fleet tracking and offline-capable driver apps, built around Ghana-China trade routes.
+- SANO Health — two sides of one platform: an offline-first mobile tool for on-device heart-rate detection and AI-assisted skin-scan analysis, built for low-end phones and community health workers with WhatsApp alerts, plus a clinic module for patient records, scheduling, and treatment tracking.
+- LOÙ Beauty Hub — guided multi-step booking for spas/cosmetology studios, service catalog with pricing/duration, appointment scheduling, customer records, staff/studio management portal.
+- Glasstech — product catalog plus an integrated quote/lead system for glass, aluminum, and cabinet contractors.
+
+Services (what we build from scratch, beyond deploying the products above):
+- Business websites — a handful of pages, mobile-friendly, WhatsApp contact, lead capture.
+- Online stores — product catalog, Paystack/MoMo checkout, admin dashboard.
+- Booking & scheduling systems — live time-slot booking, SMS confirmations, staff portals (salons, clinics, consultants).
+- Sales & inventory systems — POS/order flow, kitchen/stock dashboards, multi-role staff access (restaurants, retail, wholesale).
+- Custom business systems built from scratch — HR, payroll, logistics, health records, multi-branch, reporting dashboards.
+- Deploying an existing product (Nexus HRM, CargoScan, LOÙ Beauty Hub) branded and configured for a new client — the fastest path to live, days not months.
+- Payment integration (Paystack, Flutterwave, Stripe, MTN MoMo, Vodafone Cash), custom AI features, and IoT/hardware integration (GPS, sensors, barcode/RFID) — usually folded into one of the above rather than sold standalone.
+
+What actually moves the price on a project (real cost drivers, not generic upsells): multiple branches/locations, Mobile Money/card payments, working offline with sync, WhatsApp order/booking alerts, multiple staff roles with different access, a reports dashboard. Rough starting ranges in GH₵ (Ghanaian cedis) — always point to /price-estimator for a real number: Business Website 3,000–7,000. Online Store 8,000–18,000. Booking & Scheduling System 9,000–20,000. Sales & Inventory System 14,000–32,000. Custom Business System 22,000–60,000. Deploying an existing product 6,000–14,000. Pricing is one-time-project by default; some clients also take an ongoing support/maintenance retainer afterward — say so honestly if asked, don't claim there's never a recurring fee.
+
+Real client work (browsable at /work) — reference these by name when relevant, they're real and specific:
+- Lollarod Enterprise (Ghana) — e-commerce + wholesale/retail pricing + backoffice for a premium interior products company, 3 showrooms.
+- Westline Future (West Africa) — full operating system for a global interior design firm: website, client project portal, design vault, invoicing, staff roles, analytics, across 3 countries.
+- Green Gold Gardens (Ghana) — plant/landscaping business moved off WhatsApp entirely: live catalog, bookable design services, payroll, CRM.
+- Jaybesin Logistics (Ghana) — shipment tracking, live freight rates, sourcing marketplace, agent dashboard.
+- Kyekye Cuisine (Ghana) — QR table ordering (dine-in/delivery/pickup), live kitchen & waitstaff queues, Paystack checkout.
+- BarberManager (Ghana) — booking by barber/service/time-slot, phone-number login, SMS reminders, staff portal.
+- Bougie Hair & Beauty (UK) — multi-service salon booking across 5 disciplines, live calendar, client portal.
+- Helyz Scents, EA_Dubea's Gift Hub, Packaging Ambassadors, KenteHaul — e-commerce storefronts (home fragrance, gifting, wholesale packaging, Kente/heritage fashion).
+- The PoliBrand Agency (Ghana) — political branding platform with an interactive readiness-assessment tool and admin portal.
+- Nexus Dental System, Cosmetology & Spa Management System — deployed instances of our own products, branded for specific clinics/spas.
+
+Why clients pick us (real, not marketing fluff): we come from operational backgrounds, not an agency just coding to spec — we look at how a business actually works before building, so the system fits real workflows instead of forcing a new process on them. Fixed quotes, no hidden fees. Clients own their source code. We stay involved after launch — support doesn't just stop at delivery.
+
+Contact: john@stormglide.io, WhatsApp is the fastest way to reach the team, based in Accra (GMT) but works with clients across time zones.
+
+CONVERSATION STYLE: Keep most replies to 2-5 sentences — this is a chat widget, not an essay — unless the visitor is asking for real depth (a technical explanation, a comparison, a walkthrough), in which case give it properly. Don't repeat the same sign-off or CTA every message, and don't open every reply the same way.
+
+BOOKING: Only call create_booking once the visitor has clearly said they want to move forward (start a project, get a formal quote, book a call) AND you have at minimum their name and email — ask for only whichever of those two you're missing. You don't have a live calendar, so never claim a specific time slot is confirmed; capture their preferred time/timeframe if they give one, and tell them the team will confirm by email or WhatsApp within one business day.`;
 
 const CHAT_TOOLS = [
   {
@@ -1131,9 +1172,23 @@ const CHAT_TOOLS = [
   },
 ];
 
-function callNvidia(messages) {
+// Streams tokens from NVIDIA NIM as they're generated (rather than waiting
+// for the full completion) so the widget can render text incrementally —
+// the single biggest lever on *perceived* speed, since time-to-first-token
+// is a fraction of total generation time. Tool calls (create_booking) can't
+// be streamed to the client piecemeal (arguments arrive as fragmented JSON
+// across chunks), so those are accumulated silently server-side and only
+// surfaced once complete, via onDelta never firing for that turn.
+function streamNvidia(messages, { onDelta }) {
   const key = process.env.NVIDIA_API_KEY;
   if (!key) return Promise.reject(new Error('NVIDIA_API_KEY not set'));
+  // Tested swapping this to the older 3.1-70b checkpoint to dodge 3.3's
+  // queue congestion (see note above streamNvidia's caller) — it responded
+  // much faster, but with `tools` present it hallucinated a create_booking
+  // call (fake name/email) for a completely unrelated factual question,
+  // which is worse than slow. Staying on 3.3 despite the latency; see
+  // CHAT_SYSTEM_PROMPT/task notes for the real fix (dedicated NIM capacity
+  // or a different provider), which needs an account/billing decision.
   const model = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 
   const body = JSON.stringify({
@@ -1141,10 +1196,10 @@ function callNvidia(messages) {
     messages,
     tools: CHAT_TOOLS,
     tool_choice: 'auto',
-    temperature: 0.6,
+    temperature: 0.7,
     top_p: 0.9,
     max_tokens: 700,
-    stream: false,
+    stream: true,
   });
 
   return new Promise((resolve, reject) => {
@@ -1160,16 +1215,57 @@ function callNvidia(messages) {
         },
       },
       (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode >= 400) return reject(new Error(`NVIDIA API ${res.statusCode}: ${data.slice(0, 500)}`));
-          try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+        if (res.statusCode >= 400) {
+          let errData = '';
+          res.on('data', (chunk) => { errData += chunk; });
+          res.on('end', () => reject(new Error(`NVIDIA API ${res.statusCode}: ${errData.slice(0, 500)}`)));
+          return;
+        }
+
+        let buffer = '';
+        let mode = null; // 'content' | 'tool'
+        let contentSoFar = '';
+        const toolCall = { name: null, arguments: '' };
+
+        res.on('data', (chunk) => {
+          buffer += chunk.toString('utf8');
+          const frames = buffer.split('\n\n');
+          buffer = frames.pop();
+          for (const frame of frames) {
+            const line = frame.trim();
+            if (!line.startsWith('data:')) continue;
+            const payload = line.slice(5).trim();
+            if (!payload || payload === '[DONE]') continue;
+            let evt;
+            try { evt = JSON.parse(payload); } catch { continue; }
+            const delta = evt.choices?.[0]?.delta;
+            if (!delta) continue;
+            if (delta.tool_calls?.length && mode !== 'content') {
+              mode = 'tool';
+              const tc = delta.tool_calls[0];
+              if (tc.function?.name) toolCall.name = tc.function.name;
+              if (tc.function?.arguments) toolCall.arguments += tc.function.arguments;
+            } else if (delta.content && mode !== 'tool') {
+              mode = 'content';
+              contentSoFar += delta.content;
+              onDelta(delta.content);
+            }
+          }
         });
+        res.on('end', () => {
+          if (mode === 'tool') resolve({ mode: 'tool', name: toolCall.name, arguments: toolCall.arguments });
+          else resolve({ mode: 'content', text: contentSoFar });
+        });
+        res.on('error', reject);
       },
     );
     req.on('error', reject);
-    req.setTimeout(100000, () => req.destroy(new Error('NVIDIA API timed out')));
+    // NVIDIA's shared free-tier queue can leave a request with zero bytes
+    // sent for 20-40s before the first token even starts generating (see
+    // notes above) — a short idle timeout was cutting off requests that
+    // would have gone on to succeed. 90s leaves headroom under the
+    // function's own 120s timeoutSeconds (see exports.api at the bottom).
+    req.setTimeout(90000, () => req.destroy(new Error('NVIDIA API timed out')));
     req.write(body);
     req.end();
   });
@@ -1187,47 +1283,60 @@ app.post('/v1/chat', async (req, res) => {
     content: String(m.content || '').slice(0, 4000),
   }));
 
-  try {
-    const completion = await callNvidia([{ role: 'system', content: CHAT_SYSTEM_PROMPT }, ...trimmed]);
-    const choice = completion.choices?.[0];
-    const toolCalls = choice?.message?.tool_calls;
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
-    if (toolCalls?.length) {
-      const bookingCall = toolCalls.find((t) => t.function?.name === 'create_booking');
-      if (bookingCall) {
-        let args = {};
-        try { args = JSON.parse(bookingCall.function.arguments || '{}'); } catch { /* malformed args from model — ignore, fall through */ }
-        if (args.name && args.email) {
-          const lead = {
-            name: args.name,
-            email: args.email,
-            phone: args.phone || null,
-            organization: null,
-            missionScope: args.topic || 'AI chat booking',
-            details: args.preferredTime ? `Preferred time: ${args.preferredTime}` : null,
-            product: null,
-            source: 'ai_chat',
-            configuratorSelections: null,
-            budget: null,
-            timeline: args.preferredTime || null,
-            status: 'NEW',
-            createdAt: now(),
-          };
-          const ref = await db.collection('leads').add(lead);
-          emailNewLead({ id: ref.id, ...lead }).catch((e) => console.warn('Lead email failed:', e.message));
-          return res.json({
-            reply: `Thanks ${args.name.split(' ')[0]} — I've passed this to the team (${args.topic}). You'll hear from us at ${args.email} within one business day. Anything else I can help with in the meantime?`,
-            booked: true,
-          });
-        }
+  try {
+    const result = await streamNvidia(
+      [{ role: 'system', content: CHAT_SYSTEM_PROMPT }, ...trimmed],
+      { onDelta: (text) => send({ delta: text }) },
+    );
+
+    if (result.mode === 'tool' && result.name === 'create_booking') {
+      let args = {};
+      try { args = JSON.parse(result.arguments || '{}'); } catch { /* malformed args from model — ignore, fall through */ }
+      if (args.name && args.email) {
+        const lead = {
+          name: args.name,
+          email: args.email,
+          phone: args.phone || null,
+          organization: null,
+          missionScope: args.topic || 'AI chat booking',
+          details: args.preferredTime ? `Preferred time: ${args.preferredTime}` : null,
+          product: null,
+          source: 'ai_chat',
+          configuratorSelections: null,
+          budget: null,
+          timeline: args.preferredTime || null,
+          status: 'NEW',
+          createdAt: now(),
+        };
+        const ref = await db.collection('leads').add(lead);
+        emailNewLead({ id: ref.id, ...lead }).catch((e) => console.warn('Lead email failed:', e.message));
+        send({
+          final: `Thanks ${args.name.split(' ')[0]} — I've passed this to the team (${args.topic}). You'll hear from us at ${args.email} within one business day. Anything else I can help with in the meantime?`,
+          booked: true,
+        });
+        return res.end();
       }
+      send({ final: "Happy to get that started — what's the best name and email to reach you at?", booked: false });
+      return res.end();
     }
 
-    const reply = choice?.message?.content?.trim();
-    return res.json({ reply: reply || "Sorry, I didn't quite catch that — could you rephrase?", booked: false });
+    if (result.mode === 'content' && result.text.trim()) {
+      send({ done: true });
+      return res.end();
+    }
+
+    send({ final: "Sorry, I didn't quite catch that — could you rephrase?", booked: false });
+    return res.end();
   } catch (err) {
     console.error('AI chat error:', err.message);
-    return res.status(500).json({ message: 'The assistant is unavailable right now — try WhatsApp or the contact form instead.' });
+    send({ final: 'The assistant is unavailable right now — try WhatsApp or the contact form instead.', booked: false });
+    return res.end();
   }
 });
 

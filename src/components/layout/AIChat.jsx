@@ -23,17 +23,30 @@ export default function AIChat() {
     if (!text || sending) return
 
     const next = [...messages, { role: 'user', content: text }]
-    setMessages(next)
+    setMessages([...next, { role: 'assistant', content: '' }])
     setInput('')
     setSending(true)
     setError(false)
 
     try {
-      const { reply } = await sendChatMessage(next)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      await sendChatMessage(next, {
+        onDelta: (partial) => {
+          setMessages(prev => {
+            const copy = [...prev]
+            copy[copy.length - 1] = { role: 'assistant', content: partial }
+            return copy
+          })
+        },
+      })
     } catch {
       setError(true)
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting right now — try WhatsApp or the contact form, or give it another moment and try again." }])
+      setMessages(prev => {
+        const last = prev[prev.length - 1]
+        if (last?.role === 'assistant' && last.content) return prev
+        const copy = [...prev]
+        copy[copy.length - 1] = { role: 'assistant', content: "I'm having trouble connecting right now — try WhatsApp or the contact form, or give it another moment and try again." }
+        return copy
+      })
     } finally {
       setSending(false)
     }
@@ -60,14 +73,17 @@ export default function AIChat() {
         </div>
 
         <div className="sg-ai-messages" ref={listRef}>
-          {messages.map((m, i) => (
-            <div key={i} className={`sg-ai-bubble sg-ai-bubble-${m.role}`}>{m.content}</div>
-          ))}
-          {sending && (
-            <div className="sg-ai-bubble sg-ai-bubble-assistant sg-ai-typing">
-              <Loader2 size={14} className="sg-ai-spin" /> Thinking…
-            </div>
-          )}
+          {messages.map((m, i) => {
+            const isPendingReply = sending && i === messages.length - 1 && m.role === 'assistant' && !m.content
+            if (isPendingReply) {
+              return (
+                <div key={i} className="sg-ai-bubble sg-ai-bubble-assistant sg-ai-typing">
+                  <Loader2 size={14} className="sg-ai-spin" /> Thinking…
+                </div>
+              )
+            }
+            return <div key={i} className={`sg-ai-bubble sg-ai-bubble-${m.role}`}>{m.content}</div>
+          })}
         </div>
 
         <form className="sg-ai-input-row" onSubmit={handleSend}>
