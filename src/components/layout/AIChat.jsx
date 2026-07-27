@@ -123,9 +123,15 @@ export default function AIChat() {
           transition: transform 180ms ease, box-shadow 180ms ease;
         }
         .sg-ai-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(37,99,235,0.34); }
-        .sg-ai-fab.is-open { background: var(--color-text-heading); }
+        .sg-ai-fab.is-open { background: var(--color-text-heading); animation: none; }
         .sg-ai-fab-logo.sg-brand-logo.is-mark { width: 24px; color: #fff; }
         .sg-ai-fab-logo .sg-brand-logo-mark-accent { fill: #fff; opacity: 0.72; }
+
+        .sg-ai-fab:not(.is-open) { animation: sgAiFabPulse 2.8s ease-out infinite; }
+        @keyframes sgAiFabPulse {
+          0%, 100% { box-shadow: 0 12px 32px rgba(37,99,235,0.28), 0 0 0 0 rgba(37,99,235,0.45); }
+          50% { box-shadow: 0 12px 32px rgba(37,99,235,0.28), 0 0 0 12px rgba(37,99,235,0); }
+        }
 
         .sg-ai-panel {
           position: fixed;
@@ -136,7 +142,16 @@ export default function AIChat() {
           height: min(520px, calc(100vh - 8rem));
           display: flex;
           flex-direction: column;
-          background: var(--color-surface);
+          /* --color-surface is a ~3-5% "glass" tint by design (see
+             visualVariants.js's lightColors), meant to sit as a subtle film
+             over the page's solid background — fine for small chips over
+             plain space, but reads as fully transparent for a text-heavy
+             panel that can end up over busy content. Blended with the real
+             solid background color instead, same technique the nav dock
+             uses (.sg-navbar in Navbar.jsx). */
+          background: color-mix(in srgb, var(--color-background) 97%, var(--color-surface));
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border: 1.5px solid var(--color-border-subtle);
           border-radius: var(--border-radius-lg);
           box-shadow: 0 24px 64px rgba(15,23,42,0.18);
@@ -159,7 +174,7 @@ export default function AIChat() {
           gap: 0.75rem;
           padding: 1rem 1.1rem;
           border-bottom: 1px solid var(--color-border-subtle);
-          background: var(--color-surface-alt);
+          background: color-mix(in srgb, var(--color-background) 92%, var(--color-surface-alt));
           flex-shrink: 0;
         }
         .sg-ai-header-icon {
@@ -234,12 +249,17 @@ export default function AIChat() {
         .sg-ai-error { padding: 0 0.9rem 0.75rem; font-size: 0.72rem; color: var(--color-danger); }
 
         @media (max-width: 640px) {
-          .sg-ai-fab { left: 1rem; bottom: 1rem; width: 48px; height: 48px; }
-          .sg-ai-panel { left: 0.75rem; bottom: 4.75rem; }
+          /* The bottom dock nav (.sg-navbar) spans nearly the full width and
+             sits at bottom:10px with a z-index above this FAB, so the old
+             bottom-left spot got buried under it. Moved to the right side,
+             clear above the dock's height instead. */
+          .sg-ai-fab { left: auto; right: 1rem; bottom: 92px; width: 48px; height: 48px; }
+          .sg-ai-panel { left: auto; right: 0.75rem; bottom: 150px; transform-origin: bottom right; }
         }
 
         @media (prefers-reduced-motion: reduce) {
           .sg-ai-fab, .sg-ai-panel { transition: none; }
+          .sg-ai-fab:not(.is-open) { animation: none; }
         }
       `}</style>
     </>
