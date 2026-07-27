@@ -1089,7 +1089,7 @@ app.put('/v1/crm/lead/:id/status', verifyToken, adminOnly, async (req, res) => {
 });
 
 // =============================================================================
-// AI CHAT (NVIDIA NIM — OpenAI-compatible chat completions)
+// AI CHAT (Groq — OpenAI-compatible chat completions)
 // =============================================================================
 
 // Kept deliberately broad per the brief: a real assistant, not a scripted
@@ -1149,7 +1149,9 @@ Contact: john@stormglide.io, WhatsApp is the fastest way to reach the team, base
 
 CONVERSATION STYLE: Keep most replies to 2-5 sentences — this is a chat widget, not an essay — unless the visitor is asking for real depth (a technical explanation, a comparison, a walkthrough), in which case give it properly. Don't repeat the same sign-off or CTA every message, and don't open every reply the same way.
 
-BOOKING: Only call create_booking once the visitor has clearly said they want to move forward (start a project, get a formal quote, book a call) AND you have at minimum their name and email — ask for only whichever of those two you're missing. You don't have a live calendar, so never claim a specific time slot is confirmed; capture their preferred time/timeframe if they give one, and tell them the team will confirm by email or WhatsApp within one business day.`;
+BOOKING: Only call create_booking once the visitor has clearly said they want to move forward (start a project, get a formal quote, book a call) AND you have at minimum their name and email — ask for only whichever of those two you're missing. You don't have a live calendar, so never claim a specific time slot is confirmed; capture their preferred time/timeframe if they give one, and tell them the team will confirm by email or WhatsApp within one business day.
+
+DON'T INVENT FACTS: Everything above is what you actually know — don't go beyond it. If someone asks about something not covered here (a specific policy like refunds/warranties/SLAs/contracts, a guarantee, a legal term, a number you weren't given), don't make up a plausible-sounding answer. Say plainly that it depends on the project and isn't something you have a fixed answer for, and point them to the team (WhatsApp or john@stormglide.io) to get a definitive one.`;
 
 const CHAT_TOOLS = [
   {
@@ -1172,24 +1174,26 @@ const CHAT_TOOLS = [
   },
 ];
 
-// Streams tokens from NVIDIA NIM as they're generated (rather than waiting
-// for the full completion) so the widget can render text incrementally —
-// the single biggest lever on *perceived* speed, since time-to-first-token
-// is a fraction of total generation time. Tool calls (create_booking) can't
+// Streams tokens from Groq as they're generated (rather than waiting for
+// the full completion) so the widget can render text incrementally — the
+// single biggest lever on *perceived* speed, since time-to-first-token is
+// a fraction of total generation time. Tool calls (create_booking) can't
 // be streamed to the client piecemeal (arguments arrive as fragmented JSON
 // across chunks), so those are accumulated silently server-side and only
 // surfaced once complete, via onDelta never firing for that turn.
-function streamNvidia(messages, { onDelta }) {
-  const key = process.env.NVIDIA_API_KEY;
-  if (!key) return Promise.reject(new Error('NVIDIA_API_KEY not set'));
-  // Tested swapping this to the older 3.1-70b checkpoint to dodge 3.3's
-  // queue congestion (see note above streamNvidia's caller) — it responded
-  // much faster, but with `tools` present it hallucinated a create_booking
-  // call (fake name/email) for a completely unrelated factual question,
-  // which is worse than slow. Staying on 3.3 despite the latency; see
-  // CHAT_SYSTEM_PROMPT/task notes for the real fix (dedicated NIM capacity
-  // or a different provider), which needs an account/billing decision.
-  const model = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
+//
+// Previously ran on NVIDIA's free build.nvidia.com catalog, which turned
+// out to have no self-serve capacity upgrade at all — the shared free-tier
+// queue for llama-3.3-70b-instruct was measured hitting 20-90s delays and
+// outright "ResourceExhausted" errors, with no billing page to fix it (only
+// an unofficial forum request or a full NVIDIA AI Enterprise sales deal).
+// Switched to Groq: a normal self-serve API key, and its inference engine
+// is built specifically for low-latency token generation rather than a
+// shared evaluation queue.
+function streamChatCompletion(messages, { onDelta }) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return Promise.reject(new Error('GROQ_API_KEY not set'));
+  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
   const body = JSON.stringify({
     model,
@@ -1205,8 +1209,8 @@ function streamNvidia(messages, { onDelta }) {
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
-        hostname: 'integrate.api.nvidia.com',
-        path: '/v1/chat/completions',
+        hostname: 'api.groq.com',
+        path: '/openai/v1/chat/completions',
         method: 'POST',
         headers: {
           Authorization: `Bearer ${key}`,
@@ -1218,7 +1222,7 @@ function streamNvidia(messages, { onDelta }) {
         if (res.statusCode >= 400) {
           let errData = '';
           res.on('data', (chunk) => { errData += chunk; });
-          res.on('end', () => reject(new Error(`NVIDIA API ${res.statusCode}: ${errData.slice(0, 500)}`)));
+          res.on('end', () => reject(new Error(`Groq API ${res.statusCode}: ${errData.slice(0, 500)}`)));
           return;
         }
 
@@ -1260,12 +1264,10 @@ function streamNvidia(messages, { onDelta }) {
       },
     );
     req.on('error', reject);
-    // NVIDIA's shared free-tier queue can leave a request with zero bytes
-    // sent for 20-40s before the first token even starts generating (see
-    // notes above) — a short idle timeout was cutting off requests that
-    // would have gone on to succeed. 90s leaves headroom under the
-    // function's own 120s timeoutSeconds (see exports.api at the bottom).
-    req.setTimeout(90000, () => req.destroy(new Error('NVIDIA API timed out')));
+    // Groq's inference is fast enough that a long idle timeout isn't needed
+    // the way it was for NVIDIA's congested free tier — 20s is generous
+    // headroom, and if it's ever hit something is genuinely wrong upstream.
+    req.setTimeout(20000, () => req.destroy(new Error('Groq API timed out')));
     req.write(body);
     req.end();
   });
@@ -1290,7 +1292,7 @@ app.post('/v1/chat', async (req, res) => {
   const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
   try {
-    const result = await streamNvidia(
+    const result = await streamChatCompletion(
       [{ role: 'system', content: CHAT_SYSTEM_PROMPT }, ...trimmed],
       { onDelta: (text) => send({ delta: text }) },
     );
