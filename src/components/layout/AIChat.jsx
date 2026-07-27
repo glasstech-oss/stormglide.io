@@ -329,7 +329,10 @@ export default function AIChat() {
           border: 1px solid var(--color-border-subtle);
           border-radius: 999px;
           padding: 0.6rem 1rem;
-          font-size: 0.85rem;
+          /* iOS Safari auto-zooms the whole page on focus if a text input's
+             font-size is under 16px — 16px here is the floor, not a design
+             choice, even though 0.85rem matches the rest of the widget. */
+          font-size: 16px;
           background: var(--color-surface);
           color: var(--color-text-heading);
         }
