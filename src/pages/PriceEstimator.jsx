@@ -12,14 +12,16 @@ import { useTheme } from '../context/ThemeContext'
 const PACKAGES = [
   {
     id: 'website', name: 'Business Website', icon: Globe, color: 'var(--sg-accent)',
-    audience: 'Get found online, take enquiries', min: 3000, max: 7000,
+    audience: 'Get found online, take enquiries', min: 7000, max: 18000,
     example: 'Like Westline Future\'s site',
+    note: 'Basic sites start at GH₵7,000 — the final number depends entirely on what you actually need.',
     tags: ['5–8 pages', 'Mobile-friendly', 'WhatsApp button', 'Contact form'],
   },
   {
     id: 'ecommerce', name: 'Online Store', icon: ShoppingCart, color: 'var(--color-warning)',
-    audience: 'Sell online, accept MoMo & card payments', min: 8000, max: 18000,
+    audience: 'Sell online, accept MoMo & card payments', min: 8500, max: 25000,
     example: 'Like Lollarod Enterprise',
+    note: 'Large-scale or highly custom stores (multi-warehouse, ERP/API integration, marketplace-scale) run well beyond this — up to GH₵400,000+, scoped individually.',
     tags: ['Product catalog', 'Paystack / MoMo checkout', 'Admin dashboard'],
   },
   {
@@ -287,9 +289,12 @@ export default function PriceEstimator() {
                         {p.min === null ? 'Custom quote' : `${gh(p.min)} – ${gh(p.max)}`}
                       </div>
                       {p.example && (
-                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginBottom: '0.75rem' }}>{p.example}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginBottom: p.note ? '0.4rem' : '0.75rem' }}>{p.example}</div>
                       )}
-                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginTop: p.example ? 0 : '0.75rem' }}>
+                      {p.note && (
+                        <div style={{ fontSize: '0.68rem', color: 'var(--color-text-secondary)', fontStyle: 'italic', lineHeight: 1.45, marginBottom: '0.75rem' }}>{p.note}</div>
+                      )}
+                      <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginTop: (p.example || p.note) ? 0 : '0.75rem' }}>
                         {p.tags.map(t => (
                           <span key={t} style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border-subtle)', color: 'var(--color-text-secondary)' }}>{t}</span>
                         ))}
