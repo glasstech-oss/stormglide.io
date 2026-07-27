@@ -10,6 +10,7 @@ import { trackPageview } from './lib/analytics'
 import SquircleDefs from './components/common/SquircleDefs'
 import Navbar from './components/layout/Navbar'
 import WhatsAppFloat from './components/layout/WhatsAppFloat'
+import AIChat from './components/layout/AIChat'
 import { BOARD_PATHS, getBoardKey, getMove, getSpatialPosition } from './lib/spatialBoard'
 import { boardPageComponents } from './lib/boardPages'
 import { OVERLAY_KEY, setPanelNode, useActivePanelNode } from './lib/panelRegistry'
@@ -427,6 +428,7 @@ function SiteContent() {
         </Suspense>
       )}
       <WhatsAppFloat />
+      <AIChat />
       <RouteSEO />
     </>
   )

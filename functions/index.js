@@ -1089,6 +1089,149 @@ app.put('/v1/crm/lead/:id/status', verifyToken, adminOnly, async (req, res) => {
 });
 
 // =============================================================================
+// AI CHAT (NVIDIA NIM — OpenAI-compatible chat completions)
+// =============================================================================
+
+// Kept deliberately broad per the brief: a real assistant, not a scripted
+// FAQ bot — happy to answer general knowledge and give real technical
+// advice, while knowing Stormglide's own products/pricing/contact details
+// cold and being able to actually create a booking (not just say "someone
+// will follow up" — it does the follow-up itself, via the leads pipeline).
+const CHAT_SYSTEM_PROMPT = `You are the AI assistant embedded on stormglide.io, a software company based in Accra, Ghana that designs, builds, and operates custom business systems worldwide.
+
+Your personality: knowledgeable, direct, genuinely helpful — like a sharp colleague, not a sales script. You can hold a real conversation about anything the visitor brings up (general knowledge, technology trends, how to approach a technical problem, advice on their own stack) even when it has nothing to do with Stormglide. Give real, specific, useful answers, not deflections. If a question is outside what you can responsibly answer (medical, legal, financial advice), say so plainly.
+
+What you know about Stormglide, and should use naturally when relevant:
+- Products (all live in production today): Nexus HRM (HR & payroll), Nexus Dental (dental practice management), CargoScan (freight cost calculator + GPS shipment tracking), SANO Health (offline-first community + clinic health tool), Glasstech (product catalog & quote system for glass/aluminum works), LOÙ Beauty Hub (spa/cosmetology booking & management).
+- Services: custom websites & e-commerce, web apps & business systems, mobile apps, SaaS product development, UI/UX design, MVP/prototyping.
+- Rough pricing (GH₵, Ghanaian cedis) — always frame as estimates, the real price estimator at /price-estimator gives an exact range: Business Website 3,000–7,000. Online Store 8,000–18,000. Booking & Scheduling System 9,000–20,000. Sales & Inventory System 14,000–32,000. Custom Business System 22,000–60,000. Deploying an existing product (branded/configured for a client) 6,000–14,000.
+- Contact: john@stormglide.io, based in Accra (GMT), works with clients across time zones. WhatsApp is the fastest way to reach the team.
+- Real client work: Lollarod Enterprise, Westline Future, Green Gold Gardens, Jaybesin Logistics, Kyekye Cuisine, BarberManager, Bougie Hair & Beauty, Helyz Scents, EA_Dubea's Gift Hub, Packaging Ambassadors, The PoliBrand Agency, KenteHaul — all real, live systems, browsable at /work.
+
+When a visitor wants to start a project, get a price estimate, or book time with the team: use the create_booking tool once you have their name and email (ask for whichever you're missing — don't invent details). You do not have a live calendar, so do not claim a specific slot is booked; instead capture their details and preferred time/timeframe, and tell them the team will confirm by email/WhatsApp within one business day. Keep replies concise — a few sentences, not an essay, unless the visitor is asking for real depth (e.g. a technical explanation).`;
+
+const CHAT_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'create_booking',
+      description: 'Capture a lead/booking request once the visitor has given at least their name and email and wants to start a project, get a quote, or talk to the team.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: "Visitor's name" },
+          email: { type: 'string', description: "Visitor's email" },
+          phone: { type: 'string', description: "Visitor's phone/WhatsApp number, if given" },
+          topic: { type: 'string', description: 'What they want — e.g. "custom booking system for a salon", "pricing for Nexus HRM"' },
+          preferredTime: { type: 'string', description: 'Their stated preferred time/timeframe for a call, if any' },
+        },
+        required: ['name', 'email', 'topic'],
+      },
+    },
+  },
+];
+
+function callNvidia(messages) {
+  const key = process.env.NVIDIA_API_KEY;
+  if (!key) return Promise.reject(new Error('NVIDIA_API_KEY not set'));
+  const model = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
+
+  const body = JSON.stringify({
+    model,
+    messages,
+    tools: CHAT_TOOLS,
+    tool_choice: 'auto',
+    temperature: 0.6,
+    top_p: 0.9,
+    max_tokens: 700,
+    stream: false,
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: 'integrate.api.nvidia.com',
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 400) return reject(new Error(`NVIDIA API ${res.statusCode}: ${data.slice(0, 500)}`));
+          try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+        });
+      },
+    );
+    req.on('error', reject);
+    req.setTimeout(100000, () => req.destroy(new Error('NVIDIA API timed out')));
+    req.write(body);
+    req.end();
+  });
+}
+
+app.post('/v1/chat', async (req, res) => {
+  const { messages } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ message: 'messages array is required.' });
+  }
+  // Cap history sent to the model — recent context is what matters, and this
+  // bounds both cost and abuse via an artificially long client-side history.
+  const trimmed = messages.slice(-20).map((m) => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: String(m.content || '').slice(0, 4000),
+  }));
+
+  try {
+    const completion = await callNvidia([{ role: 'system', content: CHAT_SYSTEM_PROMPT }, ...trimmed]);
+    const choice = completion.choices?.[0];
+    const toolCalls = choice?.message?.tool_calls;
+
+    if (toolCalls?.length) {
+      const bookingCall = toolCalls.find((t) => t.function?.name === 'create_booking');
+      if (bookingCall) {
+        let args = {};
+        try { args = JSON.parse(bookingCall.function.arguments || '{}'); } catch { /* malformed args from model — ignore, fall through */ }
+        if (args.name && args.email) {
+          const lead = {
+            name: args.name,
+            email: args.email,
+            phone: args.phone || null,
+            organization: null,
+            missionScope: args.topic || 'AI chat booking',
+            details: args.preferredTime ? `Preferred time: ${args.preferredTime}` : null,
+            product: null,
+            source: 'ai_chat',
+            configuratorSelections: null,
+            budget: null,
+            timeline: args.preferredTime || null,
+            status: 'NEW',
+            createdAt: now(),
+          };
+          const ref = await db.collection('leads').add(lead);
+          emailNewLead({ id: ref.id, ...lead }).catch((e) => console.warn('Lead email failed:', e.message));
+          return res.json({
+            reply: `Thanks ${args.name.split(' ')[0]} — I've passed this to the team (${args.topic}). You'll hear from us at ${args.email} within one business day. Anything else I can help with in the meantime?`,
+            booked: true,
+          });
+        }
+      }
+    }
+
+    const reply = choice?.message?.content?.trim();
+    return res.json({ reply: reply || "Sorry, I didn't quite catch that — could you rephrase?", booked: false });
+  } catch (err) {
+    console.error('AI chat error:', err.message);
+    return res.status(500).json({ message: 'The assistant is unavailable right now — try WhatsApp or the contact form instead.' });
+  }
+});
+
+// =============================================================================
 // ANALYTICS ROUTES (Google Analytics 4)
 // =============================================================================
 
@@ -2308,7 +2451,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok', service: 'stormglide-a
 // =============================================================================
 // EXPORT HTTP FUNCTION
 // =============================================================================
-exports.api = functions.https.onRequest(app);
+exports.api = functions.runWith({ timeoutSeconds: 120 }).https.onRequest(app);
 
 // =============================================================================
 // SCHEDULED MONITORING
