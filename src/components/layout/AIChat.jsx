@@ -5,6 +5,7 @@ import { sendChatMessage } from '../../lib/aiChat'
 import BrandLogo from '../common/BrandLogo'
 
 const GREETING = "Hi — I'm Stormglide's AI assistant. Ask me anything about what we build, get a price estimate, book time with the team, or ask something completely unrelated — happy to help either way."
+const DRAG_CLOSE_THRESHOLD = 90
 
 // The assistant is instructed to hand out links using `[label](url)` markdown
 // syntax (WhatsApp, email, /work) since bubbles otherwise render as plain
@@ -42,8 +43,14 @@ export default function AIChat() {
   // currently shown.
   const [typingIndex, setTypingIndex] = useState(null)
   const [revealLen, setRevealLen] = useState(0)
+  // Live drag offset while the mobile sheet's handle is being dragged down —
+  // 0 means "not dragging", and the panel's inline transform tracks the
+  // finger 1:1 until release (see handleDragEnd).
+  const [dragY, setDragY] = useState(0)
   const listRef = useRef(null)
   const messagesRef = useRef(messages)
+  const textareaRef = useRef(null)
+  const dragRef = useRef({ startY: 0, active: false })
   useEffect(() => { messagesRef.current = messages }, [messages])
 
   useEffect(() => {
@@ -51,11 +58,28 @@ export default function AIChat() {
     listRef.current.scrollTop = listRef.current.scrollHeight
   }, [messages, revealLen])
 
+  // Auto-focus the input when the panel opens, like a native message thread
+  // dropping you straight into typing — delayed slightly so it doesn't fight
+  // the open transition (and the iOS keyboard doesn't slam up mid-animation).
+  useEffect(() => {
+    if (!open) return
+    const id = setTimeout(() => textareaRef.current?.focus(), 220)
+    return () => clearTimeout(id)
+  }, [open])
+
+  // Escape closes from anywhere, matching every native dialog/sheet.
+  useEffect(() => {
+    if (!open) return
+    function onKey(e) { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   // Advances revealLen toward the target message's full length. Speeds up
   // when the backlog is large (e.g. the network delivered a big chunk at
   // once) so long replies don't feel sluggish, but stays close to a natural
   // typing cadence for the common case. typingIndex itself is only ever set
-  // by handleSend for the next reply — once fully revealed and the network
+  // by sendMessage for the next reply — once fully revealed and the network
   // is done, isRevealing (derived below, not stored) simply goes false.
   useEffect(() => {
     if (typingIndex === null) return
@@ -74,10 +98,21 @@ export default function AIChat() {
   const typingTarget = typingIndex !== null ? (messages[typingIndex]?.content?.length || 0) : 0
   const isRevealing = typingIndex !== null && (netBusy || revealLen < typingTarget)
 
-  async function handleSend(e) {
-    e.preventDefault()
+  function resizeTextarea(el) {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }
+
+  function handleInputChange(e) {
+    setInput(e.target.value)
+    resizeTextarea(e.target)
+  }
+
+  async function sendMessage() {
     const text = input.trim()
     if (!text || netBusy || isRevealing) return
+    if (navigator.vibrate) navigator.vibrate(8)
 
     const next = [...messages, { role: 'user', content: text }]
     const assistantIndex = next.length
@@ -85,6 +120,11 @@ export default function AIChat() {
     setTypingIndex(assistantIndex)
     setRevealLen(0)
     setInput('')
+    // Clearing the inline height (rather than remeasuring scrollHeight) —
+    // at this point in the function the DOM node's value hasn't caught up
+    // to the just-cleared React state yet, so scrollHeight would still
+    // reflect the old, possibly multi-line, text.
+    if (textareaRef.current) textareaRef.current.style.height = ''
     setNetBusy(true)
     setError(false)
 
@@ -112,6 +152,36 @@ export default function AIChat() {
     }
   }
 
+  function handleFormSubmit(e) {
+    e.preventDefault()
+    sendMessage()
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  // Swipe-down-to-close on the sheet's drag handle only (not the whole
+  // panel) — so dragging the messages list still just scrolls it, the way
+  // every real bottom sheet separates "grab" from "content" areas.
+  function handleDragStart(e) {
+    dragRef.current = { startY: e.touches[0].clientY, active: true }
+  }
+  function handleDragMove(e) {
+    if (!dragRef.current.active) return
+    const delta = e.touches[0].clientY - dragRef.current.startY
+    if (delta > 0) setDragY(delta)
+  }
+  function handleDragEnd() {
+    if (!dragRef.current.active) return
+    dragRef.current.active = false
+    if (dragY > DRAG_CLOSE_THRESHOLD) setOpen(false)
+    setDragY(0)
+  }
+
   return (
     <>
       <button
@@ -123,13 +193,30 @@ export default function AIChat() {
         {open ? <X size={22} /> : <BrandLogo markOnly className="sg-ai-fab-logo" />}
       </button>
 
-      <div className={`sg-ai-panel${open ? ' is-open' : ''}`} role="dialog" aria-label="Stormglide AI assistant" aria-hidden={!open}>
+      {open && <div className="sg-ai-backdrop" onClick={() => setOpen(false)} />}
+
+      <div
+        className={`sg-ai-panel${open ? ' is-open' : ''}`}
+        role="dialog"
+        aria-label="Stormglide AI assistant"
+        aria-hidden={!open}
+        style={dragY ? { transform: `translateY(${dragY}px)`, transition: 'none' } : undefined}
+      >
+        <div
+          className="sg-ai-drag-handle"
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        />
         <div className="sg-ai-header">
           <div className="sg-ai-header-icon"><BrandLogo markOnly className="sg-ai-header-logo" /></div>
           <div>
             <div className="sg-ai-header-title">Stormglide AI</div>
             <div className="sg-ai-header-sub">Ask anything — really</div>
           </div>
+          <button className="sg-ai-header-close" onClick={() => setOpen(false)} aria-label="Close">
+            <X size={18} />
+          </button>
         </div>
 
         <div className="sg-ai-messages" ref={listRef}>
@@ -156,13 +243,16 @@ export default function AIChat() {
           })}
         </div>
 
-        <form className="sg-ai-input-row" onSubmit={handleSend}>
-          <input
+        <form className="sg-ai-input-row" onSubmit={handleFormSubmit}>
+          <textarea
+            ref={textareaRef}
             className="sg-ai-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             placeholder="Type a message…"
             aria-label="Message"
+            rows={1}
             disabled={netBusy || isRevealing}
           />
           <button type="submit" className="sg-ai-send" disabled={netBusy || isRevealing || !input.trim()} aria-label="Send">
@@ -202,11 +292,23 @@ export default function AIChat() {
           50% { box-shadow: 0 12px 32px rgba(37,99,235,0.28), 0 0 0 12px rgba(37,99,235,0); }
         }
 
+        /* Invisible, functional only — click-outside-to-close. On the mobile
+           full-screen sheet it sits fully behind the panel and never shows. */
+        .sg-ai-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background: transparent;
+        }
+
         .sg-ai-panel {
           position: fixed;
           left: 1.25rem;
           bottom: 5.25rem;
-          z-index: 1001;
+          /* Above .sg-navbar's 1500 (Navbar.jsx) — on mobile this panel goes
+             full-screen and needs to sit above the bottom dock nav, not
+             underneath it. */
+          z-index: 1600;
           width: min(360px, calc(100vw - 2.5rem));
           height: min(520px, calc(100vh - 8rem));
           display: flex;
@@ -237,6 +339,8 @@ export default function AIChat() {
           transform: translateY(0) scale(1);
         }
 
+        .sg-ai-drag-handle { display: none; }
+
         .sg-ai-header {
           display: flex;
           align-items: center;
@@ -257,6 +361,21 @@ export default function AIChat() {
         .sg-ai-header-logo .sg-brand-logo-mark-accent { opacity: 0.6; }
         .sg-ai-header-title { font-weight: 700; font-size: 0.88rem; color: var(--color-text-heading); }
         .sg-ai-header-sub { font-size: 0.72rem; color: var(--color-text-secondary); }
+        .sg-ai-header-close {
+          display: none;
+          margin-left: auto;
+          width: 30px; height: 30px;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          border-radius: 50%;
+          background: transparent;
+          color: var(--color-text-secondary);
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 150ms ease, color 150ms ease;
+        }
+        .sg-ai-header-close:hover { background: var(--color-surface-alt); color: var(--color-text-heading); }
 
         .sg-ai-messages {
           flex: 1;
@@ -274,6 +393,7 @@ export default function AIChat() {
           font-size: 0.85rem;
           line-height: 1.55;
           white-space: pre-wrap;
+          animation: sgAiBubbleIn 220ms ease-out both;
         }
         .sg-ai-bubble-assistant {
           align-self: flex-start;
@@ -287,6 +407,10 @@ export default function AIChat() {
           background: var(--sg-accent);
           color: #fff;
           border-bottom-right-radius: 4px;
+        }
+        @keyframes sgAiBubbleIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .sg-ai-link { color: var(--sg-accent); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
@@ -319,6 +443,7 @@ export default function AIChat() {
 
         .sg-ai-input-row {
           display: flex;
+          align-items: flex-end;
           gap: 0.5rem;
           padding: 0.75rem;
           border-top: 1px solid var(--color-border-subtle);
@@ -327,14 +452,19 @@ export default function AIChat() {
         .sg-ai-input {
           flex: 1;
           border: 1px solid var(--color-border-subtle);
-          border-radius: 999px;
+          border-radius: 18px;
           padding: 0.6rem 1rem;
           /* iOS Safari auto-zooms the whole page on focus if a text input's
              font-size is under 16px — 16px here is the floor, not a design
              choice, even though 0.85rem matches the rest of the widget. */
           font-size: 16px;
+          line-height: 1.4;
           background: var(--color-surface);
           color: var(--color-text-heading);
+          resize: none;
+          max-height: 120px;
+          overflow-y: auto;
+          font-family: inherit;
         }
         .sg-ai-input:focus-visible { outline: 2px solid var(--sg-accent); outline-offset: 1px; }
         .sg-ai-input:disabled { opacity: 0.6; }
@@ -352,13 +482,46 @@ export default function AIChat() {
              bottom-left spot got buried under it. Moved to the right side,
              clear above the dock's height instead. */
           .sg-ai-fab { left: auto; right: 1rem; bottom: 92px; width: 48px; height: 48px; }
-          .sg-ai-panel { left: auto; right: 0.75rem; bottom: 150px; transform-origin: bottom right; }
+          .sg-ai-fab.is-open { display: none; }
+
+          /* Full-screen sheet instead of a floating card — the single
+             biggest lever on "feels like an app screen" vs "a widget over
+             the page", matching how Messages/WhatsApp/Instagram present a
+             conversation. Slides up from the bottom edge. */
+          .sg-ai-panel {
+            inset: 0;
+            width: auto;
+            height: auto;
+            border-radius: 20px 20px 0 0;
+            border: none;
+            border-top: 1.5px solid var(--color-border-subtle);
+            transform: translateY(100%);
+            transform-origin: bottom center;
+          }
+          .sg-ai-panel.is-open { transform: translateY(0); }
+
+          .sg-ai-drag-handle {
+            display: block;
+            width: 40px;
+            height: 5px;
+            border-radius: 999px;
+            background: var(--color-border-subtle);
+            margin: 10px auto 2px;
+            flex-shrink: 0;
+            touch-action: none;
+          }
+
+          .sg-ai-header-close { display: flex; }
+
+          .sg-ai-input-row {
+            padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
           .sg-ai-fab, .sg-ai-panel { transition: none; }
           .sg-ai-fab:not(.is-open) { animation: none; }
-          .sg-ai-cursor, .sg-ai-dot { animation: none; }
+          .sg-ai-cursor, .sg-ai-dot, .sg-ai-bubble { animation: none; }
         }
       `}</style>
     </>
