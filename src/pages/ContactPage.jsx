@@ -23,11 +23,13 @@ const PILLARS = [
   { icon: Zap, title: 'Speed Without Shortcuts', desc: "We scope in 48 hours, demo in week one, and ship on the exact date we commit to. No 6-month timelines, no excuses, no disappearing developers. Fast is how we work.", color: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 7%, transparent)', border: 'color-mix(in srgb, var(--color-warning) 18%, transparent)' },
 ]
 
+const CLIENT_COUNTRIES = ['Ghana', 'Guinea', 'UK', 'US', 'UAE', 'Togo', 'China']
+
 const STATS = [
-  { value: String(LIVE_PRODUCT_COUNT),   label: 'Products live'      },
-  { value: 'Ghana & Guinea',             label: 'Countries served'   },
-  { value: String(CLIENT_WORK_COUNT),    label: 'Systems shipped'    },
-  { value: '24h',                        label: 'Response time'      },
+  { value: String(LIVE_PRODUCT_COUNT),        label: 'Products live'      },
+  { value: String(CLIENT_COUNTRIES.length),   label: 'Countries served'   },
+  { value: String(CLIENT_WORK_COUNT),         label: 'Systems shipped'    },
+  { value: '24h',                             label: 'Response time'      },
 ]
 
 const SECURITY_POINTS = [
@@ -49,7 +51,7 @@ const WEB3FORMS_KEY = 'f921c153-954b-431f-bbe5-30475c682b44'
 
 const FAQS = [
   { q: 'How long does a typical project take?', a: 'Most custom systems take 6–16 weeks depending on scope. Simple web apps can be ready in 3–4 weeks. We give you a clear timeline before we start.' },
-  { q: 'Do you work with clients outside Ghana?', a: 'Yes. We currently serve clients in Ghana and Guinea, and we work remotely with clients anywhere. We communicate over WhatsApp, email, and video.' },
+  { q: 'Do you work with clients outside Ghana?', a: 'Yes. We currently have clients across Ghana, Guinea, the UK, the US, the UAE, Togo, and China, and we work remotely with clients anywhere. We communicate over WhatsApp, email, and video.' },
   { q: 'What happens after launch?', a: "We provide ongoing support and maintenance for everything we build. We don't disappear. Bug fixes are free; new features are quoted separately." },
   { q: 'Can we start with one of your existing products?', a: 'Absolutely. Several products like Nexus HRM and LOÙ Beauty Hub can be deployed and customized for your business within days.' },
   { q: 'Do you own the code after delivery?', a: 'Yes. Every project we deliver, you own the source code and all assets outright. No vendor lock-in — host it, modify it, or hand it to another developer, any time.' },
@@ -159,7 +161,7 @@ export default function ContactPage() {
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
               <MapPin size={14} />
-              <span>Accra, Ghana — operating across Ghana & Guinea</span>
+              <span>Accra, Ghana — clients across {CLIENT_COUNTRIES.join(', ')}</span>
             </div>
           </motion.div>
         </div>
@@ -188,6 +190,9 @@ export default function ContactPage() {
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</div>
                 </div>
               ))}
+            </div>
+            <div style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--color-text-secondary)', marginBottom: '1.25rem' }}>
+              {CLIENT_COUNTRIES.join(' · ')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 1.25rem', background: 'color-mix(in srgb, var(--color-success) 6%, transparent)', border: '1.5px solid color-mix(in srgb, var(--color-success) 20%, transparent)', borderRadius: 'var(--border-radius)' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)', flexShrink: 0 }} />

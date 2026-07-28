@@ -102,7 +102,7 @@ const FAQS = [
   },
   {
     q: 'Do you work with clients outside Ghana?',
-    a: "Yes. We currently have clients in Ghana and Guinea, and work remotely with anyone. We communicate over WhatsApp, email, and video — and we're available across West African time zones.",
+    a: "Yes. We currently have clients across Ghana, Guinea, the UK, the US, the UAE, Togo, and China, and work remotely with anyone. We communicate over WhatsApp, email, and video — and we're available across time zones.",
   },
   {
     q: 'What if I already have an existing system I want improved?',

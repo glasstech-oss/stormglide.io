@@ -71,22 +71,37 @@ export default function Navbar() {
               ? location.pathname === '/contact'
               : location.pathname === link.href || location.pathname.startsWith(`${link.href}/`)
             return (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={isActive ? 'is-active' : ''}
-                onPointerEnter={() => prefetchBoardPage(link.href)}
-                onFocus={() => prefetchBoardPage(link.href)}
-              >
-                {isActive && (
-                  <motion.span
-                    className="sg-nav-active-pill"
-                    layoutId="sg-nav-active"
-                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  />
-                )}
-                <span className="sg-nav-link-label">{link.label}</span>
-              </Link>
+              // The wrapper (not the Link) carries `layout` — the active
+              // link grows slightly wider via CSS padding, and framer-motion
+              // animates every sibling wrapper's resulting position shift,
+              // which is what actually reads as "the others move apart".
+              <motion.div layout key={link.href} className="sg-nav-item-wrap" transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
+                <Link
+                  to={link.href}
+                  className={isActive ? 'is-active' : ''}
+                  onPointerEnter={() => prefetchBoardPage(link.href)}
+                  onFocus={() => prefetchBoardPage(link.href)}
+                >
+                  {isActive && (
+                    <motion.span
+                      className="sg-nav-active-pill"
+                      layoutId="sg-nav-active"
+                      initial={{ borderRadius: '46% 54% 58% 42% / 52% 46% 54% 48%' }}
+                      animate={{ borderRadius: '999px' }}
+                      transition={{ type: 'spring', stiffness: 380, damping: 30, borderRadius: { duration: 0.5, ease: 'easeOut' } }}
+                    >
+                      {/* liquid-glass glint: sweeps across once on activation */}
+                      <motion.span
+                        className="sg-nav-active-sheen"
+                        initial={{ x: '-130%', opacity: 0 }}
+                        animate={{ x: '130%', opacity: [0, 1, 0] }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                      />
+                    </motion.span>
+                  )}
+                  <span className="sg-nav-link-label">{link.label}</span>
+                </Link>
+              </motion.div>
             )
           })}
         </div>
@@ -205,6 +220,10 @@ export default function Navbar() {
           margin-left: auto;
         }
 
+        .sg-nav-item-wrap {
+          display: flex;
+        }
+
         .sg-nav-links a {
           position: relative;
           color: var(--color-text-secondary);
@@ -213,7 +232,7 @@ export default function Navbar() {
           text-decoration: none;
           padding: 0.42rem 0.75rem;
           border-radius: 999px;
-          transition: color 150ms ease, transform 150ms ease;
+          transition: color 150ms ease, transform 150ms ease, padding 320ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .sg-nav-links a:hover {
@@ -223,17 +242,33 @@ export default function Navbar() {
 
         .sg-nav-links a.is-active {
           color: var(--color-text-heading);
+          /* The extra reach is what makes the wrapper's layout prop kick
+             in — its resize is what pushes the neighboring items apart. */
+          padding: 0.42rem 1.05rem;
         }
 
         .sg-nav-active-pill {
           position: absolute;
           inset: 0;
+          overflow: hidden;
           border-radius: 999px;
           background: var(--glass-bg-strong);
           border: 1px solid var(--glass-border);
           box-shadow: inset 0 1px 0 var(--glass-highlight);
           backdrop-filter: var(--glass-blur-soft);
           -webkit-backdrop-filter: var(--glass-blur-soft);
+        }
+
+        .sg-nav-active-sheen {
+          position: absolute;
+          top: -60%;
+          left: 0;
+          width: 45%;
+          height: 220%;
+          background: linear-gradient(115deg, transparent, color-mix(in srgb, var(--sg-accent) 65%, white) 50%, transparent);
+          filter: blur(2px);
+          transform: skewX(-16deg);
+          pointer-events: none;
         }
 
         .sg-nav-link-label {
@@ -364,7 +399,8 @@ export default function Navbar() {
             width: 50vw;
             opacity: 0.65;
             pointer-events: none;
-            backdrop-filter: var(--glass-blur-soft);
+            backdrop-filter: blur(8px) saturate(140%);
+            -webkit-backdrop-filter: blur(8px) saturate(140%);
           }
           .sg-navbar.is-dock-hidden .sg-dock-tabs {
             opacity: 0;
@@ -390,6 +426,12 @@ export default function Navbar() {
             border-radius: 18px;
             color: var(--color-text-secondary);
             text-decoration: none;
+            transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), background 250ms ease, color 250ms ease;
+          }
+          .sg-dock-tabs a:active {
+            transform: scale(0.75) translateY(4px);
+            background: color-mix(in srgb, var(--sg-accent) 15%, transparent);
+            transition: transform 80ms cubic-bezier(0.16, 1, 0.3, 1), background 80ms ease;
           }
           .sg-dock-tabs a.is-active {
             color: var(--sg-accent);

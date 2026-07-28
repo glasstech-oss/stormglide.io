@@ -133,7 +133,7 @@ const DEBRIS = [
 
 const PROOF_STATS = [
   { value: String(LIVE_PRODUCT_COUNT), label: 'Products live, in production', tone: 'blue' },
-  { value: '2', label: 'Countries running our systems — Ghana & Guinea', tone: 'green' },
+  { value: '7', label: 'Countries running our systems — Ghana, Guinea, UK, US, UAE, Togo & China', tone: 'green' },
   { value: '24h', label: 'Response on every enquiry', tone: 'orange' },
 ]
 
@@ -199,8 +199,8 @@ function Station({ progress, enter, hold, exit, stay = false, first = false, chi
   // motion values here (every call site passes useGyroscope()'s output) —
   // no fallback needed, and `new useMotionValue()` would be calling a React
   // hook conditionally besides being a meaningless use of `new` on a hook.
-  const tiltOffX = useTransform(tiltX, v => v * 12)
-  const tiltOffY = useTransform(tiltY, v => v * 12)
+  const tiltOffX = useTransform(tiltX, v => v * 35)
+  const tiltOffY = useTransform(tiltY, v => v * 35)
 
   return (
     <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter }}>
@@ -346,8 +346,8 @@ function Debris({ d, progress, tiltX, tiltY }) {
   })
   
   // Mobile parallax tilt offset (only active when gyro events fire)
-  const tiltOffX = useTransform(tiltX, v => v * 15 * (d.z * 10))
-  const tiltOffY = useTransform(tiltY, v => v * 15 * (d.z * 10))
+  const tiltOffX = useTransform(tiltX, v => v * 45 * (d.z * 10))
+  const tiltOffY = useTransform(tiltY, v => v * 45 * (d.z * 10))
 
   return (
     <motion.div

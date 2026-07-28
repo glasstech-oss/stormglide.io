@@ -58,8 +58,8 @@ export default function Services() {
             return (
               <motion.div
                 key={service.id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
                 className="card"
@@ -142,8 +142,8 @@ export default function Services() {
           return (
             <motion.div
               key={service.id}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.08 }}
               className="card"
@@ -212,7 +212,7 @@ export default function Services() {
           {primaryServices.length > 0 && (
             <ServiceTier
               title="Our SaaS Products"
-              subtitle="Production-ready software, live and in use across Ghana & Guinea"
+              subtitle="Production-ready software, live and in use across Ghana, Guinea, UK, US, UAE, Togo & China"
               services={primaryServices}
               isPrimary={true}
             />
