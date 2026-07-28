@@ -47,11 +47,8 @@ export default function Services() {
       </motion.div>
 
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isPrimary ? 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))' : 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))',
-          gap: '2rem',
-        }}
+        className="sg-services-grid"
+        data-primary={isPrimary}
       >
         {tierServices.map((service, idx) => {
           const IconComponent = Icons[service.icon] || Icons.Zap

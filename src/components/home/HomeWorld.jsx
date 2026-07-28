@@ -7,6 +7,39 @@ import { useTheme } from '../../context/ThemeContext'
 import { LIVE_PRODUCT_COUNT } from '../../data/products'
 import '../../styles/homeWorld.css'
 
+/* Gyroscope parallax for mobile — adds a subtle holographic float based on device tilt.
+   Fails gracefully if DeviceOrientationEvent is unavailable or needs explicit permission. */
+function useGyroscope() {
+  const tiltX = useMotionValue(0)
+  const tiltY = useMotionValue(0)
+
+  useEffect(() => {
+    const handleOrientation = (e) => {
+      if (e.gamma === null || e.beta === null) return
+      // Normalize beta (front-back tilt): ~45deg is a typical holding angle
+      // normalize gamma (left-right tilt): [-45, 45] -> [-1, 1]
+      const b = Math.max(0, Math.min(90, e.beta))
+      const g = Math.max(-45, Math.min(45, e.gamma))
+      tiltY.set((b - 45) / 45)
+      tiltX.set(g / 45)
+    }
+    
+    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+    }
+    return () => {
+      if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+        window.removeEventListener('deviceorientation', handleOrientation)
+      }
+    }
+  }, [tiltX, tiltY])
+
+  return {
+    tiltX: useSpring(tiltX, { stiffness: 100, damping: 30, mass: 0.5 }),
+    tiltY: useSpring(tiltY, { stiffness: 100, damping: 30, mass: 0.5 }),
+  }
+}
+
 /* Manual scroll-progress tracker, deliberately not framer-motion's useScroll.
    useScroll's container-ref binding was going silent here — scrollTop moved
    (verified: setting it directly held its value) but the returned progress
@@ -119,36 +152,35 @@ function mapRange(v, input, output) {
   return output[output.length - 1]
 }
 
-function Station({ progress, enter, hold, exit, stay = false, first = false, children, className }) {
-  // Each station scales up out of depth, holds, then flies past the camera —
-  // except the first (visible immediately) and the last (stays for handoff).
+function Station({ progress, enter, hold, exit, stay = false, first = false, children, className, tiltX, tiltY }) {
   // All input ranges must stay inside [0,1]: framer compiles these
   // scroll-linked transforms to native ScrollTimeline keyframes, and WAAPI
   // throws on offsets outside that range (which unmounts the whole app
-  // when there's no error boundary above).
-  // Function-form transforms on purpose: range-form ones get promoted to a
-  // native ScrollTimeline bound to the whole scroll container, which maps
-  // progress over the entire page instead of this runway segment. Function
-  // form stays JS-driven and tracks the segment-scoped progress correctly.
+  // when there's no error boundary above). Function-form transforms on
+  // purpose: range-form ones get promoted to a native ScrollTimeline bound
+  // to the whole scroll container, mapping progress over the entire page
+  // instead of this runway segment.
   const inR = first ? [hold, exit] : stay ? [enter, enter + 0.06] : [enter, enter + 0.06, hold, exit]
   const outO = first ? [1, 0] : stay ? [0, 1] : [0, 1, 1, 0]
   const opacity = useTransform(progress, v => mapRange(v, inR, outO))
-  // Real depth: negative z is "far" (small via perspective foreshortening),
-  // 0 is arrived, positive z is "flown past the camera." Uses the exact
-  // same breakpoints as opacity so the station keeps approaching all the
-  // way through the fully-visible hold plateau and keeps receding through
-  // exit, instead of snapping still at a fixed scale — continuous motion
-  // reads as a camera flying through, not a slideshow cross-fade.
   const outZ = first ? [0, 950] : stay ? [-950, 0] : [-950, -280, 0, 650]
   const z = useTransform(progress, v => mapRange(v, inR, outZ))
   const transform = useTransform(z, zv => `translateZ(${zv.toFixed(1)}px)`)
-  // Depth-of-field: out of focus while entering/exiting, sharp at hold —
-  // reuses opacity's own breakpoints so blur and fade always agree.
   const outB = outO.map(o => (1 - o) * BLUR_MAX)
   const filter = useTransform(progress, v => `blur(${mapRange(v, inR, outB).toFixed(2)}px)`)
+
+  // Station subtle parallax based on gyroscope. tiltX/tiltY are always real
+  // motion values here (every call site passes useGyroscope()'s output) —
+  // no fallback needed, and `new useMotionValue()` would be calling a React
+  // hook conditionally besides being a meaningless use of `new` on a hook.
+  const tiltOffX = useTransform(tiltX, v => v * 12)
+  const tiltOffY = useTransform(tiltY, v => v * 12)
+
   return (
     <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter }}>
-      {children}
+      <motion.div style={{ x: tiltOffX, y: tiltOffY, width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
+        {children}
+      </motion.div>
     </motion.div>
   )
 }
@@ -159,26 +191,18 @@ export default function HomeWorld() {
   const whatsappPhone = theme.contactWhatsapp.replace(/[^0-9]/g, '').replace(/^0/, '233')
 
   const runwayRef = useRef(null)
-  // The active board panel is the scroll node on desktop; on mobile (no
-  // board layout) this is null, meaning "the window scrolls" — both are
-  // handled by useRunwayProgress.
   const activePanelNode = useActivePanelNode()
   const rawProgress = useRunwayProgress(runwayRef, activePanelNode)
   // Springs the raw scroll-tied value so the whole flight has a touch of
   // inertia instead of moving in lockstep with every pixel of scroll —
   // overdamped on purpose (no bounce/overshoot on a progress value).
   const scrollYProgress = useSpring(rawProgress, { stiffness: 400, damping: 50, mass: 0.5 })
+  const { tiltX, tiltY } = useGyroscope()
 
-  // How fast the visitor is actually scrolling right now — drives a global
-  // motion-blur + vignette on top of each station's own depth-of-field, so
-  // a fast flick genuinely feels like accelerating through the world and
-  // settles back to clean/sharp the moment scrolling slows or stops.
   // Deliberately measured off rawProgress, not the already-sprung
-  // scrollYProgress — chaining a velocity+spring off a value that's
-  // itself mid-spring compounds two independent lag curves, so the effect
-  // keeps "catching up" long after the visitor's hand has actually
-  // stopped. Reading the raw scroll signal keeps this tied to what the
-  // visitor is doing right now.
+  // scrollYProgress — chaining a velocity+spring off a value that's itself
+  // mid-spring compounds two independent lag curves, so the effect keeps
+  // "catching up" long after the visitor's hand has actually stopped.
   const rawVelocity = useVelocity(rawProgress)
   const velocity = useSpring(rawVelocity, { stiffness: 260, damping: 34, mass: 0.25 })
   const speedFilter = useTransform(velocity, v => {
@@ -191,6 +215,20 @@ export default function HomeWorld() {
     String(Math.round(v * 8000)).padStart(4, '0'),
   )
   const railIndex = useTransform(scrollYProgress, v => Math.min(4, Math.floor(v * 5)))
+
+  // Haptic feedback when crossing a rail threshold on mobile
+  const prevRailIndex = useRef(0)
+  useEffect(() => {
+    return railIndex.on('change', latest => {
+      if (latest !== prevRailIndex.current) {
+        prevRailIndex.current = latest
+        // Trigger subtle haptic bump on rail station change
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(12) 
+        }
+      }
+    })
+  }, [railIndex])
 
   if (reduceMotion) {
     // Static fallback: the same content as a plain document.
@@ -212,28 +250,28 @@ export default function HomeWorld() {
         <motion.div className="sg-world-flight" style={{ filter: speedFilter, perspective: `${PERSPECTIVE}px` }}>
           {/* debris drifts past between the hero and the thesis */}
           {DEBRIS.map(d => (
-            <Debris key={d.tag + d.x} d={d} progress={scrollYProgress} />
+            <Debris key={d.tag + d.x} d={d} progress={scrollYProgress} tiltX={tiltX} tiltY={tiltY} />
           ))}
 
-          <Station progress={scrollYProgress} enter={0} hold={0.16} exit={0.26} first className="is-hero">
+          <Station progress={scrollYProgress} enter={0} hold={0.16} exit={0.26} first className="is-hero" tiltX={tiltX} tiltY={tiltY}>
             <HeroStation whatsappPhone={whatsappPhone} />
           </Station>
 
-          <Station progress={scrollYProgress} enter={0.2} hold={0.3} exit={0.38} className="is-chaos">
+          <Station progress={scrollYProgress} enter={0.2} hold={0.3} exit={0.38} className="is-chaos" tiltX={tiltX} tiltY={tiltY}>
             <p className="sg-world-chaos">
               Right now, your business is <em>floating in pieces.</em>
             </p>
           </Station>
 
-          <Station progress={scrollYProgress} enter={0.34} hold={0.46} exit={0.56}>
+          <Station progress={scrollYProgress} enter={0.34} hold={0.46} exit={0.56} tiltX={tiltX} tiltY={tiltY}>
             <ThesisStation />
           </Station>
 
-          <Station progress={scrollYProgress} enter={0.5} hold={0.6} exit={0.68}>
+          <Station progress={scrollYProgress} enter={0.5} hold={0.6} exit={0.68} tiltX={tiltX} tiltY={tiltY}>
             <ProofStation />
           </Station>
 
-          <Station progress={scrollYProgress} enter={0.72} hold={0.88} exit={1} stay>
+          <Station progress={scrollYProgress} enter={0.72} hold={0.88} exit={1} stay tiltX={tiltX} tiltY={tiltY}>
             <CoreStation />
           </Station>
         </motion.div>
@@ -264,7 +302,7 @@ function RailItem({ label, index, railIndex }) {
   return <motion.span style={{ opacity }}>{label}</motion.span>
 }
 
-function Debris({ d, progress }) {
+function Debris({ d, progress, tiltX, tiltY }) {
   // Debris lives in the depth band between the hero and thesis stations,
   // staggered by its z offset so pieces stream past rather than arrive at once.
   const start = 0.14 + d.z * 0.24
@@ -272,29 +310,28 @@ function Debris({ d, progress }) {
   const opacity = useTransform(progress, v =>
     mapRange(v, [start, start + 0.05, end - 0.05, end], [0, 1, 1, 0]),
   )
-  // Single function-form transform (not separate x/y/scale/rotate motion
-  // values) so the outward drift, spin, and scale all read from the same
-  // progress sample — a raw `transform` string on a motion.div takes over
-  // from framer's shorthand props entirely, so it has to carry everything,
-  // including the element's own centering translate.
   const transform = useTransform(progress, v => {
     const scale = mapRange(v, [start, end], [0.5, 1.7])
-    // How far the piece has drifted outward from center, in units of its
-    // own placement offset — 1 = original spot, >1 = flung further out as
-    // it streaks past the camera.
     const drift = mapRange(v, [start, end], [0.55, 1.85])
     const x = (d.x * drift).toFixed(2)
     const y = (d.y * drift).toFixed(2)
     const rot = (d.r * drift).toFixed(1)
     return `translate(-50%, -50%) translate(${x}vw, ${y}vh) rotate(${rot}deg) scale(${scale.toFixed(3)})`
   })
+  
+  // Mobile parallax tilt offset (only active when gyro events fire)
+  const tiltOffX = useTransform(tiltX, v => v * 15 * (d.z * 10))
+  const tiltOffY = useTransform(tiltY, v => v * 15 * (d.z * 10))
+
   return (
     <motion.div
       className="sg-world-debris"
       style={{ opacity, transform, left: '50%', top: '50%' }}
     >
-      <small>{d.tag}</small>
-      {d.text}
+      <motion.div style={{ x: tiltOffX, y: tiltOffY }}>
+        <small>{d.tag}</small>
+        {d.text}
+      </motion.div>
     </motion.div>
   )
 }
