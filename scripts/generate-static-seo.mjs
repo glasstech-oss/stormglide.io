@@ -95,4 +95,17 @@ for (const route of seoRoutes) {
   await writeFile(outputPath, html)
 }
 
-console.log(`Generated static search HTML for ${seoRoutes.length} public routes.`)
+// sitemap.xml used to be hand-maintained in public/ and drifted from the
+// real route list (missing real pages, listing a since-removed product and
+// a client-redirect-only stub) — generating it from the same seoRoutes
+// array that drives every other piece of SEO metadata means it can't drift
+// again, and lastmod is always the actual build date instead of frozen.
+const today = new Date().toISOString().slice(0, 10)
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${seoRoutes.map(route => `  <url><loc>${route.path === '/' ? `${SITE_URL}/` : `${SITE_URL}${route.path}`}</loc><lastmod>${today}</lastmod></url>`).join('\n')}
+</urlset>
+`
+await writeFile(join(distDir, 'sitemap.xml'), sitemap)
+
+console.log(`Generated static search HTML for ${seoRoutes.length} public routes, plus sitemap.xml.`)

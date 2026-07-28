@@ -15,6 +15,7 @@
     "singleProjectMode": true
   },
   "hosting": {
+    "site": "stormglideio",
     "public": "dist",
     "cleanUrls": true,
     "ignore": [
@@ -36,6 +37,16 @@
       {
         "source": "/products/sano",
         "destination": "/sano-health",
+        "type": 301
+      },
+      {
+        "source": "/products/nexus-dental",
+        "destination": "/nexus-dental",
+        "type": 301
+      },
+      {
+        "source": "/about",
+        "destination": "/contact",
         "type": 301
       }
     ],
