@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ArrowUp } from 'lucide-react'
+import { X, ArrowUp, Headset } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { sendChatMessage } from '../../lib/aiChat'
 import BrandLogo from '../common/BrandLogo'
 
-const GREETING = "Hi — I'm Stormglide's AI assistant. Ask me anything about what we build, get a price estimate, book time with the team, or ask something completely unrelated — happy to help either way."
+const GREETING = "Hi — I'm Stormglide's support assistant. Ask me anything about what we build, get a price estimate, book time with the team, or ask something completely unrelated — happy to help either way."
 const DRAG_CLOSE_THRESHOLD = 90
 
 // The assistant is instructed to hand out links using `[label](url)` markdown
@@ -217,10 +217,15 @@ export default function AIChat() {
       <button
         className={`sg-ai-fab${open ? ' is-open' : ''}`}
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? 'Close AI assistant' : 'Open AI assistant'}
+        aria-label={open ? 'Close support chat' : 'Open support chat'}
         aria-expanded={open}
       >
-        {open ? <X size={22} /> : <BrandLogo markOnly className="sg-ai-fab-logo" />}
+        {open ? <X size={20} /> : <Headset size={22} />}
+        {!open && (
+          <div className="sg-ai-fab-tooltip">
+            Chat with Support
+          </div>
+        )}
       </button>
 
       {open && <div className="sg-ai-backdrop" onClick={() => setOpen(false)} />}
@@ -228,7 +233,7 @@ export default function AIChat() {
       <div
         className={`sg-ai-panel${open ? ' is-open' : ''}`}
         role="dialog"
-        aria-label="Stormglide AI assistant"
+        aria-label="Stormglide Customer Support"
         aria-hidden={!open}
         style={{
           ...(dragY ? { transform: `translateY(${dragY}px)`, transition: 'none' } : null),
@@ -244,8 +249,8 @@ export default function AIChat() {
         <div className="sg-ai-header">
           <div className="sg-ai-header-icon"><BrandLogo markOnly className="sg-ai-header-logo" /></div>
           <div>
-            <div className="sg-ai-header-title">Stormglide AI</div>
-            <div className="sg-ai-header-sub">Ask anything — really</div>
+            <div className="sg-ai-header-title">Customer Support</div>
+            <div className="sg-ai-header-sub">We're here to help</div>
           </div>
           <button className="sg-ai-header-close" onClick={() => setOpen(false)} aria-label="Close">
             <X size={18} />
@@ -301,28 +306,62 @@ export default function AIChat() {
           left: 1.25rem;
           bottom: 1.25rem;
           z-index: 1001;
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
           border: none;
           border-radius: 50%;
-          background: linear-gradient(155deg, var(--sg-accent), var(--sg-accent-2));
+          background: var(--sg-accent);
           color: #fff;
           cursor: pointer;
-          box-shadow: 0 12px 32px rgba(37,99,235,0.28);
+          box-shadow: 0 8px 24px rgba(37,99,235,0.3);
           transition: transform 180ms ease, box-shadow 180ms ease;
         }
-        .sg-ai-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(37,99,235,0.34); }
-        .sg-ai-fab.is-open { background: var(--color-text-heading); animation: none; }
-        .sg-ai-fab-logo.sg-brand-logo.is-mark { width: 24px; color: #fff; }
-        .sg-ai-fab-logo .sg-brand-logo-mark-accent { fill: #fff; opacity: 0.72; }
+        .sg-ai-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 12px 32px rgba(37,99,235,0.4); }
+        .sg-ai-fab.is-open { background: var(--color-text-heading); animation: none; transform: none; }
+        
+        .sg-ai-fab-tooltip {
+          position: absolute;
+          left: calc(100% + 16px);
+          top: 50%;
+          transform: translateY(-50%);
+          background: var(--color-surface-alt);
+          border: 1px solid var(--color-border-subtle);
+          padding: 0.5rem 0.8rem;
+          border-radius: 8px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--color-text-heading);
+          white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          pointer-events: none;
+          animation: sgTooltipBounce 2s infinite ease-in-out;
+        }
+        .sg-ai-fab-tooltip::before {
+          content: '';
+          position: absolute;
+          left: -4px;
+          top: 50%;
+          margin-top: -4px;
+          width: 8px;
+          height: 8px;
+          background: var(--color-surface-alt);
+          border-left: 1px solid var(--color-border-subtle);
+          border-bottom: 1px solid var(--color-border-subtle);
+          transform: rotate(45deg);
+        }
+        
+        @keyframes sgTooltipBounce {
+          0%, 100% { transform: translateY(-50%) translateX(0); }
+          50% { transform: translateY(-50%) translateX(4px); }
+        }
 
         .sg-ai-fab:not(.is-open) { animation: sgAiFabPulse 2.8s ease-out infinite; }
         @keyframes sgAiFabPulse {
-          0%, 100% { box-shadow: 0 12px 32px rgba(37,99,235,0.28), 0 0 0 0 rgba(37,99,235,0.45); }
-          50% { box-shadow: 0 12px 32px rgba(37,99,235,0.28), 0 0 0 12px rgba(37,99,235,0); }
+          0%, 100% { box-shadow: 0 8px 24px rgba(37,99,235,0.3), 0 0 0 0 rgba(37,99,235,0.45); }
+          50% { box-shadow: 0 8px 24px rgba(37,99,235,0.3), 0 0 0 12px rgba(37,99,235,0); }
         }
 
         /* Invisible, functional only — click-outside-to-close. On the mobile
@@ -514,8 +553,25 @@ export default function AIChat() {
              sits at bottom:10px with a z-index above this FAB, so the old
              bottom-left spot got buried under it. Moved to the right side,
              clear above the dock's height instead. */
-          .sg-ai-fab { left: auto; right: 1rem; bottom: 92px; width: 48px; height: 48px; }
+          .sg-ai-fab { left: auto; right: 1rem; bottom: 92px; width: 44px; height: 44px; border-radius: 50%; }
           .sg-ai-fab.is-open { display: none; }
+          .sg-ai-fab-tooltip {
+            left: auto;
+            right: calc(100% + 16px);
+            animation: sgTooltipBounceMobile 2s infinite ease-in-out;
+          }
+          .sg-ai-fab-tooltip::before {
+            left: auto;
+            right: -4px;
+            border-left: none;
+            border-bottom: none;
+            border-right: 1px solid var(--color-border-subtle);
+            border-top: 1px solid var(--color-border-subtle);
+          }
+          @keyframes sgTooltipBounceMobile {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-4px); }
+          }
 
           /* Full-screen sheet instead of a floating card — the single
              biggest lever on "feels like an app screen" vs "a widget over

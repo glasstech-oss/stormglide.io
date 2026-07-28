@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import PageLayout from '../components/layout/PageLayout'
 import { services } from '../data/services'
 import { useLenis } from '../lib/useLenis'
+import GyroCard from '../components/common/GyroCard'
 
 const ICONS = { Globe2, Building2, Brain, Users, ShoppingBag, Lightbulb, Stethoscope, Cloud, Truck, CreditCard, Cpu, Rocket }
 
@@ -36,13 +37,14 @@ const TIER_META = {
 function ServiceCard({ s }) {
   const Icon = ICONS[s.icon] || Globe2
   return (
-    <motion.div
+    <GyroCard
       className="service-card sg-cursor-hover"
       whileHover={{ y: -4 }}
       style={{
         background: 'var(--glass-bg)', border: '1.5px solid var(--ink-100)',
         borderRadius: 'var(--radius-xl)', padding: '2rem',
         boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden',
+        height: '100%',
       }}
     >
       {/* Top accent line */}
@@ -75,7 +77,7 @@ function ServiceCard({ s }) {
           <span style={{ fontSize: '0.75rem', color: 'var(--ink-300)', paddingLeft: '1.375rem' }}>+ {s.features.length - 5} more</span>
         )}
       </div>
-    </motion.div>
+    </GyroCard>
   )
 }
 

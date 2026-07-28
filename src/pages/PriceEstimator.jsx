@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowLeft, Check, Globe, Building2, ShoppingCart, CalendarClock, Package, Zap, Sparkles, Loader2, ArrowUpRight } from 'lucide-react'
 import PageLayout from '../components/layout/PageLayout'
-import { submitLead } from '../lib/crm'
 import { useTheme } from '../context/ThemeContext'
+import SystemBuilderCanvas from '../components/estimator/SystemBuilderCanvas'
+import { Eye, List } from 'lucide-react'
 
 // Grounded in what we've actually delivered (see src/data/clientWork.js) and
 // realistic Ghana SME software-project pricing — not a copied rate card.
@@ -102,6 +103,7 @@ export default function PriceEstimator() {
   const [addOns, setAddOns] = useState(new Set())
   const [form, setForm] = useState({ name: '', email: '', phone: '', organization: '', currentSetup: '', timeline: TIMELINES[1], details: '' })
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
+  const [viewMode, setViewMode] = useState('list') // 'list' | 'canvas'
 
   const pkg = pkgId === CUSTOM_APP.id ? CUSTOM_APP : PACKAGES.find(p => p.id === pkgId)
   const isCustom = pkgId === CUSTOM_APP.id
@@ -308,15 +310,48 @@ export default function PriceEstimator() {
 
           {step === 1 && pkg && !isCustom && (
             <motion.div key="addons" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <h2 style={{ fontSize: '1.15rem', marginBottom: '0.25rem' }}>What does your {pkg.name.toLowerCase()} actually need to do?</h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-                Base price starts at {gh(pkg.min)}. Tick what applies — the price below updates as you go.
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.875rem', marginBottom: '2.25rem' }}>
-                {SCOPE_FACTORS.map(f => {
-                  const checked = scopeFactors.has(f.id)
-                  return (
-                    <button
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.15rem', marginBottom: '0.25rem' }}>What does your {pkg.name.toLowerCase()} actually need to do?</h2>
+                  <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                    Base price starts at {gh(pkg.min)}. Tick what applies — the price below updates as you go.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', background: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)', borderRadius: '99px', padding: '0.25rem' }}>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600, background: viewMode === 'list' ? 'var(--color-surface-alt)' : 'transparent', color: viewMode === 'list' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', border: 'none', cursor: 'pointer' }}
+                  >
+                    <List size={14} /> List
+                  </button>
+                  <button
+                    onClick={() => setViewMode('canvas')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600, background: viewMode === 'canvas' ? 'var(--color-surface-alt)' : 'transparent', color: viewMode === 'canvas' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', border: 'none', cursor: 'pointer' }}
+                  >
+                    <Eye size={14} /> Visual Builder
+                  </button>
+                </div>
+              </div>
+
+              {viewMode === 'canvas' ? (
+                <div style={{ marginBottom: '2rem' }}>
+                  <SystemBuilderCanvas
+                    pkg={pkg}
+                    scopeFactors={scopeFactors}
+                    addOns={addOns}
+                    allScopeFactors={SCOPE_FACTORS}
+                    allAddOns={ADD_ONS}
+                    onToggleScopeFactor={toggleScopeFactor}
+                    onToggleAddOn={toggleAddOn}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.875rem', marginBottom: '2.25rem' }}>
+                    {SCOPE_FACTORS.map(f => {
+                      const checked = scopeFactors.has(f.id)
+                      return (
+                        <button
                       key={f.id}
                       onClick={() => toggleScopeFactor(f.id)}
                       className="card"
@@ -373,6 +408,8 @@ export default function PriceEstimator() {
                   )
                 })}
               </div>
+                </>
+              )}
             </motion.div>
           )}
 

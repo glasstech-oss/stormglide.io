@@ -164,6 +164,32 @@ svg {
 #root {
   min-height: 100vh;
   isolation: isolate;
+  position: relative;
+  overflow-x: clip;
+}
+
+/* Subtle fluid animated mesh background */
+#root::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--sg-accent) 8%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--sg-accent-2) 6%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 30% 70%, rgba(224, 106, 15, 0.05) 0%, transparent 45%);
+  filter: blur(80px);
+  animation: sgFluidMesh 28s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  z-index: -1;
+}
+
+@keyframes sgFluidMesh {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(30deg) scale(1.1) translate(2%, -3%); }
+  100% { transform: rotate(60deg) scale(0.9) translate(-4%, 4%); }
 }
 
 .sg-page-loader {
@@ -306,7 +332,7 @@ svg {
 .btn-secondary:active,
 .sg-home-text-link:active,
 .sg-system-tabs button:active {
-  transform: translateY(0) scale(0.97);
+  transform: translateY(2px) scale(0.92);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--sg-accent) 14%, transparent);
   transition-duration: 80ms;
 }

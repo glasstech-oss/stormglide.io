@@ -322,6 +322,19 @@
   height: 390px;
   border-radius: var(--radius-lg);
   z-index: 1;
+  flex: 1;
+}
+
+/* Bento Grid Responsive Classes */
+@media (max-width: 900px) {
+  .bento-grid-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem;
+  }
+  .bento-item {
+    grid-column: span 12 !important;
+  }
 }
 
 .sg-stage-window-main.is-active {

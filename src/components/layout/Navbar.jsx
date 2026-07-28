@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import Magnetic from '../common/Magnetic'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useTransform } from 'framer-motion'
 import { ArrowRight, House, Info, LayoutGrid, Menu, MonitorSmartphone, Package, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import BrandLogo from '../common/BrandLogo'
 import { useActivePanelNode } from '../../lib/panelRegistry'
 import { prefetchBoardPage } from '../../lib/boardPages'
+import { useGyroscope } from '../../hooks/useGyroscope'
 
 const NAV_LINKS = [
   { label: 'Services', href: '/services' },
@@ -25,6 +26,11 @@ export default function Navbar() {
   // like a native app's tab bar. Starts false so the dock doesn't flash
   // hidden on initial mount, before any real scroll event has happened.
   const [dockHidden, setDockHidden] = useState(false)
+  const { tiltX, tiltY } = useGyroscope({ stiffness: 120, damping: 25, mass: 0.4 })
+  const liquidX = useTransform(tiltX, v => v * 16)
+  const liquidY = useTransform(tiltY, v => v * 16)
+  const liquidOppositeX = useTransform(tiltX, v => v * -12)
+  const liquidOppositeY = useTransform(tiltY, v => v * -12)
   const { activeVariant } = useTheme()
   const location = useLocation()
   const isHome = location.pathname === '/'
@@ -123,12 +129,20 @@ export default function Navbar() {
           ].map(({ href, label, Icon }) => {
             const active = href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
             return (
-              <Link key={href} to={href} className={active ? 'is-active' : ''} aria-label={label}
+              <Link key={href} to={href} className={active ? 'is-active sg-liquid-tab' : 'sg-liquid-tab'} aria-label={label}
                 onClick={() => {
                   if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10)
                 }}
                 onPointerEnter={() => prefetchBoardPage(href)}>
-                <Icon size={21} strokeWidth={active ? 2.4 : 1.8} />
+                {active && (
+                  <div className="sg-liquid-container">
+                    <motion.div className="sg-liquid-blob blue" style={{ x: liquidX, y: liquidY }} />
+                    <motion.div className="sg-liquid-blob orange" style={{ x: liquidOppositeX, y: liquidOppositeY }} />
+                  </div>
+                )}
+                <span className="sg-dock-icon-wrapper">
+                  <Icon size={21} strokeWidth={active ? 2.4 : 1.8} />
+                </span>
                 <small>{label}</small>
               </Link>
             )
@@ -428,14 +442,62 @@ export default function Navbar() {
             text-decoration: none;
             transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), background 250ms ease, color 250ms ease;
           }
+          .sg-liquid-tab {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+          }
+          .sg-liquid-container {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #0B0F19;
+            box-shadow: inset 0 1px 3px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.6);
+          }
+          .sg-liquid-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 45%, transparent 65%, rgba(0,0,0,0.4) 100%);
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 3;
+          }
+          .sg-liquid-blob {
+            position: absolute;
+            will-change: transform;
+            opacity: 1;
+          }
+          .sg-liquid-blob.blue {
+            width: 100%; height: 140%;
+            top: -20%; left: -20%;
+            background: var(--sg-accent);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          }
+          .sg-liquid-blob.orange {
+            width: 150%; height: 150%;
+            bottom: -15%; right: -25%;
+            background: #FF6A00;
+            border-radius: 50% 40% 30% 70% / 50% 60% 40% 40%;
+            z-index: 2;
+          }
+          .sg-dock-icon-wrapper {
+            position: relative;
+            z-index: 2;
+          }
           .sg-dock-tabs a:active {
             transform: scale(0.75) translateY(4px);
-            background: color-mix(in srgb, var(--sg-accent) 15%, transparent);
-            transition: transform 80ms cubic-bezier(0.16, 1, 0.3, 1), background 80ms ease;
+            transition: transform 80ms cubic-bezier(0.16, 1, 0.3, 1);
           }
           .sg-dock-tabs a.is-active {
-            color: var(--sg-accent);
-            background: color-mix(in srgb, var(--sg-accent) 9%, transparent);
+            color: #ffffff;
+            background: transparent;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+          }
+          .sg-dock-tabs a.is-active small {
+            font-weight: 700;
           }
           .sg-dock-tabs small {
             font-family: var(--font-mono);

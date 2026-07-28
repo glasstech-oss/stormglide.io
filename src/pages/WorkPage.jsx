@@ -7,6 +7,7 @@ import PageLayout from '../components/layout/PageLayout'
 import { SITE_URL } from '../data/seo'
 import { CLIENT_WORK, getWorkPath } from '../data/clientWork'
 import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/viewTransition'
+import GyroCard from '../components/common/GyroCard'
 
 const clientWorkSchema = {
   '@context': 'https://schema.org',
@@ -192,7 +193,7 @@ export default function WorkPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(440px, 100%), 1fr))', gap: '1.5rem' }} className="client-grid">
             {CLIENT_WORK.map((c, i) => (
-              <motion.div
+              <GyroCard
                 key={c.name}
                 className="sg-client-card"
                 initial={{ opacity: 0, y: 20 }}
@@ -269,7 +270,7 @@ export default function WorkPage() {
                     View case study <ArrowRight size={13} />
                   </div>
                 </div>
-              </motion.div>
+              </GyroCard>
             ))}
           </div>
 
