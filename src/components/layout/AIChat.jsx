@@ -47,6 +47,15 @@ export default function AIChat() {
   // 0 means "not dragging", and the panel's inline transform tracks the
   // finger 1:1 until release (see handleDragEnd).
   const [dragY, setDragY] = useState(0)
+  // On mobile, the sheet is `position:fixed; inset:0` — sized to the layout
+  // viewport. When the on-screen keyboard opens, most browsers shrink the
+  // *visual* viewport (what's actually visible) without shrinking the
+  // layout viewport, so a plain inset:0 box ends up taller than the visible
+  // area and part of it (usually the header/earlier messages) gets scrolled
+  // out of frame, exactly the "have to scroll to see it" bug. Tracking
+  // window.visualViewport directly and pinning the sheet's real top/height
+  // to it fixes this regardless of which resize mode the browser uses.
+  const [viewportRect, setViewportRect] = useState(null)
   const listRef = useRef(null)
   const messagesRef = useRef(messages)
   const textareaRef = useRef(null)
@@ -56,7 +65,7 @@ export default function AIChat() {
   useEffect(() => {
     if (!listRef.current) return
     listRef.current.scrollTop = listRef.current.scrollHeight
-  }, [messages, revealLen])
+  }, [messages, revealLen, viewportRect])
 
   // Auto-focus the input when the panel opens, like a native message thread
   // dropping you straight into typing — delayed slightly so it doesn't fight
@@ -73,6 +82,27 @@ export default function AIChat() {
     function onKey(e) { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  // Only matters for the full-screen mobile sheet (see viewportRect comment
+  // above) — desktop's small floating card has its own explicit width/height
+  // and shouldn't be resized to match the visual viewport.
+  useEffect(() => {
+    if (!open) return
+    const vv = window.visualViewport
+    if (!vv || !window.matchMedia('(max-width: 640px)').matches) return
+
+    function update() {
+      setViewportRect({ height: vv.height, offsetTop: vv.offsetTop })
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      setViewportRect(null)
+    }
   }, [open])
 
   // Advances revealLen toward the target message's full length. Speeds up
@@ -200,7 +230,10 @@ export default function AIChat() {
         role="dialog"
         aria-label="Stormglide AI assistant"
         aria-hidden={!open}
-        style={dragY ? { transform: `translateY(${dragY}px)`, transition: 'none' } : undefined}
+        style={{
+          ...(dragY ? { transform: `translateY(${dragY}px)`, transition: 'none' } : null),
+          ...(viewportRect ? { top: `${viewportRect.offsetTop}px`, height: `${viewportRect.height}px` } : null),
+        }}
       >
         <div
           className="sg-ai-drag-handle"

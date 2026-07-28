@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- interactive-widget=resizes-content: on browsers that support it
+         (recent Chrome, Safari 16.4+), the layout viewport actually shrinks
+         when the on-screen keyboard opens, instead of just visually panning
+         over fixed-position content — needed for the AI chat's full-screen
+         mobile sheet (see AIChat.jsx) to resize correctly above the
+         keyboard rather than getting partly scrolled out of view. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <!-- SG-SEO-START -->
     <title data-sg-static-seo>Software Company in Ghana | Stormglide Technologies</title>
     <meta data-sg-static-seo name="description" content="Looking for a website or software company in Ghana? Stormglide builds fast websites, web apps, mobile apps, SaaS products, and business systems from Accra." />
