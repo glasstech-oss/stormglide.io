@@ -19,6 +19,12 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  // Mobile-only (see .sg-navbar.is-dock-hidden, scoped to the same
+  // max-width:768px breakpoint as the icon dock itself): hides the dock
+  // while actively scrolling and brings it back once scrolling settles,
+  // like a native app's tab bar. Starts false so the dock doesn't flash
+  // hidden on initial mount, before any real scroll event has happened.
+  const [dockHidden, setDockHidden] = useState(false)
   const { activeVariant } = useTheme()
   const location = useLocation()
   const isHome = location.pathname === '/'
@@ -26,11 +32,28 @@ export default function Navbar() {
   const activePanelNode = useActivePanelNode()
 
   useEffect(() => {
-    if (!activePanelNode) return undefined
-    const handleScroll = () => setScrolled(activePanelNode.scrollTop > 8)
-    handleScroll()
-    activePanelNode.addEventListener('scroll', handleScroll, { passive: true })
-    return () => activePanelNode.removeEventListener('scroll', handleScroll)
+    // activePanelNode comes from panelRegistry, which is only ever populated
+    // by the desktop spatial-board components (Board/DepthOverlay in
+    // App.jsx, gated at min-width:920px) — on mobile nothing registers a
+    // node there, so it's always null and the plain document scroll (via
+    // window) is the real thing to listen to instead.
+    const node = activePanelNode || window
+    const getScrollTop = () => (activePanelNode ? activePanelNode.scrollTop : document.documentElement.scrollTop)
+    const syncScrolled = () => setScrolled(getScrollTop() > 8)
+    syncScrolled()
+
+    let idleTimer = null
+    const handleScroll = () => {
+      setScrolled(getScrollTop() > 8)
+      setDockHidden(true)
+      clearTimeout(idleTimer)
+      idleTimer = setTimeout(() => setDockHidden(false), 400)
+    }
+    node.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      node.removeEventListener('scroll', handleScroll)
+      clearTimeout(idleTimer)
+    }
   }, [activePanelNode])
 
   return (
@@ -40,7 +63,7 @@ export default function Navbar() {
       <Link to="/" className="sg-logo sg-brand-pin" aria-label="Stormglide home">
         <BrandLogo className="sg-navbar-brand-logo" />
       </Link>
-    <nav className={`sg-navbar ${overHero ? 'is-over-hero' : 'is-solid'}`} data-variant={activeVariant.id}>
+    <nav className={`sg-navbar ${overHero ? 'is-over-hero' : 'is-solid'}${dockHidden ? ' is-dock-hidden' : ''}`} data-variant={activeVariant.id}>
       <div className="sg-navbar-inner">
         <div className="sg-nav-links">
           {NAV_LINKS.map(link => {
@@ -86,6 +109,9 @@ export default function Navbar() {
             const active = href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
             return (
               <Link key={href} to={href} className={active ? 'is-active' : ''} aria-label={label}
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10)
+                }}
                 onPointerEnter={() => prefetchBoardPage(href)}>
                 <Icon size={21} strokeWidth={active ? 2.4 : 1.8} />
                 <small>{label}</small>
@@ -325,6 +351,24 @@ export default function Navbar() {
             bottom: 10px;
             width: calc(100vw - 20px);
             border-radius: 26px;
+            transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), 
+                        width 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                        opacity 380ms cubic-bezier(0.16, 1, 0.3, 1), 
+                        background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+          }
+          /* Fluid dock: while scrolling, the dock shrinks into a translucent pill
+             and drops down slightly, keeping it out of the way but still providing
+             context of where you are (Dynamic Island style) */
+          .sg-navbar.is-dock-hidden {
+            transform: translateY(22px) scale(0.85);
+            width: 50vw;
+            opacity: 0.65;
+            pointer-events: none;
+            backdrop-filter: var(--glass-blur-soft);
+          }
+          .sg-navbar.is-dock-hidden .sg-dock-tabs {
+            opacity: 0;
+            transform: scale(0.9);
           }
           .sg-navbar-inner {
             padding: 0.4rem 0.4rem;
@@ -336,6 +380,7 @@ export default function Navbar() {
             width: 100%;
             justify-content: space-around;
             align-items: center;
+            transition: opacity 300ms ease, transform 300ms ease;
           }
           .sg-dock-tabs a {
             display: grid;
@@ -356,6 +401,11 @@ export default function Navbar() {
             letter-spacing: 0.14em;
             text-transform: uppercase;
           }
+        }
+
+        @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+          .sg-navbar { transition: none; }
+          .sg-navbar.is-dock-hidden { transform: none; }
         }
       `}</style>
     </nav>
