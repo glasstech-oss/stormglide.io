@@ -14,6 +14,8 @@ function useGyroscope() {
   const tiltY = useMotionValue(0)
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.DeviceOrientationEvent) return undefined
+
     const handleOrientation = (e) => {
       if (e.gamma === null || e.beta === null) return
       // Normalize beta (front-back tilt): ~45deg is a typical holding angle
@@ -23,14 +25,38 @@ function useGyroscope() {
       tiltY.set((b - 45) / 45)
       tiltX.set(g / 45)
     }
-    
-    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+
+    // iOS 13+ requires an explicit permission grant, triggered from within
+    // a real user gesture, before deviceorientation events fire at all —
+    // requesting it passively on mount is silently ignored there. Android
+    // and desktop have no such requirement and just start firing directly.
+    const needsPermission = typeof window.DeviceOrientationEvent.requestPermission === 'function'
+    if (!needsPermission) {
       window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+      return () => window.removeEventListener('deviceorientation', handleOrientation)
     }
+
+    let requested = false
+    const requestOnGesture = () => {
+      if (requested) return
+      requested = true
+      window.removeEventListener('touchend', requestOnGesture)
+      window.removeEventListener('click', requestOnGesture)
+      window.DeviceOrientationEvent.requestPermission()
+        .then((result) => {
+          if (result === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+          }
+        })
+        .catch(() => { /* denied, or not a real user-gesture context — tilt just stays inert */ })
+    }
+    window.addEventListener('touchend', requestOnGesture, { passive: true })
+    window.addEventListener('click', requestOnGesture)
+
     return () => {
-      if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
-        window.removeEventListener('deviceorientation', handleOrientation)
-      }
+      window.removeEventListener('deviceorientation', handleOrientation)
+      window.removeEventListener('touchend', requestOnGesture)
+      window.removeEventListener('click', requestOnGesture)
     }
   }, [tiltX, tiltY])
 
