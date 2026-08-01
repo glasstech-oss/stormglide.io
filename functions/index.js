@@ -1158,7 +1158,9 @@ CONVERSATION STYLE: Keep most replies to 2-5 sentences — this is a chat widget
 
 PERSONAL TOUCH: You don't need a name to answer questions, and never open with "what's your name?" — that's an interrogation, not a conversation. But once things get substantive (a few exchanges in) and you still don't know who you're talking to, it's natural to ask casually, in passing, the way a person would — "by the way, who am I chatting with?" or similar — not as its own message, folded into a reply. Ask at most once. Never ask again if they've already told you or clearly wish not to say. Once you know their name, use it naturally here and there — not in every message, that reads as fake.
 
-CONTACT LINKS: Stormglide's direct channels are WhatsApp (fastest) and email. When a visitor is ready to move forward, wants to talk to a real person, or asks how to reach the team, give both as real clickable links using exactly this markdown syntax so the widget renders them properly: [Chat on WhatsApp](${CONTACT_WHATSAPP_LINK}) and [Email us](mailto:${CONTACT_EMAIL}). Use the same syntax for internal pages — if someone wants to see past work or examples, send them there directly: [See our work](/work). Never write a bare URL or email address as plain text when this link syntax is available instead.
+CONTACT LINKS: Stormglide's direct channels are WhatsApp (fastest) and email. When a visitor is ready to move forward, wants to talk to a real person, or asks how to reach the team, give both as real clickable links using exactly this markdown syntax so the widget renders them properly: [Chat on WhatsApp](${CONTACT_WHATSAPP_LINK}) and [Email us](mailto:${CONTACT_EMAIL}).
+
+NAVIGATION: If the user wants to see a specific page, go somewhere, or asks a question that is best answered by looking at a page (e.g., "take me to services", "show me your products", "what is your pricing?"), call the \`navigate_to_page\` tool with the correct absolute path (e.g. \`/services\`, \`/products\`, \`/pricing\`, \`/work\`, \`/contact\`, \`/\`). Do NOT call the tool if the user is just asking a casual question that can be answered in a short sentence, but do call it if they explicitly want to go there or if the page itself is the best answer.
 
 BOOKING: Only call create_booking once the visitor has clearly said they want to move forward (start a project, get a formal quote, book a call) AND you have at minimum their name and email — ask for only whichever of those two you're missing. You don't have a live calendar, so never claim a specific time slot is confirmed; capture their preferred time/timeframe if they give one, and tell them the team will confirm by email or WhatsApp within one business day.
 
@@ -1180,6 +1182,20 @@ const CHAT_TOOLS = [
           preferredTime: { type: 'string', description: 'Their stated preferred time/timeframe for a call, if any' },
         },
         required: ['name', 'email', 'topic'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'navigate_to_page',
+      description: 'Navigate the user to a specific page on the website. Use this when the user asks to see a page, go somewhere, or asks a question that is best answered by looking at a specific page (e.g. "show me your work", "take me to pricing").',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'The absolute path to navigate to. Must be one of: /, /services, /products, /work, /pricing, /contact' },
+        },
+        required: ['path'],
       },
     },
   },
@@ -1337,6 +1353,16 @@ app.post('/v1/chat', async (req, res) => {
       }
       send({ final: `Happy to get that started — what's the best name and email to reach you at? Or if you'd rather just talk directly: [Chat on WhatsApp](${CONTACT_WHATSAPP_LINK}).`, booked: false });
       return res.end();
+    }
+
+    if (result.mode === 'tool' && result.name === 'navigate_to_page') {
+      let args = {};
+      try { args = JSON.parse(result.arguments || '{}'); } catch { /* ignore */ }
+      if (args.path) {
+        send({ action: { type: 'NAVIGATE', path: args.path } });
+        send({ final: `Taking you to ${args.path === '/' ? 'the home page' : args.path}...`, booked: false });
+        return res.end();
+      }
     }
 
     if (result.mode === 'content' && result.text.trim()) {

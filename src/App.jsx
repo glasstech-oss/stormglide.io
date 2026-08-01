@@ -8,9 +8,9 @@ import BrandLoader from './components/common/BrandLoader'
 import RouteSEO from './components/common/RouteSEO'
 import { trackPageview } from './lib/analytics'
 import SquircleDefs from './components/common/SquircleDefs'
-import Navbar from './components/layout/Navbar'
+import AINavBar from './components/layout/AINavBar'
 import WhatsAppFloat from './components/layout/WhatsAppFloat'
-import AIChat from './components/layout/AIChat'
+import CanvasBackground from './components/layout/CanvasBackground'
 import StormGliderGame from './components/game/StormGliderGame'
 import { BOARD_PATHS, getBoardKey, getMove, getSpatialPosition } from './lib/spatialBoard'
 import { boardPageComponents } from './lib/boardPages'
@@ -402,7 +402,7 @@ function SiteContent() {
 
   return (
     <>
-      <Navbar />
+      <CanvasBackground />
       <ScrollProgress activeNode={scrollNode} />
       {isDesktopBoard ? (
         <>
@@ -429,7 +429,7 @@ function SiteContent() {
         </Suspense>
       )}
       <WhatsAppFloat />
-      <AIChat />
+      <AINavBar />
       <StormGliderGame />
       <RouteSEO />
     </>

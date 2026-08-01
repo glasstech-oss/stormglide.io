@@ -3,7 +3,7 @@ const API_BASE = 'https://us-central1-stormglideio.cloudfunctions.net/api'
 // Reads the /v1/chat SSE stream and reports each text chunk via onDelta as
 // it arrives, so the UI can render tokens live instead of waiting for the
 // full reply — the response body is a stream of `data: {...}\n\n` frames.
-export async function sendChatMessage(messages, { onDelta } = {}) {
+export async function sendChatMessage(messages, { onDelta, onAction } = {}) {
   const res = await fetch(`${API_BASE}/v1/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -29,6 +29,9 @@ export async function sendChatMessage(messages, { onDelta } = {}) {
       const payload = line.slice(5).trim()
       if (!payload || payload === '[DONE]') continue
       const evt = JSON.parse(payload)
+      if (evt.action) {
+        onAction?.(evt.action)
+      }
       if (evt.delta) {
         fullText += evt.delta
         onDelta?.(fullText)
@@ -40,6 +43,6 @@ export async function sendChatMessage(messages, { onDelta } = {}) {
     }
   }
 
-  if (!fullText) throw new Error('empty reply')
+  if (!fullText && !booked) throw new Error('empty reply')
   return { reply: fullText, booked }
 }

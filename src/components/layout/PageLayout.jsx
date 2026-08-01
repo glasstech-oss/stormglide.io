@@ -9,7 +9,7 @@ export default function PageLayout({ children }) {
           <span className="sg-on">ONLINE</span>
         </div>
       </div>
-      <main style={{ paddingTop: '68px', position: 'relative', zIndex: 1, background: 'var(--color-background)' }}>
+      <main style={{ paddingTop: '68px', position: 'relative', zIndex: 1, background: 'transparent' }}>
         {children}
       </main>
       <Footer />
