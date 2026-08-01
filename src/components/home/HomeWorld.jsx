@@ -137,6 +137,13 @@ function Station({ progress, enter, hold, exit, stay = false, first = false, chi
   const transform = useTransform(z, zv => `translateZ(${zv.toFixed(1)}px)`)
   const outB = outO.map(o => (1 - o) * BLUR_MAX)
   const filter = useTransform(progress, v => `blur(${mapRange(v, inR, outB).toFixed(2)}px)`)
+  // Every station shares the same grid-area (see .sg-world-station in
+  // homeWorld.css) so they can crossfade in place — but opacity alone
+  // doesn't stop a faded-out station from still catching clicks. Without
+  // this, whichever station renders later in the DOM sits on top and
+  // silently swallows taps meant for an earlier one underneath (this is
+  // exactly why the hero's buttons stopped responding).
+  const pointerEvents = useTransform(opacity, o => (o > 0.5 ? 'auto' : 'none'))
 
   // Station subtle parallax based on gyroscope. tiltX/tiltY are always real
   // motion values here (every call site passes useGyroscope()'s output) —
@@ -146,7 +153,7 @@ function Station({ progress, enter, hold, exit, stay = false, first = false, chi
   const tiltOffY = useTransform(tiltY, v => v * 35)
 
   return (
-    <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter }}>
+    <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter, pointerEvents }}>
       <motion.div style={{ x: tiltOffX, y: tiltOffY, width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
         {children}
       </motion.div>
@@ -326,8 +333,8 @@ function HeroStation({ whatsappPhone }) {
         dashboard your team will actually use.
       </motion.p>
       <motion.div {...heroRise(3)} className="sg-world-actions">
-        <Link to="/products" className="btn-primary">
-          See our products <ArrowRight size={16} />
+        <Link to="/work" className="btn-primary">
+          See our work <ArrowRight size={16} />
         </Link>
         <Link to="/price-estimator" className="sg-home-text-link">
           Start a project <ArrowRight size={15} />
