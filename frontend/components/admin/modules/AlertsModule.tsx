@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALERTS, Alert, AlertSeverity, AlertType } from "@/lib/alertsData";
+import { Alert, AlertSeverity, AlertType } from "@/lib/alertsData";
 import { MonitoringAPI } from "@/lib/api";
 import {
     Globe, ShieldCheck, Flame, FileText, Database, Activity,
-    Shield, Bell, CheckCircle2, XCircle, Filter, ChevronDown
+    Shield, Bell, CheckCircle2, XCircle, Filter, ChevronDown, Loader2
 } from "lucide-react";
 
 const TYPE_CFG: Record<AlertType, { icon: React.ComponentType<{ size?: number; className?: string }>, label: string, color: string }> = {
@@ -29,15 +29,23 @@ const SEV_CFG: Record<AlertSeverity, { color: string; bg: string; ring: string; 
 const SEV_ORDER: AlertSeverity[] = ["critical", "high", "medium", "low"];
 
 export default function AlertsModule() {
-    const [alerts, setAlerts] = useState<Alert[]>(ALERTS);
+    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [sevFilter, setSevFilter] = useState<AlertSeverity | "all">("all");
     const [typeFilter, setTypeFilter] = useState<AlertType | "all">("all");
     const [showResolved, setShowResolved] = useState(false);
 
     useEffect(() => {
         MonitoringAPI.getAlerts().then((apiAlerts: any[]) => {
-            if (!apiAlerts || apiAlerts.length === 0) return;
-            const mapped: Alert[] = apiAlerts.map((a: any) => ({
+            // A genuinely empty result (no alerts at all) is a real, valid
+            // state — it should clear to an empty list, not silently keep
+            // whatever was there before. Previously this bailed out on an
+            // empty response, which (combined with seeding state from the
+            // fictional ALERTS array) meant the module could show 9 fake
+            // "Apex Logistics" / "Coastal Pharma" alerts forever, even once
+            // real monitoring had nothing to report.
+            const mapped: Alert[] = (apiAlerts || []).map((a: any) => ({
                 id: a.id,
                 type: (a.type?.toLowerCase() || "security") as AlertType,
                 severity: (a.severity?.toLowerCase() || "medium") as AlertSeverity,
@@ -48,7 +56,10 @@ export default function AlertsModule() {
                 resolved: a.resolved,
             }));
             setAlerts(mapped);
-        }).catch(() => {});
+        }).catch((err) => {
+            console.error("Failed to load alerts:", err);
+            setError("Could not load alerts.");
+        }).finally(() => setLoading(false));
     }, []);
 
     const resolve = async (id: string) => {
@@ -70,8 +81,20 @@ export default function AlertsModule() {
     const counts: Record<AlertSeverity, number> = { critical: 0, high: 0, medium: 0, low: 0 };
     alerts.filter(a => !a.resolved).forEach(a => counts[a.severity]++);
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center gap-3 py-16 text-sm text-gray-500">
+                <Loader2 size={18} className="animate-spin" /> Loading alerts…
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
+            {error && (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>
+            )}
+
             {/* Summary Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {SEV_ORDER.map(sev => {
@@ -126,7 +149,9 @@ export default function AlertsModule() {
                 {visible.length === 0 && (
                     <div className="text-center py-16 space-y-3">
                         <Bell size={32} className="text-gray-700 mx-auto" />
-                        <p className="text-gray-600 font-mono text-sm">No alerts matching your filters.</p>
+                        <p className="text-gray-600 font-mono text-sm">
+                            {alerts.length === 0 ? "All clear — no alerts have fired." : "No alerts matching your filters."}
+                        </p>
                     </div>
                 )}
                 <AnimatePresence>

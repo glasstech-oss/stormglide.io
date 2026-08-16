@@ -11,6 +11,7 @@ const PAGE_LABELS: Record<string, string> = {
     dashboard: "Overview",
     crm: "Clients",
     projects: "Projects",
+    monitoring: "Monitoring",
     billing: "Payments",
     settings: "Website settings",
 };
@@ -19,12 +20,18 @@ export default function Header() {
     const { activeTab, setActiveTab } = useAdminStore();
     const pathname = usePathname();
     const router = useRouter();
-    const current = pathname.startsWith("/admin/projects") ? "projects" : activeTab;
+    const current = pathname.startsWith("/admin/projects") ? "projects"
+        : pathname.startsWith("/admin/monitoring") ? "monitoring"
+        : activeTab;
     const email = auth?.currentUser?.email || "Administrator";
 
     const navigate = (id: string) => {
         if (id === "projects") {
             router.push("/admin/projects");
+            return;
+        }
+        if (id === "monitoring") {
+            router.push("/admin/monitoring");
             return;
         }
         setActiveTab(id);

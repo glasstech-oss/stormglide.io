@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAdminStore } from "@/store/adminStore";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const MENU_ITEMS = [
     { id: "dashboard", label: "Overview", icon: LayoutDashboard },
     { id: "crm", label: "Clients", icon: Users },
     { id: "leads", label: "Leads", icon: Inbox },
+    { id: "monitoring", label: "Monitoring", icon: Activity },
     { id: "projects", label: "Projects", icon: BriefcaseBusiness },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "billing", label: "Payments", icon: CreditCard },
@@ -57,6 +58,10 @@ export default function Sidebar() {
             router.push("/admin/leads");
             return;
         }
+        if (id === "monitoring") {
+            router.push("/admin/monitoring");
+            return;
+        }
         if (id === "analytics") {
             router.push("/admin/analytics");
             return;
@@ -97,12 +102,14 @@ export default function Sidebar() {
                     const isInvoices = pathname.startsWith("/admin/invoices");
                     const isTeam = pathname.startsWith("/admin/team");
                     const isLeads = pathname.startsWith("/admin/leads");
+                    const isMonitoring = pathname.startsWith("/admin/monitoring");
                     const isAnalytics = pathname.startsWith("/admin/analytics");
-                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isAnalytics;
+                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isAnalytics;
                     const active = item.id === "projects" ? isProjects
                         : item.id === "invoices" ? isInvoices
                         : item.id === "team" ? isTeam
                         : item.id === "leads" ? isLeads
+                        : item.id === "monitoring" ? isMonitoring
                         : item.id === "analytics" ? isAnalytics
                         : !isDedicatedRoute && activeTab === item.id;
                     return (

@@ -2700,26 +2700,13 @@ exports.monitoringCycle = functions.pubsub.schedule('0 */6 * * *').onRun(async (
   return null;
 });
 
-exports.checkDomainExpiry = functions.pubsub.schedule('0 0 * * *').onRun(async () => {
-  const sevenDaysAgo = admin.firestore.Timestamp.fromDate(new Date(Date.now() - 7 * 86400000));
-  const clientsSnap = await db.collection('clientProfiles').get();
-  for (const clientDoc of clientsSnap.docs) {
-    const recentSnap = await db.collection('infraSnapshots')
-      .where('clientId', '==', clientDoc.id)
-      .where('checkType', '==', 'DOMAIN')
-      .where('checkedAt', '>=', sevenDaysAgo)
-      .limit(1).get();
-    if (recentSnap.empty) {
-      await createAlertIfNew(
-        clientDoc.id, 'DOMAIN', 'medium',
-        `Domain monitoring gap — ${clientDoc.data().companyName}`,
-        'No domain check recorded in the last 7 days.',
-        clientDoc.data().companyName
-      );
-    }
-  }
-  return null;
-});
+// Note: there used to be a checkDomainExpiry scheduled function here that
+// checked for infraSnapshots with checkType:'DOMAIN' — but nothing anywhere
+// ever wrote one, so it just fired a useless "monitoring gap" alert every
+// single day, forever. Real domain-expiry alerting lives in the
+// domainManagement collection / GET /v1/alerts/domain-renewal instead
+// (manual entry: registrar + expiry date per domain, alerts fire on a real
+// 30/7-day threshold). Removed the dead stub rather than leave it spamming.
 
 // Daily visits + growth-trend digest — yesterday vs the day before, and vs
 // the same weekday the prior week (single-day GA4 numbers are noisy day to
