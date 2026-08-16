@@ -240,6 +240,10 @@ export const ProjectsAPI = {
         const { data } = await apiClient.get('/v1/domains');
         return data;
     },
+    getAllSubscriptions: async () => {
+        const { data } = await apiClient.get('/v1/project-subscriptions');
+        return data;
+    },
     addDomain: async (body: Record<string, unknown>) => {
         const { data } = await apiClient.post('/v1/domains', body);
         return data;

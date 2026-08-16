@@ -16,6 +16,8 @@ const PAGE_LABELS: Record<string, string> = {
     vault: "Documents",
     audit: "Audit Log",
     billing: "Payments",
+    subscriptions: "Subscriptions",
+    forecast: "Forecast",
     settings: "Website settings",
 };
 
@@ -28,6 +30,8 @@ export default function Header() {
         : pathname.startsWith("/admin/kanban") ? "kanban"
         : pathname.startsWith("/admin/vault") ? "vault"
         : pathname.startsWith("/admin/audit") ? "audit"
+        : pathname.startsWith("/admin/subscriptions") ? "subscriptions"
+        : pathname.startsWith("/admin/forecast") ? "forecast"
         : activeTab;
     const email = auth?.currentUser?.email || "Administrator";
 
@@ -50,6 +54,14 @@ export default function Header() {
         }
         if (id === "audit") {
             router.push("/admin/audit");
+            return;
+        }
+        if (id === "subscriptions") {
+            router.push("/admin/subscriptions");
+            return;
+        }
+        if (id === "forecast") {
+            router.push("/admin/forecast");
             return;
         }
         setActiveTab(id);

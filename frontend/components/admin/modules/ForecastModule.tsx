@@ -1,50 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-    TrendingUp, ArrowUpRight, ArrowDownRight, Calendar,
-    DollarSign, BarChart2, Target
+    TrendingUp, ArrowUpRight, ArrowDownRight, DollarSign, BarChart2, Loader2
 } from "lucide-react";
 import {
-    ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
-    Tooltip, ResponsiveContainer, Legend, Area, AreaChart
+    ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
+import { BillingAPI, ProjectsAPI } from "@/lib/api";
+import { toDate } from "@/lib/firestore";
 
-const MRR_DATA = [
-    { month: "Jan", actual: 12500, projected: null },
-    { month: "Feb", actual: 15800, projected: null },
-    { month: "Mar", actual: 14200, projected: null },
-    { month: "Apr", actual: 19500, projected: null },
-    { month: "May", actual: 21000, projected: null },
-    { month: "Jun", actual: 28400, projected: null },
-    { month: "Jul", actual: null, projected: 34000 },
-    { month: "Aug", actual: null, projected: 38500 },
-    { month: "Sep", actual: null, projected: 42000 },
-];
+type View = "revenue" | "cashflow" | "profitability";
 
-const CASHFLOW_EVENTS = [
-    { date: "Jun 25", label: "INV-2026-006 due — Apex Logistics", amount: 30000, type: "incoming" as const },
-    { date: "Jun 29", label: "Postmark renewal — StarTech", amount: 60, type: "outgoing" as const },
-    { date: "Jul 01", label: "AWS EC2 renewal — Nexus-MFG", amount: 380, type: "outgoing" as const },
-    { date: "Jul 01", label: "Firebase billing — Apex Logistics", amount: 410, type: "outgoing" as const },
-    { date: "Jul 01", label: "SendGrid + Sentry — Nexus-MFG", amount: 215, type: "outgoing" as const },
-    { date: "Jul 02", label: "INV-2026-003 due — Coastal Pharma", amount: 12000, type: "incoming" as const },
-    { date: "Jul 05", label: "DigitalOcean renewal — StarTech", amount: 200, type: "outgoing" as const },
-    { date: "Jul 10", label: "Maps API billing — BioLink", amount: 160, type: "outgoing" as const },
-    { date: "Jul 15", label: "Vercel Pro — Apex Logistics", amount: 80, type: "outgoing" as const },
-    { date: "Jul 18", label: "Phase completion invoice — Nexus-MFG", amount: 20000, type: "incoming" as const },
-    { date: "Jul 22", label: "Cloudinary renewal — Apex", amount: 45, type: "outgoing" as const },
-    { date: "Aug 01", label: "Expected retainer — BioLink SLA", amount: 8500, type: "incoming" as const },
-];
-
-const PROFITABILITY = [
-    { client: "BioLink Technologies", invoiced: 140000, costs: 664, marginPct: 99.5, phase: "COMPLETED" },
-    { client: "Apex Logistics Ltd.", invoiced: 55000, costs: 535, marginPct: 99.0, phase: "BACKEND_ARCH" },
-    { client: "Nexus-MFG", invoiced: 18500, costs: 595, marginPct: 96.8, phase: "STAGING" },
-    { client: "Coastal Pharma", invoiced: 12000, costs: 80, marginPct: 99.3, phase: "DISCOVERY" },
-    { client: "StarTech Holdings", invoiced: 8500, costs: 260, marginPct: 96.9, phase: "UI/UX" },
-];
+interface CashflowEvent {
+    date: Date;
+    label: string;
+    amount: number;
+    type: "incoming" | "outgoing";
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -52,9 +26,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <div className="bg-[#111827] border border-white/10 rounded-xl p-4 text-sm shadow-2xl">
                 <p className="font-mono text-gray-400 text-xs mb-2">{label}</p>
                 {payload.map((p: any, i: number) => (
-                    <p key={i} style={{ color: p.color }} className="font-bold">
-                        {p.name}: GHS {(p.value || 0).toLocaleString()}
-                    </p>
+                    <p key={i} style={{ color: p.color }} className="font-bold">{p.name}: {(p.value || 0).toLocaleString()}</p>
                 ))}
             </div>
         );
@@ -63,175 +35,245 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function ForecastModule() {
-    const [activeView, setActiveView] = useState<"mrr" | "cashflow" | "profitability">("mrr");
+    const [activeView, setActiveView] = useState<View>("revenue");
+    const [loading, setLoading] = useState(true);
+    const [invoices, setInvoices] = useState<any[]>([]);
+    const [subs, setSubs] = useState<any[]>([]);
+    const [expenses, setExpenses] = useState<any[]>([]);
+    const [projects, setProjects] = useState<any[]>([]);
 
-    const currentMRR = 28400;
-    const projectedMRR = 42000;
-    const growthPct = (((projectedMRR - currentMRR) / currentMRR) * 100).toFixed(1);
-    const totalAR = CASHFLOW_EVENTS.filter(e => e.type === "incoming").reduce((a, e) => a + e.amount, 0);
-    const totalAP = CASHFLOW_EVENTS.filter(e => e.type === "outgoing").reduce((a, e) => a + e.amount, 0);
+    const load = useCallback(async () => {
+        try {
+            const [inv, sub, exp, proj] = await Promise.all([
+                BillingAPI.getInvoices(),
+                ProjectsAPI.getAllSubscriptions(),
+                ProjectsAPI.getExpenses(),
+                ProjectsAPI.list(),
+            ]);
+            setInvoices(inv || []);
+            setSubs(sub || []);
+            setExpenses(exp || []);
+            setProjects(proj || []);
+        } catch {
+            // leave everything empty — an honest blank forecast beats invented numbers
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const projectToClient = useMemo(() => {
+        const map = new Map<string, { clientId: string; name: string }>();
+        projects.forEach((p: any) => map.set(p.id, { clientId: p.clientId, name: p.client?.companyName || p.projectName }));
+        return map;
+    }, [projects]);
+
+    // Revenue by month — built from paid invoices' actual payment dates.
+    // Not "MRR" in the recurring-subscription sense: this business invoices
+    // by phase, not by subscription, so this is realized revenue over time.
+    const revenueByMonth = useMemo(() => {
+        const paid = invoices.filter((i) => i.status === "PAID");
+        const buckets = new Map<string, number>();
+        paid.forEach((inv) => {
+            const d = toDate(inv.paidAt) || toDate(inv.createdAt);
+            if (!d) return;
+            const key = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            buckets.set(key, (buckets.get(key) || 0) + (Number(inv.amount) || 0));
+        });
+        return Array.from(buckets, ([month, revenue]) => ({ month, revenue }));
+    }, [invoices]);
+
+    const thisMonthRevenue = useMemo(() => {
+        const now = new Date();
+        return invoices
+            .filter((i) => i.status === "PAID")
+            .filter((i) => {
+                const d = toDate(i.paidAt) || toDate(i.createdAt);
+                return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            })
+            .reduce((a, i) => a + (Number(i.amount) || 0), 0);
+    }, [invoices]);
+
+    const outstanding = useMemo(
+        () => invoices.filter((i) => i.status === "SENT" || i.status === "OVERDUE").reduce((a, i) => a + (Number(i.amount) || 0), 0),
+        [invoices]
+    );
+
+    const cashflowEvents: CashflowEvent[] = useMemo(() => {
+        const incoming: CashflowEvent[] = invoices
+            .filter((i) => i.status === "SENT" || i.status === "OVERDUE")
+            .map((i) => {
+                const d = toDate(i.dueDate);
+                return d ? { date: d, label: `${i.invoiceNumber} due — ${i.client?.companyName || 'Unknown client'}`, amount: Number(i.amount) || 0, type: "incoming" as const } : null;
+            })
+            .filter(Boolean) as CashflowEvent[];
+
+        const outgoing: CashflowEvent[] = subs
+            .filter((s) => s.status === "ACTIVE" && s.billingFrequency === "MONTHLY")
+            .map((s) => {
+                const d = toDate(s.renewalDate);
+                const client = projectToClient.get(s.projectId);
+                return d ? { date: d, label: `${s.serviceName} renewal — ${client?.name || 'Unassigned'}`, amount: Number(s.monthlyCost) || 0, type: "outgoing" as const } : null;
+            })
+            .filter(Boolean) as CashflowEvent[];
+
+        return [...incoming, ...outgoing].sort((a, b) => a.date.getTime() - b.date.getTime());
+    }, [invoices, subs, projectToClient]);
+
+    const next30 = cashflowEvents.filter((e) => {
+        const days = (e.date.getTime() - Date.now()) / 86400000;
+        return days >= -1 && days <= 30;
+    });
+    const totalAR = next30.filter((e) => e.type === "incoming").reduce((a, e) => a + e.amount, 0);
+    const totalAP = next30.filter((e) => e.type === "outgoing").reduce((a, e) => a + e.amount, 0);
     const netCashflow = totalAR - totalAP;
+
+    const profitability = useMemo(() => {
+        const byClient = new Map<string, { name: string; invoiced: number; costs: number }>();
+        invoices.filter((i) => i.status === "PAID").forEach((i) => {
+            const key = i.clientId;
+            const name = i.client?.companyName || "Unknown client";
+            const row = byClient.get(key) || { name, invoiced: 0, costs: 0 };
+            row.invoiced += Number(i.amount) || 0;
+            byClient.set(key, row);
+        });
+        expenses.forEach((e) => {
+            const client = projectToClient.get(e.projectId);
+            if (!client) return;
+            const row = byClient.get(client.clientId) || { name: client.name, invoiced: 0, costs: 0 };
+            row.costs += Number(e.amount) || 0;
+            byClient.set(client.clientId, row);
+        });
+        subs.filter((s) => s.status === "ACTIVE" && s.billingFrequency === "MONTHLY").forEach((s) => {
+            const client = projectToClient.get(s.projectId);
+            if (!client) return;
+            const row = byClient.get(client.clientId) || { name: client.name, invoiced: 0, costs: 0 };
+            row.costs += Number(s.monthlyCost) || 0;
+            byClient.set(client.clientId, row);
+        });
+        return Array.from(byClient.values())
+            .map((r) => ({ ...r, net: r.invoiced - r.costs, marginPct: r.invoiced > 0 ? Math.round(((r.invoiced - r.costs) / r.invoiced) * 100) : 0 }))
+            .sort((a, b) => b.invoiced - a.invoiced);
+    }, [invoices, expenses, subs, projectToClient]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-24">
+                <Loader2 size={28} className="animate-spin text-cyan-400" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
             {/* KPI Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: "Current MRR", value: `GHS ${currentMRR.toLocaleString()}`, sub: "Jun 2026", icon: TrendingUp, color: "cyan" },
-                    { label: "Projected MRR (Sep)", value: `GHS ${projectedMRR.toLocaleString()}`, sub: `+${growthPct}% growth`, icon: Target, color: "purple" },
-                    { label: "Incoming (60 days)", value: `GHS ${totalAR.toLocaleString()}`, sub: "invoices + retainers", icon: ArrowUpRight, color: "emerald" },
-                    { label: "Net Cashflow", value: `GHS ${netCashflow.toLocaleString()}`, sub: "next 60 days", icon: BarChart2, color: netCashflow > 0 ? "emerald" : "red" },
+                    { label: "Revenue This Month", value: thisMonthRevenue, icon: TrendingUp, color: "cyan" },
+                    { label: "Outstanding (unpaid)", value: outstanding, icon: DollarSign, color: "amber" },
+                    { label: "Incoming (30 days)", value: totalAR, icon: ArrowUpRight, color: "emerald" },
+                    { label: "Net Cashflow (30 days)", value: netCashflow, icon: BarChart2, color: netCashflow >= 0 ? "emerald" : "red" },
                 ].map((kpi, i) => (
                     <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                         className="p-5 rounded-2xl bg-[#111827] border border-white/5">
                         <div className={`text-${kpi.color}-400 mb-3`}><kpi.icon size={18} /></div>
                         <div className="text-xs text-gray-500 mb-1">{kpi.label}</div>
-                        <div className="text-lg font-bold text-white font-mono">{kpi.value}</div>
-                        <div className="text-[10px] text-gray-600 mt-1">{kpi.sub}</div>
+                        <div className="text-lg font-bold text-white font-mono">{kpi.value.toLocaleString()}</div>
                     </motion.div>
                 ))}
             </div>
+            <p className="text-[11px] text-gray-600 -mt-4">Amounts summed at face value across invoice currencies — not currency-converted.</p>
 
             {/* View Tabs */}
             <div className="flex gap-2">
-                {(["mrr", "cashflow", "profitability"] as const).map(v => (
+                {(["revenue", "cashflow", "profitability"] as const).map((v) => (
                     <button key={v} onClick={() => setActiveView(v)}
                         className={`px-5 py-2.5 rounded-xl border text-sm font-medium capitalize transition-all ${activeView === v ? "bg-white/10 border-white/20 text-white" : "bg-white/5 border-white/5 text-gray-500 hover:text-gray-300"}`}>
-                        {v === "mrr" ? "MRR Projection" : v === "cashflow" ? "Cash Flow (60 days)" : "Project Profitability"}
+                        {v === "revenue" ? "Revenue" : v === "cashflow" ? "Cash Flow" : "Client Profitability"}
                     </button>
                 ))}
             </div>
 
-            {/* MRR Chart */}
-            {activeView === "mrr" && (
+            {activeView === "revenue" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 rounded-3xl bg-[#111827] border border-white/5">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 className="text-lg font-bold text-white">MRR Growth + 3-Month Projection</h3>
-                            <p className="text-sm text-gray-500 mt-1">Solid = actual · Dashed = projected</p>
+                    <h3 className="text-lg font-bold text-white mb-1">Realized revenue by month</h3>
+                    <p className="text-sm text-gray-500 mb-6">Paid invoices only. History starts from your first recorded payment — there's no backfilled trend data before that.</p>
+                    {revenueByMonth.length === 0 ? (
+                        <div className="py-16 text-center text-gray-600 font-mono text-sm">No paid invoices yet.</div>
+                    ) : (
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={revenueByMonth}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                    <XAxis dataKey="month" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                    <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Bar dataKey="revenue" name="Revenue" fill="#22D3EE" fillOpacity={0.7} radius={[6, 6, 0, 0]} />
+                                </ComposedChart>
+                            </ResponsiveContainer>
                         </div>
-                        <div className="text-right">
-                            <div className="text-sm text-gray-500">ARR (projected)</div>
-                            <div className="text-2xl font-bold text-cyan-400 font-mono">GHS {(projectedMRR * 12).toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <div className="h-[320px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={MRR_DATA}>
-                                <defs>
-                                    <linearGradient id="actualGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#22D3EE" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#22D3EE" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#A855F7" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#A855F7" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} tickFormatter={v => `${v / 1000}k`} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="actual" name="Actual MRR" fill="#22D3EE" fillOpacity={0.7} radius={[6, 6, 0, 0]} />
-                                <Bar dataKey="projected" name="Projected MRR" fill="#A855F7" fillOpacity={0.5} radius={[6, 6, 0, 0]} />
-                            </ComposedChart>
-                        </ResponsiveContainer>
-                    </div>
+                    )}
                 </motion.div>
             )}
 
-            {/* Cash Flow Timeline */}
             {activeView === "cashflow" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 rounded-3xl bg-[#111827] border border-white/5 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-bold text-white">Cash Flow Calendar</h3>
+                        <h3 className="text-lg font-bold text-white">Cash Flow Timeline</h3>
                         <div className="flex gap-4 text-xs">
                             <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Incoming</span>
                             <span className="flex items-center gap-1.5 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span> Outgoing</span>
                         </div>
                     </div>
-                    {CASHFLOW_EVENTS.map((ev, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors"
-                        >
-                            <div className="w-14 flex-shrink-0 text-center">
+                    {cashflowEvents.length === 0 && (
+                        <div className="py-16 text-center text-gray-600 font-mono text-sm">No upcoming invoices or subscription renewals.</div>
+                    )}
+                    {cashflowEvents.map((ev, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+                            className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                            <div className="w-16 flex-shrink-0 text-center">
                                 <div className="text-[10px] font-mono text-gray-600">DATE</div>
-                                <div className="text-xs font-bold text-white font-mono">{ev.date}</div>
+                                <div className="text-xs font-bold text-white font-mono">{ev.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                             </div>
                             <div className={`flex-shrink-0 p-2 rounded-lg ${ev.type === "incoming" ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
-                                {ev.type === "incoming"
-                                    ? <ArrowUpRight size={14} className="text-emerald-400" />
-                                    : <ArrowDownRight size={14} className="text-red-400" />}
+                                {ev.type === "incoming" ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-red-400" />}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-gray-300 truncate">{ev.label}</p>
                             </div>
                             <div className={`text-sm font-bold font-mono flex-shrink-0 ${ev.type === "incoming" ? "text-emerald-400" : "text-red-400"}`}>
-                                {ev.type === "incoming" ? "+" : "-"}GHS {ev.amount.toLocaleString()}
+                                {ev.type === "incoming" ? "+" : "-"}{ev.amount.toLocaleString()}
                             </div>
                         </motion.div>
                     ))}
-                    <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
-                        <span className="text-sm text-gray-400">Net 60-day cashflow</span>
-                        <span className={`text-xl font-bold font-mono ${netCashflow > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {netCashflow > 0 ? "+" : ""}GHS {netCashflow.toLocaleString()}
-                        </span>
-                    </div>
                 </motion.div>
             )}
 
-            {/* Profitability */}
             {activeView === "profitability" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-3xl bg-[#111827] border border-white/5 overflow-hidden">
                     <div className="hidden md:grid grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1fr] gap-4 px-6 py-4 border-b border-white/5 text-[11px] font-mono text-gray-500 uppercase tracking-widest">
-                        <span>Client</span><span>Invoiced</span><span>Running Costs</span><span>Net Profit</span><span>Margin</span>
+                        <span>Client</span><span>Invoiced (paid)</span><span>Running Costs</span><span>Net</span><span>Margin</span>
                     </div>
-                    {PROFITABILITY.map((row, i) => {
-                        const net = row.invoiced - row.costs;
-                        return (
-                            <motion.div
-                                key={row.client}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: i * 0.06 }}
-                                className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1fr] gap-2 md:gap-4 px-6 py-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors items-center last:border-0"
-                            >
-                                <div>
-                                    <div className="text-sm font-medium text-white">{row.client}</div>
-                                    <div className="text-[10px] font-mono text-gray-600 mt-0.5">{row.phase}</div>
+                    {profitability.length === 0 && (
+                        <div className="py-16 text-center text-gray-600 font-mono text-sm">No paid invoices yet.</div>
+                    )}
+                    {profitability.map((row, i) => (
+                        <motion.div key={row.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.06 }}
+                            className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1fr] gap-2 md:gap-4 px-6 py-5 border-b border-white/5 hover:bg-white/[0.02] transition-colors items-center last:border-0">
+                            <div className="text-sm font-medium text-white">{row.name}</div>
+                            <div className="font-mono font-bold text-white text-sm">{row.invoiced.toLocaleString()}</div>
+                            <div className="font-mono text-sm text-red-400">{row.costs.toLocaleString()}</div>
+                            <div className={`font-mono font-bold text-sm ${row.net >= 0 ? "text-emerald-400" : "text-red-400"}`}>{row.net.toLocaleString()}</div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div initial={{ width: 0 }} animate={{ width: `${Math.max(0, Math.min(100, row.marginPct))}%` }} transition={{ duration: 0.8, delay: i * 0.06 }}
+                                        className={`h-full rounded-full ${row.marginPct >= 0 ? "bg-emerald-500" : "bg-red-500"}`} />
                                 </div>
-                                <div className="font-mono font-bold text-white text-sm">GHS {row.invoiced.toLocaleString()}</div>
-                                <div className="font-mono text-sm text-red-400">GHS {row.costs.toLocaleString()}</div>
-                                <div className="font-mono font-bold text-emerald-400 text-sm">GHS {net.toLocaleString()}</div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${row.marginPct}%` }}
-                                                transition={{ duration: 0.8, delay: i * 0.06 }}
-                                                className="h-full bg-emerald-500 rounded-full"
-                                            />
-                                        </div>
-                                        <span className="text-xs font-mono text-emerald-400 w-12 text-right">{row.marginPct}%</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                    <div className="px-6 py-5 bg-white/[0.02] border-t border-white/10">
-                        <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1fr] gap-4 text-sm">
-                            <div className="font-bold text-gray-400">TOTAL</div>
-                            <div className="font-bold font-mono text-white">GHS {PROFITABILITY.reduce((a, r) => a + r.invoiced, 0).toLocaleString()}</div>
-                            <div className="font-bold font-mono text-red-400">GHS {PROFITABILITY.reduce((a, r) => a + r.costs, 0).toLocaleString()}</div>
-                            <div className="font-bold font-mono text-emerald-400">GHS {PROFITABILITY.reduce((a, r) => a + r.invoiced - r.costs, 0).toLocaleString()}</div>
-                            <div className="font-bold font-mono text-emerald-400">98.8%</div>
-                        </div>
-                    </div>
+                                <span className={`text-xs font-mono w-12 text-right ${row.marginPct >= 0 ? "text-emerald-400" : "text-red-400"}`}>{row.marginPct}%</span>
+                            </div>
+                        </motion.div>
+                    ))}
                 </motion.div>
             )}
         </div>

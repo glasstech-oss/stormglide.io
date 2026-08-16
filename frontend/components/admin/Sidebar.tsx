@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity, Kanban, FileCheck, ScrollText } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity, Kanban, FileCheck, ScrollText, Package, TrendingUp } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAdminStore } from "@/store/adminStore";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,8 @@ const MENU_ITEMS = [
     { id: "projects", label: "Projects", icon: BriefcaseBusiness },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "billing", label: "Payments", icon: CreditCard },
+    { id: "subscriptions", label: "Subscriptions", icon: Package },
+    { id: "forecast", label: "Forecast", icon: TrendingUp },
     { id: "analytics", label: "Visitor insight", icon: BarChart3 },
     { id: "team", label: "About page team", icon: UserSquare2 },
     { id: "audit", label: "Audit Log", icon: ScrollText },
@@ -77,6 +79,14 @@ export default function Sidebar() {
             router.push("/admin/audit");
             return;
         }
+        if (id === "subscriptions") {
+            router.push("/admin/subscriptions");
+            return;
+        }
+        if (id === "forecast") {
+            router.push("/admin/forecast");
+            return;
+        }
         if (id === "analytics") {
             router.push("/admin/analytics");
             return;
@@ -121,8 +131,10 @@ export default function Sidebar() {
                     const isKanban = pathname.startsWith("/admin/kanban");
                     const isVault = pathname.startsWith("/admin/vault");
                     const isAudit = pathname.startsWith("/admin/audit");
+                    const isSubscriptions = pathname.startsWith("/admin/subscriptions");
+                    const isForecast = pathname.startsWith("/admin/forecast");
                     const isAnalytics = pathname.startsWith("/admin/analytics");
-                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isKanban || isVault || isAudit || isAnalytics;
+                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isKanban || isVault || isAudit || isSubscriptions || isForecast || isAnalytics;
                     const active = item.id === "projects" ? isProjects
                         : item.id === "invoices" ? isInvoices
                         : item.id === "team" ? isTeam
@@ -131,6 +143,8 @@ export default function Sidebar() {
                         : item.id === "kanban" ? isKanban
                         : item.id === "vault" ? isVault
                         : item.id === "audit" ? isAudit
+                        : item.id === "subscriptions" ? isSubscriptions
+                        : item.id === "forecast" ? isForecast
                         : item.id === "analytics" ? isAnalytics
                         : !isDedicatedRoute && activeTab === item.id;
                     return (
