@@ -2712,20 +2712,24 @@ exports.monitoringCycle = functions.pubsub.schedule('0 */6 * * *').onRun(async (
 // GCP BILLING BUDGET ALERTS
 // =============================================================================
 
-// Cloud Billing budget notifications carry no Stormglide-specific identifier
-// (client/project id) — only the GCP budget's own id and billing account.
-// This is the join back to a client, keyed by budget id since a billing
-// account can hold other, unrelated budgets (e.g. Firebase's own
-// auto-created ones) that must never be attributed to a client here.
-const BUDGET_CLIENT_MAP = {
-  '0c7f594f-8755-4874-a827-141654a44f79': { clientId: 'LlosgTAKe0VadqlMQodi', clientName: 'MC-Bauchemie Ghana' },
-  '7814d375-5bd1-4a5c-8659-f0d3d50b55ee': { clientId: '2COI4GEerQCu3E2zVFsf', clientName: 'Green Gold Gardens' },
-  '9e4eac84-2ead-49ff-ac2d-7ba10163203f': { clientId: 'LpFjSLGn7vXJccGHrbvA', clientName: 'Westline Future' },
-};
+// Static per-client monthly cloud budget config. `budgetId` links a Cloud
+// Billing budget to its Stormglide client for the Pub/Sub handler below —
+// needed because a billing account can hold other, unrelated budgets (e.g.
+// Firebase's own auto-created ones) that must never be attributed to a
+// client here. Entries with `budgetId: null` have no budget yet (billing
+// isn't enabled on that GCP project) — kept here so the dashboard can show
+// that honestly instead of silently omitting the client.
+const CLIENT_BUDGETS = [
+  { budgetId: '0c7f594f-8755-4874-a827-141654a44f79', clientId: 'LlosgTAKe0VadqlMQodi', clientName: 'MC-Bauchemie Ghana', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: '7814d375-5bd1-4a5c-8659-f0d3d50b55ee', clientId: '2COI4GEerQCu3E2zVFsf', clientName: 'Green Gold Gardens', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: '9e4eac84-2ead-49ff-ac2d-7ba10163203f', clientId: 'LpFjSLGn7vXJccGHrbvA', clientName: 'Westline Future', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: null, clientId: 'cISlC5fm1rzxG6d9LUe9', clientName: 'Glasstech Fab', budgetAmount: null, currencyCode: null },
+];
+const BUDGET_ID_MAP = Object.fromEntries(CLIENT_BUDGETS.filter((b) => b.budgetId).map((b) => [b.budgetId, b]));
 
 exports.billingBudgetAlert = functions.pubsub.topic('billing-budget-alerts').onPublish(async (message) => {
   const budgetId = message.attributes?.budgetId;
-  const client = BUDGET_CLIENT_MAP[budgetId];
+  const client = BUDGET_ID_MAP[budgetId];
   if (!client) {
     console.log(`Ignoring billing budget notification for untracked budget ${budgetId}`);
     return null;
@@ -2747,6 +2751,11 @@ exports.billingBudgetAlert = functions.pubsub.topic('billing-budget-alerts').onP
   // emails immediately rather than waiting for the budget to be exhausted.
   const severity = pct >= 100 ? 'critical' : 'high';
 
+  await db.collection('budgetStatus').doc(client.clientId).set({
+    clientId: client.clientId, clientName: client.clientName,
+    costAmount, budgetAmount, currencyCode, pct, updatedAt: now(),
+  }, { merge: true });
+
   await createAlertIfNew(
     client.clientId, 'BUDGET', severity,
     `${client.clientName} — ${pct}% of monthly cloud budget spent`,
@@ -2755,6 +2764,21 @@ exports.billingBudgetAlert = functions.pubsub.topic('billing-budget-alerts').onP
   );
 
   return null;
+});
+
+app.get('/v1/monitoring/budgets', verifyToken, adminOnly, async (req, res) => {
+  const statusSnap = await db.collection('budgetStatus').get();
+  const statusMap = {};
+  statusSnap.forEach((d) => { statusMap[d.id] = d.data(); });
+  const budgets = CLIENT_BUDGETS.map((b) => ({
+    clientId: b.clientId,
+    clientName: b.clientName,
+    budgetAmount: b.budgetAmount,
+    currencyCode: b.currencyCode,
+    configured: !!b.budgetId,
+    latest: statusMap[b.clientId] || null,
+  }));
+  return res.json(budgets);
 });
 
 // Daily visits + growth-trend digest — yesterday vs the day before, and vs

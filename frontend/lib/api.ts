@@ -236,6 +236,10 @@ export const ProjectsAPI = {
         const { data } = await apiClient.get('/v1/domains', { params: { projectId } });
         return data;
     },
+    getAllDomains: async () => {
+        const { data } = await apiClient.get('/v1/domains');
+        return data;
+    },
     addDomain: async (body: Record<string, unknown>) => {
         const { data } = await apiClient.post('/v1/domains', body);
         return data;
@@ -415,6 +419,10 @@ export const MonitoringAPI = {
     },
     getAlertStats: async () => {
         const { data } = await apiClient.get('/v1/monitoring/alerts/stats');
+        return data;
+    },
+    getBudgets: async () => {
+        const { data } = await apiClient.get('/v1/monitoring/budgets');
         return data;
     },
     resolveAlert: async (alertId: string) => {
