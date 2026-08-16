@@ -2708,6 +2708,55 @@ exports.monitoringCycle = functions.pubsub.schedule('0 */6 * * *').onRun(async (
 // (manual entry: registrar + expiry date per domain, alerts fire on a real
 // 30/7-day threshold). Removed the dead stub rather than leave it spamming.
 
+// =============================================================================
+// GCP BILLING BUDGET ALERTS
+// =============================================================================
+
+// Cloud Billing budget notifications carry no Stormglide-specific identifier
+// (client/project id) — only the GCP budget's own id and billing account.
+// This is the join back to a client, keyed by budget id since a billing
+// account can hold other, unrelated budgets (e.g. Firebase's own
+// auto-created ones) that must never be attributed to a client here.
+const BUDGET_CLIENT_MAP = {
+  '0c7f594f-8755-4874-a827-141654a44f79': { clientId: 'LlosgTAKe0VadqlMQodi', clientName: 'MC-Bauchemie Ghana' },
+  '7814d375-5bd1-4a5c-8659-f0d3d50b55ee': { clientId: '2COI4GEerQCu3E2zVFsf', clientName: 'Green Gold Gardens' },
+  '9e4eac84-2ead-49ff-ac2d-7ba10163203f': { clientId: 'LpFjSLGn7vXJccGHrbvA', clientName: 'Westline Future' },
+};
+
+exports.billingBudgetAlert = functions.pubsub.topic('billing-budget-alerts').onPublish(async (message) => {
+  const budgetId = message.attributes?.budgetId;
+  const client = BUDGET_CLIENT_MAP[budgetId];
+  if (!client) {
+    console.log(`Ignoring billing budget notification for untracked budget ${budgetId}`);
+    return null;
+  }
+
+  let payload;
+  try {
+    payload = message.json;
+  } catch (e) {
+    console.error('Malformed billing budget notification payload:', e.message);
+    return null;
+  }
+
+  const costAmount = Number(payload.costAmount) || 0;
+  const budgetAmount = Number(payload.budgetAmount) || 0;
+  const currencyCode = payload.currencyCode || 'USD';
+  const pct = Math.round((Number(payload.alertThresholdExceeded) || (budgetAmount ? costAmount / budgetAmount : 0)) * 100);
+  // Every configured threshold (50/90/100%) is treated as high-or-above so it
+  // emails immediately rather than waiting for the budget to be exhausted.
+  const severity = pct >= 100 ? 'critical' : 'high';
+
+  await createAlertIfNew(
+    client.clientId, 'BUDGET', severity,
+    `${client.clientName} — ${pct}% of monthly cloud budget spent`,
+    `${currencyCode} ${costAmount.toFixed(2)} of ${currencyCode} ${budgetAmount.toFixed(2)} this billing period`,
+    client.clientName
+  );
+
+  return null;
+});
+
 // Daily visits + growth-trend digest — yesterday vs the day before, and vs
 // the same weekday the prior week (single-day GA4 numbers are noisy day to
 // day; the week-over-week comparison is what actually reads as a trend).
