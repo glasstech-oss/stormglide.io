@@ -238,6 +238,16 @@ const emailPhase = (to, d) => sendEmail(to, `Project Update: ${d.projectName} �
   </div>`
 );
 
+// ── Audit log helper ──────────────────────────────────────────────────────────
+// Fire-and-forget so a logging failure never blocks the actual mutation.
+const logAudit = (req, action, entityType, entityId, details) => {
+  db.collection('auditLogs').add({
+    action, entityType, entityId: entityId || null,
+    adminId: req.user.uid, adminEmail: req.user.email || null,
+    details: details || null, createdAt: now(),
+  }).catch((e) => console.error('Audit log write failed:', e.message));
+};
+
 // ── Deduplicating alert helper ────────────────────────────────────────────────
 const createAlertIfNew = async (clientId, type, severity, title, description, clientName) => {
   const existing = await db.collection('alertRecords')
@@ -788,6 +798,7 @@ app.put('/v1/settings', verifyToken, adminOnly, async (req, res) => {
       updatedAt: now(),
       updatedBy: req.user.email || req.user.uid,
     }, { merge: true });
+    logAudit(req, 'Site settings updated', 'settings', 'site', Object.keys(updates).join(', '));
 
     const snap = await db.collection('settings').doc('site').get();
     return res.json({
@@ -1568,6 +1579,7 @@ app.post('/v1/billing/invoice/:clientId', verifyToken, adminOnly, async (req, re
   });
 
   const doc = await ref.get();
+  logAudit(req, 'Invoice created', 'invoice', ref.id, `${invoiceNumber} — ${cur} ${totals.amount}`);
   return res.status(201).json(toDoc(doc));
 });
 
@@ -1659,6 +1671,7 @@ app.post('/v1/billing/invoice/:id/send', verifyToken, adminOnly, async (req, res
     status: invoice.status === 'DRAFT' ? 'SENT' : invoice.status,
     sentAt: now(), updatedAt: now(),
   });
+  logAudit(req, 'Invoice sent', 'invoice', invoice.id, `${invoice.invoiceNumber} — ${invoice.currency} ${invoice.amount} to ${email}`);
 
   await emailInvoice(email, {
     invoiceNumber: invoice.invoiceNumber, amount: invoice.amount, currency: invoice.currency,
@@ -1903,7 +1916,14 @@ app.get('/v1/monitoring/documents', verifyToken, adminOnly, async (req, res) => 
     ? await db.collection('documents').where('clientId', '==', clientId).orderBy('createdAt', 'desc').get()
     : await db.collection('documents').orderBy('createdAt', 'desc').get();
   const docs = toDocs(snap);
-  return res.json(type ? docs.filter((d) => d.type === type) : docs);
+  const ids = [...new Set(docs.map((d) => d.clientId).filter(Boolean))];
+  const clientMap = {};
+  await Promise.all(ids.map(async (id) => {
+    const d = await db.collection('clientProfiles').doc(id).get();
+    if (d.exists) clientMap[id] = { id: d.id, companyName: d.data().companyName };
+  }));
+  const enriched = docs.map((d) => ({ ...d, client: clientMap[d.clientId] || null }));
+  return res.json(type ? enriched.filter((d) => d.type === type) : enriched);
 });
 
 app.post('/v1/monitoring/documents', verifyToken, adminOnly, async (req, res) => {
@@ -1912,14 +1932,21 @@ app.post('/v1/monitoring/documents', verifyToken, adminOnly, async (req, res) =>
     clientId, type: type || 'CONTRACT', title, status: status || 'DRAFT',
     fileUrl: fileUrl || null, fileSize: fileSize || null,
     uploadedBy: req.user.email || 'admin',
+    signedAt: null, signedBy: null,
     createdAt: now(), updatedAt: now(),
   });
   return res.json({ id: ref.id, clientId, title, type });
 });
 
 app.put('/v1/monitoring/documents/:id/status', verifyToken, adminOnly, async (req, res) => {
-  await db.collection('documents').doc(req.params.id).update({ status: req.body.status, updatedAt: now() });
-  return res.json({ id: req.params.id, status: req.body.status });
+  const { status } = req.body;
+  const updates = { status, updatedAt: now() };
+  if (status === 'SIGNED') {
+    updates.signedAt = now();
+    updates.signedBy = req.user.email || req.user.uid;
+  }
+  await db.collection('documents').doc(req.params.id).update(updates);
+  return res.json({ id: req.params.id, status });
 });
 
 // =============================================================================
@@ -1989,7 +2016,8 @@ app.post('/v1/audit/logs', verifyToken, adminOnly, async (req, res) => {
   const { action, entityType, entityId, details } = req.body;
   const ref = await db.collection('auditLogs').add({
     action, entityType, entityId: entityId || null,
-    adminId: req.user.uid, details: details || null, createdAt: now(),
+    adminId: req.user.uid, adminEmail: req.user.email || null,
+    details: details || null, createdAt: now(),
   });
   return res.json({ id: ref.id, action, entityType });
 });
@@ -2168,6 +2196,7 @@ app.put('/v1/projects/:id/completion', verifyToken, adminOnly, async (req, res) 
     lastAssessedAt: now(),
   });
   await db.collection('projects').doc(req.params.id).update({ completionStatus: status || 'ON_TRACK', completionPercentage: overallCompletionPercentage || 0 });
+  logAudit(req, 'Project completion updated', 'project', req.params.id, `${overallCompletionPercentage ?? '—'}% — ${status || 'ON_TRACK'}`);
   return res.json({ message: 'Completion updated' });
 });
 
@@ -2289,6 +2318,7 @@ app.post('/v1/domains', verifyToken, adminOnly, async (req, res) => {
     cost: Number(cost || 0), autoRenew: autoRenew !== false, status: 'ACTIVE',
     renewalAlertSentAt: null, createdAt: now(),
   });
+  logAudit(req, 'Domain added', 'domain', ref.id, domainName);
   return res.json({ id: ref.id, domainName, message: 'Domain added' });
 });
 
@@ -2302,6 +2332,7 @@ app.put('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
     ...(autoRenew !== undefined && { autoRenew }),
     ...(cost !== undefined && { cost }),
   });
+  logAudit(req, 'Domain updated', 'domain', req.params.id);
   return res.json({ message: 'Domain updated' });
 });
 
@@ -2317,6 +2348,7 @@ app.put('/v1/domains/:id/renew', verifyToken, adminOnly, async (req, res) => {
 
 app.delete('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
   await db.collection('domainManagement').doc(req.params.id).delete();
+  logAudit(req, 'Domain deleted', 'domain', req.params.id);
   return res.json({ message: 'Domain deleted' });
 });
 
@@ -2512,11 +2544,13 @@ app.post('/v1/infrastructure/credentials', verifyToken, adminOnly, async (req, r
     value, // In production, encrypt this
     lastAccessedAt: null, createdAt: now(),
   });
+  logAudit(req, 'Credential added', 'credential', ref.id, `${label} (${type || 'OTHER'})`); // never log the value itself
   return res.json({ id: ref.id, label, message: 'Credential added' });
 });
 
 app.delete('/v1/infrastructure/credentials/:id', verifyToken, adminOnly, async (req, res) => {
   await db.collection('credentials').doc(req.params.id).delete();
+  logAudit(req, 'Credential deleted', 'credential', req.params.id);
   return res.json({ message: 'Credential deleted' });
 });
 
@@ -2703,10 +2737,50 @@ exports.monitoringCycle = functions.pubsub.schedule('0 */6 * * *').onRun(async (
 // Note: there used to be a checkDomainExpiry scheduled function here that
 // checked for infraSnapshots with checkType:'DOMAIN' — but nothing anywhere
 // ever wrote one, so it just fired a useless "monitoring gap" alert every
-// single day, forever. Real domain-expiry alerting lives in the
-// domainManagement collection / GET /v1/alerts/domain-renewal instead
-// (manual entry: registrar + expiry date per domain, alerts fire on a real
-// 30/7-day threshold). Removed the dead stub rather than leave it spamming.
+// single day, forever. Removed the dead stub. Real domain/subscription
+// renewal alerting is the scheduled function below — GET /v1/alerts/domain-
+// renewal and GET /v1/alerts/subscription-renewal compute the same data on
+// request but nothing ever called them proactively, so they never actually
+// alerted anyone; this closes that gap by pushing through createAlertIfNew.
+exports.renewalAlertsCycle = functions.pubsub.schedule('0 8 * * *').timeZone('UTC').onRun(async () => {
+  const thirtyDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 86400000));
+  const sevenDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 7 * 86400000));
+
+  const [domainSnap, subSnap] = await Promise.all([
+    db.collection('domainManagement').where('expirationDate', '<=', thirtyDays).where('status', '!=', 'EXPIRED').get(),
+    db.collection('projectSubscription').where('renewalDate', '<=', sevenDays).where('status', '==', 'ACTIVE').get(),
+  ]);
+
+  for (const doc of toDocs(domainSnap)) {
+    const project = await db.collection('projects').doc(doc.projectId).get();
+    if (!project.exists) continue;
+    const { clientId } = project.data();
+    const clientDoc = await db.collection('clientProfiles').doc(clientId).get();
+    const daysLeft = Math.floor((doc.expirationDate.toDate().getTime() - Date.now()) / 86400000);
+    await createAlertIfNew(
+      clientId, 'DOMAIN_RENEWAL', daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'high' : 'medium',
+      `Domain expires in ${daysLeft} days — ${doc.domainName}`,
+      `Registrar: ${doc.registrar || 'Unknown'}`,
+      clientDoc.data()?.companyName
+    );
+  }
+
+  for (const doc of toDocs(subSnap)) {
+    const project = await db.collection('projects').doc(doc.projectId).get();
+    if (!project.exists) continue;
+    const { clientId } = project.data();
+    const clientDoc = await db.collection('clientProfiles').doc(clientId).get();
+    const daysLeft = Math.floor((doc.renewalDate.toDate().getTime() - Date.now()) / 86400000);
+    await createAlertIfNew(
+      clientId, 'SUBSCRIPTION_RENEWAL', daysLeft <= 2 ? 'critical' : 'high',
+      `${doc.serviceName} renews in ${daysLeft} days`,
+      `GHS ${doc.monthlyCost}/month`,
+      clientDoc.data()?.companyName
+    );
+  }
+
+  return null;
+});
 
 // =============================================================================
 // GCP BILLING BUDGET ALERTS

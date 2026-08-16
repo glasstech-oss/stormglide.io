@@ -12,6 +12,9 @@ const PAGE_LABELS: Record<string, string> = {
     crm: "Clients",
     projects: "Projects",
     monitoring: "Monitoring",
+    kanban: "Tasks",
+    vault: "Documents",
+    audit: "Audit Log",
     billing: "Payments",
     settings: "Website settings",
 };
@@ -22,6 +25,9 @@ export default function Header() {
     const router = useRouter();
     const current = pathname.startsWith("/admin/projects") ? "projects"
         : pathname.startsWith("/admin/monitoring") ? "monitoring"
+        : pathname.startsWith("/admin/kanban") ? "kanban"
+        : pathname.startsWith("/admin/vault") ? "vault"
+        : pathname.startsWith("/admin/audit") ? "audit"
         : activeTab;
     const email = auth?.currentUser?.email || "Administrator";
 
@@ -32,6 +38,18 @@ export default function Header() {
         }
         if (id === "monitoring") {
             router.push("/admin/monitoring");
+            return;
+        }
+        if (id === "kanban") {
+            router.push("/admin/kanban");
+            return;
+        }
+        if (id === "vault") {
+            router.push("/admin/vault");
+            return;
+        }
+        if (id === "audit") {
+            router.push("/admin/audit");
             return;
         }
         setActiveTab(id);

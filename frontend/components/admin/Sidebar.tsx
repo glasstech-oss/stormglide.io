@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity } from "lucide-react";
+import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity, Kanban, FileCheck, ScrollText } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAdminStore } from "@/store/adminStore";
 import { cn } from "@/lib/utils";
@@ -15,11 +15,14 @@ const MENU_ITEMS = [
     { id: "crm", label: "Clients", icon: Users },
     { id: "leads", label: "Leads", icon: Inbox },
     { id: "monitoring", label: "Monitoring", icon: Activity },
+    { id: "kanban", label: "Tasks", icon: Kanban },
+    { id: "vault", label: "Documents", icon: FileCheck },
     { id: "projects", label: "Projects", icon: BriefcaseBusiness },
     { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "billing", label: "Payments", icon: CreditCard },
     { id: "analytics", label: "Visitor insight", icon: BarChart3 },
     { id: "team", label: "About page team", icon: UserSquare2 },
+    { id: "audit", label: "Audit Log", icon: ScrollText },
     { id: "settings", label: "Website settings", icon: Settings2 },
 ];
 
@@ -60,6 +63,18 @@ export default function Sidebar() {
         }
         if (id === "monitoring") {
             router.push("/admin/monitoring");
+            return;
+        }
+        if (id === "kanban") {
+            router.push("/admin/kanban");
+            return;
+        }
+        if (id === "vault") {
+            router.push("/admin/vault");
+            return;
+        }
+        if (id === "audit") {
+            router.push("/admin/audit");
             return;
         }
         if (id === "analytics") {
@@ -103,13 +118,19 @@ export default function Sidebar() {
                     const isTeam = pathname.startsWith("/admin/team");
                     const isLeads = pathname.startsWith("/admin/leads");
                     const isMonitoring = pathname.startsWith("/admin/monitoring");
+                    const isKanban = pathname.startsWith("/admin/kanban");
+                    const isVault = pathname.startsWith("/admin/vault");
+                    const isAudit = pathname.startsWith("/admin/audit");
                     const isAnalytics = pathname.startsWith("/admin/analytics");
-                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isAnalytics;
+                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isKanban || isVault || isAudit || isAnalytics;
                     const active = item.id === "projects" ? isProjects
                         : item.id === "invoices" ? isInvoices
                         : item.id === "team" ? isTeam
                         : item.id === "leads" ? isLeads
                         : item.id === "monitoring" ? isMonitoring
+                        : item.id === "kanban" ? isKanban
+                        : item.id === "vault" ? isVault
+                        : item.id === "audit" ? isAudit
                         : item.id === "analytics" ? isAnalytics
                         : !isDedicatedRoute && activeTab === item.id;
                     return (

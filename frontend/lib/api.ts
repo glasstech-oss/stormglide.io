@@ -383,7 +383,7 @@ export const KanbanAPI = {
         const { data } = await apiClient.get('/v1/kanban/board', { params: projectId ? { projectId } : {} });
         return data;
     },
-    createTask: async (body: { title: string; description?: string; status?: string; priority?: string; projectId?: string }) => {
+    createTask: async (body: { title: string; description?: string; status?: string; priority?: string; projectId?: string; clientId?: string }) => {
         const { data } = await apiClient.post('/v1/kanban/tasks', body);
         return data;
     },
