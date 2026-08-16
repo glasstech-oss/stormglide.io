@@ -1971,9 +1971,31 @@ app.get('/v1/portal/me', verifyToken, async (req, res) => {
     ]);
     const milestones = toDocs(mSnap);
     const completed = milestones.filter((m) => m.isCompleted).length;
+
+    // Best-effort: a hiccup here (e.g. an index still building) must never
+    // break the rest of the client's portal.
+    let systemStatus = { ssl: null, uptime: null, domains: [] };
+    try {
+      const [snapSnap, domainSnap] = await Promise.all([
+        db.collection('infraSnapshots').where('projectId', '==', p.id).orderBy('checkedAt', 'desc').limit(20).get(),
+        db.collection('domainManagement').where('projectId', '==', p.id).get(),
+      ]);
+      const snapshots = toDocs(snapSnap);
+      const latestSSL = snapshots.find((s) => s.checkType === 'SSL') || null;
+      const latestUptime = snapshots.find((s) => s.checkType === 'UPTIME') || null;
+      systemStatus = {
+        ssl: latestSSL ? { status: latestSSL.status, daysLeft: latestSSL.details?.daysLeft ?? null, checkedAt: latestSSL.checkedAt } : null,
+        uptime: latestUptime ? { status: latestUptime.status, latencyMs: latestUptime.details?.latencyMs ?? null, checkedAt: latestUptime.checkedAt } : null,
+        domains: toDocs(domainSnap).map((d) => ({ domainName: d.domainName, expirationDate: d.expirationDate, status: d.status })),
+      };
+    } catch (e) {
+      console.error(`Portal system-status fetch failed for project ${p.id}:`, e.message);
+    }
+
     return {
       ...p, milestones, feedback: toDocs(fSnap),
       progress: milestones.length ? Math.round((completed / milestones.length) * 100) : 0,
+      systemStatus,
     };
   }));
 

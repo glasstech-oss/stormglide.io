@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PortalAPI } from "@/lib/api";
+import { toDate } from "@/lib/firestore";
 
 // ==========================================
 // DATA MODELS
@@ -38,6 +39,12 @@ interface Milestone {
     date: string;
 }
 
+interface SystemStatus {
+    ssl: { status: string; daysLeft: number | null } | null;
+    uptime: { status: string; latencyMs: number | null } | null;
+    domains: { domainName: string; daysLeft: number | null }[];
+}
+
 const mockClientData = {
     companyName: "Apex Logistics Ltd.",
     contactName: "David",
@@ -47,6 +54,7 @@ const mockClientData = {
         currentPhase: "BACKEND_ARCHITECTURE" as ProjectPhase,
         stagingUrl: "https://staging.apex.stormglide.io",
         isLiveSandboxActive: true,
+        systemStatus: null as SystemStatus | null,
         milestones: [
             {
                 id: "m1", phase: "DISCOVERY", title: "Deep Discovery & Requirements",
@@ -238,6 +246,14 @@ function transformApiData(apiData: any) {
             currentPhase: project.currentPhase as ProjectPhase,
             stagingUrl: project.stagingUrl || "https://staging.stormglide.io",
             isLiveSandboxActive: project.isLiveSandboxActive,
+            systemStatus: project.systemStatus ? {
+                ssl: project.systemStatus.ssl ? { status: project.systemStatus.ssl.status, daysLeft: project.systemStatus.ssl.daysLeft } : null,
+                uptime: project.systemStatus.uptime ? { status: project.systemStatus.uptime.status, latencyMs: project.systemStatus.uptime.latencyMs } : null,
+                domains: (project.systemStatus.domains || []).map((d: any) => {
+                    const exp = toDate(d.expirationDate);
+                    return { domainName: d.domainName, daysLeft: exp ? Math.floor((exp.getTime() - Date.now()) / 86400000) : null };
+                }),
+            } as SystemStatus : null,
             milestones: (project.milestones || []).map((m: any) => ({
                 id: m.id,
                 phase: m.phase as ProjectPhase,
@@ -624,6 +640,47 @@ export default function ClientPortal() {
                             {project.milestones.filter(m => m.isCompleted).length} of {project.milestones.length} phases complete
                         </p>
                     </motion.div>
+
+                    {/* System Status — real SSL/uptime/domain checks, only shown once real data exists */}
+                    {project.systemStatus && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.55 }}
+                            className="p-6 rounded-3xl bg-[#111827] border border-white/5"
+                        >
+                            <h3 className="text-sm font-bold text-gray-400 mb-4 uppercase tracking-widest font-mono flex items-center gap-2">
+                                <ShieldCheck size={14} className="text-cyan-400" /> System Status
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500">SSL certificate</span>
+                                    {project.systemStatus.ssl ? (
+                                        <span className={`font-mono text-xs px-2 py-1 rounded-lg ${project.systemStatus.ssl.status === "HEALTHY" ? "bg-emerald-500/10 text-emerald-400" : project.systemStatus.ssl.status === "WARNING" ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400"}`}>
+                                            {project.systemStatus.ssl.status === "HEALTHY" ? "Valid" : `${project.systemStatus.ssl.daysLeft ?? "?"}d left`}
+                                        </span>
+                                    ) : <span className="text-xs text-gray-600 font-mono">Not yet checked</span>}
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500">Uptime</span>
+                                    {project.systemStatus.uptime ? (
+                                        <span className={`font-mono text-xs px-2 py-1 rounded-lg ${project.systemStatus.uptime.status === "HEALTHY" ? "bg-emerald-500/10 text-emerald-400" : project.systemStatus.uptime.status === "WARNING" ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400"}`}>
+                                            {project.systemStatus.uptime.status === "HEALTHY" ? "Online" : project.systemStatus.uptime.status === "WARNING" ? "Degraded" : "Down"}
+                                        </span>
+                                    ) : <span className="text-xs text-gray-600 font-mono">Not yet checked</span>}
+                                </div>
+                                {project.systemStatus.domains.map((d) => (
+                                    <div key={d.domainName} className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-500 truncate max-w-[140px]">{d.domainName}</span>
+                                        <span className={`font-mono text-xs px-2 py-1 rounded-lg ${d.daysLeft !== null && d.daysLeft < 30 ? "bg-amber-500/10 text-amber-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                                            {d.daysLeft !== null ? `${d.daysLeft}d left` : "Unknown"}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-[10px] text-gray-700 mt-4 font-mono">Checked automatically every 6 hours.</p>
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </div>
