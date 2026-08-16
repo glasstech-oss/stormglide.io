@@ -2275,6 +2275,45 @@ app.delete('/v1/project-expenses/:id', verifyToken, adminOnly, async (req, res) 
 });
 
 // =============================================================================
+// ADMIN PORTAL: TIME TRACKING
+// =============================================================================
+// Internal visibility into where time actually went per project — this
+// business invoices by phase, not by hour, so this isn't a billing
+// mechanism, just a log.
+
+app.get('/v1/time-entries', verifyToken, adminOnly, async (req, res) => {
+  const { projectId } = req.query;
+  const snap = projectId
+    ? await db.collection('timeEntries').where('projectId', '==', projectId).get()
+    : await db.collection('timeEntries').get();
+  const entries = toDocs(snap).sort((a, b) => (b.loggedAt?.toMillis?.() || 0) - (a.loggedAt?.toMillis?.() || 0));
+  return res.json(entries);
+});
+
+app.post('/v1/time-entries', verifyToken, adminOnly, async (req, res) => {
+  const { projectId, description, minutes, billable } = req.body;
+  if (!projectId || !description || !minutes) return res.status(400).json({ error: 'Project, description, and minutes are required' });
+  const project = await db.collection('projects').doc(projectId).get();
+  if (!project.exists) return res.status(404).json({ error: 'Project not found' });
+
+  const ref = db.collection('timeEntries').doc();
+  await ref.set({
+    projectId, clientId: project.data().clientId,
+    description: String(description).trim(),
+    minutes: Math.max(0, Number(minutes) || 0),
+    billable: billable !== false,
+    loggedBy: req.user.email || req.user.uid,
+    loggedAt: now(),
+  });
+  return res.json({ id: ref.id, message: 'Time entry logged' });
+});
+
+app.delete('/v1/time-entries/:id', verifyToken, adminOnly, async (req, res) => {
+  await db.collection('timeEntries').doc(req.params.id).delete();
+  return res.json({ message: 'Time entry deleted' });
+});
+
+// =============================================================================
 // ADMIN PORTAL: DOMAINS
 // =============================================================================
 

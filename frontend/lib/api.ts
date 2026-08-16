@@ -280,6 +280,18 @@ export const ProjectsAPI = {
         const { data } = await apiClient.delete(`/v1/project-expenses/${expenseId}`);
         return data;
     },
+    getTimeEntries: async (projectId: string) => {
+        const { data } = await apiClient.get('/v1/time-entries', { params: { projectId } });
+        return data;
+    },
+    logTime: async (body: { projectId: string; description: string; minutes: number; billable?: boolean }) => {
+        const { data } = await apiClient.post('/v1/time-entries', body);
+        return data;
+    },
+    deleteTimeEntry: async (entryId: string) => {
+        const { data } = await apiClient.delete(`/v1/time-entries/${entryId}`);
+        return data;
+    },
 };
 
 // ==========================================

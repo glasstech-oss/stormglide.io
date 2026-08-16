@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
+  Clock,
   FileText,
   Gauge,
   Lock,
@@ -18,6 +19,7 @@ import { SubscriptionsTab } from "@/components/admin/projects/SubscriptionsTab";
 import { TechStackTab } from "@/components/admin/projects/TechStackTab";
 import { CompletionTab } from "@/components/admin/projects/CompletionTab";
 import { FinancesTabFull } from "@/components/admin/projects/FinancesTabFull";
+import { TimeTrackingTab } from "@/components/admin/projects/TimeTrackingTab";
 import { ProjectsAPI } from "@/lib/api";
 
 interface ProjectData {
@@ -49,6 +51,7 @@ const TABS = [
   { id: "technology", label: "Technology", icon: Package },
   { id: "domains", label: "Domains", icon: Lock },
   { id: "costs", label: "Costs & billing", icon: FileText },
+  { id: "time", label: "Time", icon: Clock },
 ];
 
 export default function ProjectDetailPage() {
@@ -150,6 +153,7 @@ export default function ProjectDetailPage() {
             <div className="border-t border-white/10 pt-8"><FinancesTabFull projectId={projectId} /></div>
           </div>
         )}
+        {activeTab === "time" && <TimeTrackingTab projectId={projectId} />}
       </div>
     </div>
   );
