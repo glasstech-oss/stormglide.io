@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
+const { BigQuery } = require('@google-cloud/bigquery');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -2855,10 +2856,10 @@ exports.renewalAlertsCycle = functions.pubsub.schedule('0 8 * * *').timeZone('UT
 // isn't enabled on that GCP project) — kept here so the dashboard can show
 // that honestly instead of silently omitting the client.
 const CLIENT_BUDGETS = [
-  { budgetId: '0c7f594f-8755-4874-a827-141654a44f79', clientId: 'LlosgTAKe0VadqlMQodi', clientName: 'MC-Bauchemie Ghana', budgetAmount: 13, currencyCode: 'USD' },
-  { budgetId: '7814d375-5bd1-4a5c-8659-f0d3d50b55ee', clientId: '2COI4GEerQCu3E2zVFsf', clientName: 'Green Gold Gardens', budgetAmount: 13, currencyCode: 'USD' },
-  { budgetId: '9e4eac84-2ead-49ff-ac2d-7ba10163203f', clientId: 'LpFjSLGn7vXJccGHrbvA', clientName: 'Westline Future', budgetAmount: 13, currencyCode: 'USD' },
-  { budgetId: null, clientId: 'cISlC5fm1rzxG6d9LUe9', clientName: 'Glasstech Fab', budgetAmount: null, currencyCode: null },
+  { budgetId: '0c7f594f-8755-4874-a827-141654a44f79', billingAccountId: '018E8F-158E1E-2703DB', clientId: 'LlosgTAKe0VadqlMQodi', clientName: 'MC-Bauchemie Ghana', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: '7814d375-5bd1-4a5c-8659-f0d3d50b55ee', billingAccountId: '017EC5-3D03B4-B5EBE9', clientId: '2COI4GEerQCu3E2zVFsf', clientName: 'Green Gold Gardens', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: '9e4eac84-2ead-49ff-ac2d-7ba10163203f', billingAccountId: '01ECF2-446B69-147764', clientId: 'LpFjSLGn7vXJccGHrbvA', clientName: 'Westline Future', budgetAmount: 13, currencyCode: 'USD' },
+  { budgetId: null, billingAccountId: null, clientId: 'cISlC5fm1rzxG6d9LUe9', clientName: 'Glasstech Fab', budgetAmount: null, currencyCode: null },
 ];
 const BUDGET_ID_MAP = Object.fromEntries(CLIENT_BUDGETS.filter((b) => b.budgetId).map((b) => [b.budgetId, b]));
 
@@ -2914,6 +2915,61 @@ app.get('/v1/monitoring/budgets', verifyToken, adminOnly, async (req, res) => {
     latest: statusMap[b.clientId] || null,
   }));
   return res.json(budgets);
+});
+
+// =============================================================================
+// GCP BILLING EXPORT — DAILY SPEND ROLLUP
+// =============================================================================
+// Standard Cloud Billing usage-cost export writes one table per billing
+// account into the `billing_export` BigQuery dataset, named
+// gcp_billing_export_v1_<accountId with dashes as underscores>. That export
+// has to be turned on per billing account from the GCP Console — there is
+// no API/gcloud path for it — and typically has next-day latency, so this
+// is a daily rollup into Firestore, not a live query. Everything here is
+// best-effort: a billing account whose export table doesn't exist yet
+// (export not enabled, or enabled too recently) is skipped, not fatal.
+
+const bigquery = new BigQuery();
+
+exports.dailySpendRollup = functions.pubsub.schedule('0 9 * * *').timeZone('UTC').onRun(async () => {
+  const yesterday = new Date(Date.now() - 86400000);
+  const dateStr = yesterday.toISOString().slice(0, 10);
+
+  for (const client of CLIENT_BUDGETS) {
+    if (!client.billingAccountId) continue;
+    const table = `gcp_billing_export_v1_${client.billingAccountId.replace(/-/g, '_')}`;
+    try {
+      const [rows] = await bigquery.query({
+        query: `
+          SELECT SUM(cost) AS totalCost, ANY_VALUE(currency) AS currency
+          FROM \`${bigquery.projectId}.billing_export.${table}\`
+          WHERE DATE(usage_start_time) = @dateStr
+        `,
+        params: { dateStr },
+      });
+      const totalCost = Number(rows[0]?.totalCost) || 0;
+      await db.collection('dailySpend').doc(`${client.clientId}_${dateStr}`).set({
+        clientId: client.clientId, clientName: client.clientName,
+        date: dateStr, cost: totalCost, currency: rows[0]?.currency || client.currencyCode || 'USD',
+        updatedAt: now(),
+      });
+    } catch (e) {
+      console.warn(`Billing export not available yet for ${client.clientName} (${table}):`, e.message);
+    }
+  }
+  return null;
+});
+
+app.get('/v1/monitoring/spend-history', verifyToken, adminOnly, async (req, res) => {
+  const { clientId, days = 30 } = req.query;
+  if (!clientId) return res.status(400).json({ error: 'clientId is required' });
+  const cutoff = new Date(Date.now() - Number(days) * 86400000).toISOString().slice(0, 10);
+  const snap = await db.collection('dailySpend')
+    .where('clientId', '==', clientId)
+    .where('date', '>=', cutoff)
+    .get();
+  const entries = toDocs(snap).sort((a, b) => a.date.localeCompare(b.date));
+  return res.json(entries);
 });
 
 // Daily visits + growth-trend digest — yesterday vs the day before, and vs

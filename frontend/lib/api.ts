@@ -441,6 +441,10 @@ export const MonitoringAPI = {
         const { data } = await apiClient.get('/v1/monitoring/budgets');
         return data;
     },
+    getSpendHistory: async (clientId: string, days = 30) => {
+        const { data } = await apiClient.get('/v1/monitoring/spend-history', { params: { clientId, days } });
+        return data;
+    },
     resolveAlert: async (alertId: string) => {
         const { data } = await apiClient.put(`/v1/monitoring/alerts/${alertId}/resolve`, {});
         return data;

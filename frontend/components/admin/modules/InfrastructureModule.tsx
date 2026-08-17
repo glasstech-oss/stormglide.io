@@ -7,6 +7,7 @@ import {
     AlertTriangle, CheckCircle2, XCircle, RefreshCw,
     Flame, Loader2, HelpCircle, Radio
 } from "lucide-react";
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { MonitoringAPI, ProjectsAPI } from "@/lib/api";
 import { toDate } from "@/lib/firestore";
 
@@ -45,6 +46,7 @@ interface BudgetInfo {
 
 interface ClientInfra {
     id: string;
+    clientId: string;
     name: string;
     projectName: string;
     url: string | null;
@@ -150,6 +152,44 @@ function BudgetCard({ budget, clientName }: { budget: BudgetInfo; clientName: st
                 <span className="font-mono">{budget.currencyCode} {budget.costAmount?.toFixed(2)} / {budget.budgetAmount?.toFixed(2)}</span>
                 <span className="font-mono">{relativeTime(budget.updatedAt)}</span>
             </div>
+        </div>
+    );
+}
+
+// Daily rollup from the GCP billing export (see functions/index.js
+// dailySpendRollup). Export has next-day latency and has to be manually
+// pointed at the billing_export BigQuery dataset from the GCP Console per
+// billing account — until that's done and a day has passed, this is
+// empty, not broken.
+function SpendHistoryChart({ clientId }: { clientId: string }) {
+    const [history, setHistory] = useState<{ date: string; cost: number }[] | null>(null);
+
+    useEffect(() => {
+        MonitoringAPI.getSpendHistory(clientId, 30)
+            .then((entries: any[]) => setHistory((entries || []).map((e) => ({ date: e.date.slice(5), cost: Number(e.cost) || 0 }))))
+            .catch(() => setHistory([]));
+    }, [clientId]);
+
+    return (
+        <div className="p-5 rounded-2xl bg-[#111827] border border-white/5">
+            <div className="text-sm font-bold text-white mb-4">Spend — last 30 days</div>
+            {history === null ? (
+                <div className="h-[140px] flex items-center justify-center"><Loader2 size={18} className="animate-spin text-cyan-400" /></div>
+            ) : history.length === 0 ? (
+                <p className="text-xs text-gray-600">No historical spend data yet. This fills in once the GCP billing export is pointed at this project and a day has passed.</p>
+            ) : (
+                <div className="h-[140px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={history}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                            <XAxis dataKey="date" stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                            <Tooltip contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }} />
+                            <Line type="monotone" dataKey="cost" stroke="#fb923c" strokeWidth={2} dot={false} />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 }
@@ -262,6 +302,7 @@ function ClientDetail({ client, onClose }: { client: ClientInfra; onClose: () =>
 
                 {/* Cloud budget */}
                 {client.budget && <BudgetCard budget={client.budget} clientName={client.name} />}
+                {client.budget?.configured && <SpendHistoryChart clientId={client.clientId} />}
             </div>
         </div>
     );
@@ -353,6 +394,7 @@ export default function InfrastructureModule() {
 
                 return {
                     id: p.id,
+                    clientId: p.clientId,
                     name: p.client?.companyName || "Unassigned client",
                     projectName: p.projectName,
                     url: p.productionUrl || p.stagingUrl,
