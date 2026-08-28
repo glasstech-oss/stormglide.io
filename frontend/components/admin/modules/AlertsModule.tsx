@@ -7,18 +7,33 @@ import { MonitoringAPI } from "@/lib/api";
 import { toDate } from "@/lib/firestore";
 import {
     Globe, ShieldCheck, Flame, FileText, Database, Activity,
-    Shield, Bell, CheckCircle2, XCircle, Filter, ChevronDown, Loader2
+    Shield, Bell, CheckCircle2, XCircle, Filter, ChevronDown, Loader2, Repeat
 } from "lucide-react";
 
+// Every key here must have a matching case emitted by the backend's
+// createAlertIfNew callers (functions/index.js) — a real alert whose type
+// isn't a key crashes this whole module (TYPE_CFG[alert.type] is undefined,
+// then .icon throws). domain/firebase/invoice/backup/security are legacy —
+// nothing currently emits them — kept for forward-compat, not dead weight
+// to remove.
 const TYPE_CFG: Record<AlertType, { icon: React.ComponentType<{ size?: number; className?: string }>, label: string, color: string }> = {
     domain: { icon: Globe, label: "Domain", color: "text-blue-400" },
+    domain_renewal: { icon: Globe, label: "Domain Renewal", color: "text-blue-400" },
     ssl: { icon: ShieldCheck, label: "SSL", color: "text-cyan-400" },
     firebase: { icon: Flame, label: "Firebase", color: "text-orange-400" },
+    budget: { icon: Flame, label: "Budget", color: "text-orange-400" },
     invoice: { icon: FileText, label: "Invoice", color: "text-emerald-400" },
     backup: { icon: Database, label: "Backup", color: "text-purple-400" },
+    subscription_renewal: { icon: Repeat, label: "Subscription", color: "text-purple-400" },
     uptime: { icon: Activity, label: "Uptime", color: "text-amber-400" },
     security: { icon: Shield, label: "Security", color: "text-red-400" },
 };
+
+// This exact lookup crashed the whole page in production once already —
+// a real alert type (BUDGET) had no TYPE_CFG entry. Falling back here means
+// the next backend/frontend drift shows an unstyled-but-visible alert
+// instead of taking down the module.
+const typeCfg = (type: AlertType) => TYPE_CFG[type] ?? { icon: Bell, label: type, color: "text-gray-400" };
 
 const SEV_CFG: Record<AlertSeverity, { color: string; bg: string; ring: string; dot: string }> = {
     critical: { color: "text-red-400", bg: "bg-red-500/10", ring: "border-red-500/30", dot: "bg-red-500" },
@@ -165,8 +180,8 @@ export default function AlertsModule() {
                 )}
                 <AnimatePresence>
                     {visible.map((alert) => {
-                        const sev = SEV_CFG[alert.severity];
-                        const typ = TYPE_CFG[alert.type];
+                        const sev = SEV_CFG[alert.severity] ?? SEV_CFG.medium;
+                        const typ = typeCfg(alert.type);
                         const TypeIcon = typ.icon;
                         return (
                             <motion.div
