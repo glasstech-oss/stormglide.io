@@ -168,6 +168,11 @@ svg {
   overflow-x: clip;
 }
 
+.sg-board-panel,
+.sg-depth-overlay {
+  scroll-padding-bottom: 7rem;
+}
+
 
 .sg-page-loader {
   min-height: 100svh;
@@ -493,6 +498,12 @@ select.input {
   section[style*='padding'] {
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .sg-game-launcher {
+    display: none !important;
   }
 }
 

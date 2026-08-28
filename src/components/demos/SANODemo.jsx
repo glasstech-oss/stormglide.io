@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Activity, Shield, Share2 } from 'lucide-react'
+import { Heart, Activity } from 'lucide-react'
 
 function PulsingHeart() {
   return (

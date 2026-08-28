@@ -250,17 +250,36 @@ const logAudit = (req, action, entityType, entityId, details) => {
 };
 
 // ── Deduplicating alert helper ────────────────────────────────────────────────
-const createAlertIfNew = async (clientId, type, severity, title, description, clientName) => {
+// `dedupeKey` identifies the underlying issue (e.g. a specific subscription or
+// domain doc) independent of the display title. Titles often embed a changing
+// number ("renews in 4 days" -> "renews in 3 days" ...); matching on the raw
+// title used to mean every tick minted a brand-new "critical" alert for the
+// same stale record instead of updating one. Defaults to `title` for callers
+// (SSL/uptime checks) whose title is already stable.
+const createAlertIfNew = async (clientId, type, severity, title, description, clientName, dedupeKey) => {
+  const key = dedupeKey || title;
   const existing = await db.collection('alertRecords')
     .where('clientId', '==', clientId)
     .where('type', '==', type)
-    .where('title', '==', title)
+    .where('dedupeKey', '==', key)
     .where('resolved', '==', false)
     .limit(1).get();
-  if (!existing.empty) return;
+
+  if (!existing.empty) {
+    const doc = existing.docs[0];
+    const prev = doc.data();
+    const escalatedToCritical = severity === 'critical' && prev.severity !== 'critical';
+    if (prev.title !== title || prev.severity !== severity || prev.description !== description) {
+      await doc.ref.update({ title, severity, description, updatedAt: now() });
+    }
+    // Re-notify only on a genuine escalation, not on every refresh — the
+    // original bug (a new row per tick) also meant a fresh email per tick.
+    if (escalatedToCritical) await emailAlert({ title, description, severity, clientName });
+    return;
+  }
 
   await db.collection('alertRecords').add({
-    type, severity, title, description,
+    type, severity, title, description, dedupeKey: key,
     clientId, clientName: clientName || null,
     resolved: false, resolvedAt: null, resolvedBy: null,
     createdAt: now(), updatedAt: now(),
@@ -2171,12 +2190,18 @@ app.post('/v1/projects', verifyToken, adminOnly, async (req, res) => {
 });
 
 app.put('/v1/projects/:id', verifyToken, adminOnly, async (req, res) => {
-  const { projectName, description, estimatedEnd, clientId } = req.body;
+  const { projectName, description, estimatedEnd, clientId, productionUrl, stagingUrl } = req.body;
+  // productionUrl/stagingUrl are what the 6-hourly monitoringCycle keys off
+  // of (see SCHEDULED MONITORING below) — until one of these is set on a
+  // project, it's invisible to SSL/uptime monitoring. Explicit `=== ''`
+  // check (not just falsy) so a URL can be cleared, not just set.
   await db.collection('projects').doc(req.params.id).update({
     ...(projectName && { projectName }),
     ...(description && { description }),
     ...(estimatedEnd && { estimatedEnd }),
     ...(clientId && { clientId }),
+    ...(productionUrl !== undefined && { productionUrl: productionUrl || null }),
+    ...(stagingUrl !== undefined && { stagingUrl: stagingUrl || null }),
     updatedAt: now(),
   });
   return res.json({ id: req.params.id, message: 'Project updated' });
@@ -2353,13 +2378,15 @@ app.get('/v1/domains', verifyToken, adminOnly, async (req, res) => {
 app.get('/v1/domains/expiring', verifyToken, adminOnly, async (req, res) => {
   const { days = 30 } = req.query;
   const thirtyDaysAhead = admin.firestore.Timestamp.fromDate(new Date(Date.now() + days * 86400000));
-  const snap = await db.collection('domainManagement')
-    .where('expirationDate', '<=', thirtyDaysAhead)
-    .where('status', '!=', 'EXPIRED')
-    .orderBy('status')
-    .orderBy('expirationDate', 'asc')
-    .get();
-  return res.json(toDocs(snap));
+  // A range filter (expirationDate) plus an orderBy on a second, unrelated
+  // field (status) needs a composite index Firestore won't auto-create; that
+  // index was never declared, so this 500'd on every call. Filter/sort in JS
+  // instead — same pattern already used by GET /v1/domains below.
+  const snap = await db.collection('domainManagement').where('expirationDate', '<=', thirtyDaysAhead).get();
+  const domains = toDocs(snap)
+    .filter((d) => d.status !== 'EXPIRED')
+    .sort((a, b) => (a.expirationDate?.toMillis?.() || 0) - (b.expirationDate?.toMillis?.() || 0));
+  return res.json(domains);
 });
 
 app.get('/v1/domains/:id', verifyToken, adminOnly, async (req, res) => {
@@ -2644,13 +2671,12 @@ app.get('/v1/alerts/summary', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/v1/alerts/domain-renewal', verifyToken, adminOnly, async (req, res) => {
   const thirtyDays = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 86400000));
-  const snap = await db.collection('domainManagement')
-    .where('expirationDate', '<=', thirtyDays)
-    .where('status', '!=', 'EXPIRED')
-    .orderBy('status')
-    .orderBy('expirationDate', 'asc')
-    .get();
-  const domains = toDocs(snap);
+  // Same missing-composite-index problem as GET /v1/domains/expiring — filter
+  // and sort in JS instead of asking Firestore to order by a second field.
+  const snap = await db.collection('domainManagement').where('expirationDate', '<=', thirtyDays).get();
+  const domains = toDocs(snap)
+    .filter((d) => d.status !== 'EXPIRED')
+    .sort((a, b) => (a.expirationDate?.toMillis?.() || 0) - (b.expirationDate?.toMillis?.() || 0));
   const alerts = domains.map(d => {
     const daysLeft = Math.floor((d.expirationDate.toDate().getTime() - Date.now()) / 86400000);
     return {
@@ -2781,7 +2807,7 @@ const checkUptime = (clientId, projectId, url) => new Promise((resolve) => {
   req.on('timeout', () => { req.destroy(); resolve(); });
 });
 
-exports.monitoringCycle = functions.pubsub.schedule('0 */6 * * *').onRun(async () => {
+exports.monitoringCycle = functions.pubsub.schedule('*/30 * * * *').onRun(async () => {
   const snap = await db.collection('projects').get();
   const projects = toDocs(snap).filter((p) => p.stagingUrl || p.productionUrl);
   for (const p of projects) {
@@ -2823,7 +2849,8 @@ exports.renewalAlertsCycle = functions.pubsub.schedule('0 8 * * *').timeZone('UT
       clientId, 'DOMAIN_RENEWAL', daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'high' : 'medium',
       `Domain expires in ${daysLeft} days — ${doc.domainName}`,
       `Registrar: ${doc.registrar || 'Unknown'}`,
-      clientDoc.data()?.companyName
+      clientDoc.data()?.companyName,
+      `domain:${doc.id}`
     );
   }
 
@@ -2837,7 +2864,8 @@ exports.renewalAlertsCycle = functions.pubsub.schedule('0 8 * * *').timeZone('UT
       clientId, 'SUBSCRIPTION_RENEWAL', daysLeft <= 2 ? 'critical' : 'high',
       `${doc.serviceName} renews in ${daysLeft} days`,
       `GHS ${doc.monthlyCost}/month`,
-      clientDoc.data()?.companyName
+      clientDoc.data()?.companyName,
+      `subscription:${doc.id}`
     );
   }
 
@@ -2883,20 +2911,30 @@ exports.billingBudgetAlert = functions.pubsub.topic('billing-budget-alerts').onP
   const budgetAmount = Number(payload.budgetAmount) || 0;
   const currencyCode = payload.currencyCode || 'USD';
   const pct = Math.round((Number(payload.alertThresholdExceeded) || (budgetAmount ? costAmount / budgetAmount : 0)) * 100);
-  // Every configured threshold (50/90/100%) is treated as high-or-above so it
-  // emails immediately rather than waiting for the budget to be exhausted.
-  const severity = pct >= 100 ? 'critical' : 'high';
 
   await db.collection('budgetStatus').doc(client.clientId).set({
     clientId: client.clientId, clientName: client.clientName,
     costAmount, budgetAmount, currencyCode, pct, updatedAt: now(),
   }, { merge: true });
 
+  // GCP publishes a budget update on every cost refresh (several times a day),
+  // not only when a 50/90/100% threshold is actually crossed, so this fires
+  // far more often than the name implies — every call used to be stamped
+  // "high" regardless of spend, which meant clients at 0-7% of a small budget
+  // generated a constant stream of high-severity noise. Gate on real tiers,
+  // and don't alert at all below 50% — that's normal, healthy spend.
+  let severity = null;
+  if (pct >= 100) severity = 'critical';
+  else if (pct >= 90) severity = 'high';
+  else if (pct >= 50) severity = 'medium';
+  if (!severity) return null;
+
   await createAlertIfNew(
     client.clientId, 'BUDGET', severity,
     `${client.clientName} — ${pct}% of monthly cloud budget spent`,
     `${currencyCode} ${costAmount.toFixed(2)} of ${currencyCode} ${budgetAmount.toFixed(2)} this billing period`,
-    client.clientName
+    client.clientName,
+    `budget:${client.clientId}`
   );
 
   return null;

@@ -623,13 +623,13 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
 }
 
 .sg-system-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  padding: 0.35rem;
-  margin-bottom: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 2.5rem;
 }
 
 .sg-system-tabs button {
@@ -637,19 +637,21 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
   display: grid;
   gap: 0.15rem;
   border: 0;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: 0;
   background: transparent;
   color: var(--color-text-secondary);
-  padding: 0.8rem 1rem;
+  padding: 0 0 0.5rem 0;
   text-align: left;
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
+  transition: color 160ms ease, border-color 160ms ease;
+  border-bottom: 2px solid transparent;
 }
 
 .sg-system-tabs button:hover,
 .sg-system-tabs button.is-active {
-  background: color-mix(in srgb, var(--sg-accent) 11%, var(--color-surface));
+  background: transparent;
   color: var(--color-text-heading);
+  border-bottom-color: var(--sg-accent);
 }
 
 .sg-system-tabs button:focus-visible {
@@ -664,10 +666,6 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
   min-height: 590px;
   display: grid;
   grid-template-columns: minmax(300px, 0.66fr) minmax(0, 1.34fr);
-  overflow: hidden;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
 }
 
 .sg-system-copy {
@@ -733,13 +731,6 @@ html[data-sg-variant='signal'] .sg-stage-frame.is-active .sg-stage-signal-scan {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-left: 1px solid var(--color-border-subtle);
-  background:
-    linear-gradient(color-mix(in srgb, var(--sg-accent) 7%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--sg-accent) 7%, transparent) 1px, transparent 1px),
-    color-mix(in srgb, var(--color-surface-alt) 74%, var(--color-surface));
-  background-size: 36px 36px;
   padding: 3rem;
 }
 

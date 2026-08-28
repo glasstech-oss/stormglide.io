@@ -41,6 +41,12 @@ const portal_module_1 = __webpack_require__(40);
 const audit_module_1 = __webpack_require__(44);
 const notifications_module_1 = __webpack_require__(47);
 const scheduler_module_1 = __webpack_require__(48);
+const projects_module_1 = __webpack_require__(54);
+const domains_module_1 = __webpack_require__(57);
+const subscriptions_module_1 = __webpack_require__(60);
+const alerts_module_1 = __webpack_require__(63);
+const milestones_module_1 = __webpack_require__(66);
+const team_module_1 = __webpack_require__(69);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -61,6 +67,12 @@ exports.AppModule = AppModule = __decorate([
             portal_module_1.PortalModule,
             audit_module_1.AuditModule,
             scheduler_module_1.SchedulerModule,
+            projects_module_1.ProjectsModule,
+            domains_module_1.DomainsModule,
+            subscriptions_module_1.SubscriptionsModule,
+            alerts_module_1.AlertsModule,
+            milestones_module_1.MilestonesModule,
+            team_module_1.TeamModule,
         ],
     })
 ], AppModule);
@@ -2807,6 +2819,12 @@ let AuditController = class AuditController {
     async createLog(body) {
         return this.auditService.createLog(body);
     }
+    async getProjectHistory(limit) {
+        return this.auditService.getProjectHistory(limit ? parseInt(limit) : 50);
+    }
+    async getEntityHistory(limit) {
+        return this.auditService.getEntityHistory(limit ? parseInt(limit) : 50);
+    }
 };
 exports.AuditController = AuditController;
 __decorate([
@@ -2825,6 +2843,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuditController.prototype, "createLog", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuditController.prototype, "getProjectHistory", null);
+__decorate([
+    (0, common_1.Get)('entity/:entityType/:entityId'),
+    __param(0, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuditController.prototype, "getEntityHistory", null);
 exports.AuditController = AuditController = __decorate([
     (0, common_1.Controller)('v1/audit'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
@@ -2856,6 +2888,18 @@ let AuditService = class AuditService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async logAction(data) {
+        return this.prisma.auditLog.create({
+            data: {
+                action: data.action,
+                entityType: data.entityType,
+                entityId: data.entityId,
+                adminId: data.adminId,
+                ipAddress: data.ipAddress,
+                timestamp: new Date(),
+            },
+        });
+    }
     async getLogs(page = 1, limit = 50, entityType) {
         const skip = (page - 1) * limit;
         const [logs, total] = await Promise.all([
@@ -2871,6 +2915,31 @@ let AuditService = class AuditService {
             this.prisma.auditLog.count({ where: entityType ? { entityType } : {} }),
         ]);
         return { logs, total, page, limit, pages: Math.ceil(total / limit) };
+    }
+    async getProjectHistory(projectId, limit = 50) {
+        return this.prisma.auditLog.findMany({
+            where: {
+                entityId: projectId,
+            },
+            include: {
+                admin: { select: { id: true, email: true } },
+            },
+            orderBy: { timestamp: 'desc' },
+            take: limit,
+        });
+    }
+    async getEntityHistory(entityType, entityId, limit = 50) {
+        return this.prisma.auditLog.findMany({
+            where: {
+                entityType,
+                entityId,
+            },
+            include: {
+                admin: { select: { id: true, email: true } },
+            },
+            orderBy: { timestamp: 'desc' },
+            take: limit,
+        });
     }
     async createLog(data) {
         return this.prisma.auditLog.create({ data });
@@ -3155,6 +3224,1861 @@ module.exports = require("https");
 /***/ ((module) => {
 
 module.exports = require("http");
+
+/***/ }),
+/* 54 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProjectsModule = void 0;
+const common_1 = __webpack_require__(2);
+const projects_service_1 = __webpack_require__(55);
+const projects_controller_1 = __webpack_require__(56);
+const prisma_module_1 = __webpack_require__(5);
+let ProjectsModule = class ProjectsModule {
+};
+exports.ProjectsModule = ProjectsModule;
+exports.ProjectsModule = ProjectsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [projects_service_1.ProjectsService],
+        controllers: [projects_controller_1.ProjectsController],
+        exports: [projects_service_1.ProjectsService],
+    })
+], ProjectsModule);
+
+
+/***/ }),
+/* 55 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProjectsService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+const client_1 = __webpack_require__(7);
+let ProjectsService = class ProjectsService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async createProject(data) {
+        return this.prisma.project.create({
+            data: {
+                clientId: data.clientId,
+                projectName: data.projectName,
+                description: data.description,
+                estimatedEnd: data.estimatedEnd,
+                completion: {
+                    create: {
+                        overallCompletionPercentage: 0,
+                        currentPhase: client_1.ProjectPhase.DISCOVERY,
+                        status: client_1.ProjectCompletionStatus.ON_TRACK,
+                        healthScore: 5,
+                    },
+                },
+                stack: {
+                    create: {},
+                },
+            },
+            include: {
+                client: true,
+                completion: true,
+                stack: true,
+                milestones: true,
+                domains: true,
+                subscriptions: true,
+            },
+        });
+    }
+    async getProject(projectId) {
+        return this.prisma.project.findUnique({
+            where: { id: projectId },
+            include: {
+                client: true,
+                completion: true,
+                stack: true,
+                milestones: true,
+                domains: true,
+                subscriptions: true,
+                invoices: true,
+            },
+        });
+    }
+    async listProjects(clientId, phase, status) {
+        const where = {};
+        if (clientId)
+            where.clientId = clientId;
+        if (phase)
+            where.currentPhase = phase;
+        if (status)
+            where.completion = { status };
+        return this.prisma.project.findMany({
+            where,
+            include: {
+                client: true,
+                completion: true,
+                _count: {
+                    select: {
+                        milestones: true,
+                        domains: true,
+                        subscriptions: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async updateProject(projectId, data) {
+        return this.prisma.project.update({
+            where: { id: projectId },
+            data,
+            include: {
+                client: true,
+                completion: true,
+                stack: true,
+            },
+        });
+    }
+    async advancePhase(projectId) {
+        const project = await this.prisma.project.findUnique({
+            where: { id: projectId },
+            include: { completion: true },
+        });
+        if (!project)
+            throw new Error('Project not found');
+        const phaseOrder = [
+            client_1.ProjectPhase.DISCOVERY,
+            client_1.ProjectPhase.UI_UX_DESIGN,
+            client_1.ProjectPhase.BACKEND_ARCHITECTURE,
+            client_1.ProjectPhase.STAGING,
+            client_1.ProjectPhase.PRODUCTION,
+            client_1.ProjectPhase.MAINTENANCE,
+        ];
+        const currentIndex = phaseOrder.indexOf(project.currentPhase);
+        const nextPhase = phaseOrder[currentIndex + 1];
+        if (!nextPhase)
+            return project;
+        return this.prisma.project.update({
+            where: { id: projectId },
+            data: {
+                currentPhase: nextPhase,
+                completion: {
+                    update: { currentPhase: nextPhase },
+                },
+            },
+            include: {
+                client: true,
+                completion: true,
+            },
+        });
+    }
+    async getProjectHealth(projectId) {
+        return this.prisma.projectCompletion.findUnique({
+            where: { projectId },
+        });
+    }
+    async updateProjectHealth(projectId, data) {
+        return this.prisma.projectCompletion.update({
+            where: { projectId },
+            data: {
+                ...data,
+                lastAssessedAt: new Date(),
+            },
+        });
+    }
+    async deleteProject(projectId) {
+        return this.prisma.project.delete({
+            where: { id: projectId },
+        });
+    }
+};
+exports.ProjectsService = ProjectsService;
+exports.ProjectsService = ProjectsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], ProjectsService);
+
+
+/***/ }),
+/* 56 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProjectsController = void 0;
+const common_1 = __webpack_require__(2);
+const projects_service_1 = __webpack_require__(55);
+const client_1 = __webpack_require__(7);
+let ProjectsController = class ProjectsController {
+    constructor(projectsService) {
+        this.projectsService = projectsService;
+    }
+    create(data) {
+        return this.projectsService.createProject(data);
+    }
+    list(clientId, phase, status) {
+        return this.projectsService.listProjects(clientId, phase, status);
+    }
+    getProject(projectId) {
+        return this.projectsService.getProject(projectId);
+    }
+    update(projectId, data) {
+        return this.projectsService.updateProject(projectId, data);
+    }
+    advancePhase(projectId) {
+        return this.projectsService.advancePhase(projectId);
+    }
+    getHealth(projectId) {
+        return this.projectsService.getProjectHealth(projectId);
+    }
+    updateHealth(projectId, data) {
+        return this.projectsService.updateProjectHealth(projectId, data);
+    }
+    delete(projectId) {
+        return this.projectsService.deleteProject(projectId);
+    }
+};
+exports.ProjectsController = ProjectsController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof projects_service_1.CreateProjectDTO !== "undefined" && projects_service_1.CreateProjectDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('clientId')),
+    __param(1, (0, common_1.Query)('phase')),
+    __param(2, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof client_1.ProjectPhase !== "undefined" && client_1.ProjectPhase) === "function" ? _c : Object, typeof (_d = typeof client_1.ProjectCompletionStatus !== "undefined" && client_1.ProjectCompletionStatus) === "function" ? _d : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getProject", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_e = typeof projects_service_1.UpdateProjectDTO !== "undefined" && projects_service_1.UpdateProjectDTO) === "function" ? _e : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/phase'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "advancePhase", null);
+__decorate([
+    (0, common_1.Get)(':id/health'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getHealth", null);
+__decorate([
+    (0, common_1.Put)(':id/health'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_f = typeof Partial !== "undefined" && Partial) === "function" ? _f : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateHealth", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "delete", null);
+exports.ProjectsController = ProjectsController = __decorate([
+    (0, common_1.Controller)('v1/projects'),
+    __metadata("design:paramtypes", [typeof (_a = typeof projects_service_1.ProjectsService !== "undefined" && projects_service_1.ProjectsService) === "function" ? _a : Object])
+], ProjectsController);
+
+
+/***/ }),
+/* 57 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DomainsModule = void 0;
+const common_1 = __webpack_require__(2);
+const domains_service_1 = __webpack_require__(58);
+const domains_controller_1 = __webpack_require__(59);
+const prisma_module_1 = __webpack_require__(5);
+let DomainsModule = class DomainsModule {
+};
+exports.DomainsModule = DomainsModule;
+exports.DomainsModule = DomainsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [domains_service_1.DomainsService],
+        controllers: [domains_controller_1.DomainsController],
+        exports: [domains_service_1.DomainsService],
+    })
+], DomainsModule);
+
+
+/***/ }),
+/* 58 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DomainsService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+const client_1 = __webpack_require__(7);
+let DomainsService = class DomainsService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async createDomain(data) {
+        const nextRenewalDate = data.expirationDate
+            ? new Date(data.expirationDate)
+            : undefined;
+        return this.prisma.domainManagement.create({
+            data: {
+                projectId: data.projectId,
+                domainName: data.domainName,
+                registrar: data.registrar,
+                expirationDate: data.expirationDate,
+                sslCertProvider: data.sslCertProvider,
+                sslExpirationDate: data.sslExpirationDate,
+                autoRenew: data.autoRenew ?? true,
+                cost: data.cost ? new client_1.Prisma.Decimal(data.cost) : undefined,
+                nextRenewalDate,
+                status: 'ACTIVE',
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async getDomain(domainId) {
+        return this.prisma.domainManagement.findUnique({
+            where: { id: domainId },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async listDomainsByProject(projectId) {
+        return this.prisma.domainManagement.findMany({
+            where: { projectId },
+            orderBy: { expirationDate: 'asc' },
+        });
+    }
+    async listDomainsExpiringIn(daysThreshold) {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
+        return this.prisma.domainManagement.findMany({
+            where: {
+                AND: [
+                    {
+                        expirationDate: {
+                            lte: thresholdDate,
+                            gte: new Date(),
+                        },
+                    },
+                    {
+                        status: { not: 'EXPIRED' },
+                    },
+                ],
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+            orderBy: { expirationDate: 'asc' },
+        });
+    }
+    async listSSLExpiringIn(daysThreshold) {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
+        return this.prisma.domainManagement.findMany({
+            where: {
+                AND: [
+                    {
+                        sslExpirationDate: {
+                            lte: thresholdDate,
+                            gte: new Date(),
+                        },
+                    },
+                ],
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+            orderBy: { sslExpirationDate: 'asc' },
+        });
+    }
+    async updateDomain(domainId, data) {
+        return this.prisma.domainManagement.update({
+            where: { id: domainId },
+            data: {
+                domainName: data.domainName,
+                registrar: data.registrar,
+                expirationDate: data.expirationDate,
+                sslCertProvider: data.sslCertProvider,
+                sslExpirationDate: data.sslExpirationDate,
+                autoRenew: data.autoRenew,
+                cost: data.cost ? new client_1.Prisma.Decimal(data.cost) : undefined,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async markDomainRenewed(domainId) {
+        const domain = await this.getDomain(domainId);
+        if (!domain)
+            throw new Error('Domain not found');
+        const newExpirationDate = new Date(domain.expirationDate);
+        newExpirationDate.setFullYear(newExpirationDate.getFullYear() + 1);
+        return this.prisma.domainManagement.update({
+            where: { id: domainId },
+            data: {
+                expirationDate: newExpirationDate,
+                nextRenewalDate: newExpirationDate,
+                status: 'ACTIVE',
+                renewalAlertSentAt: null,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async markSSLRenewed(domainId) {
+        const domain = await this.getDomain(domainId);
+        if (!domain)
+            throw new Error('Domain not found');
+        const newSSLExpiration = new Date(domain.sslExpirationDate);
+        newSSLExpiration.setFullYear(newSSLExpiration.getFullYear() + 1);
+        return this.prisma.domainManagement.update({
+            where: { id: domainId },
+            data: {
+                sslExpirationDate: newSSLExpiration,
+                renewalAlertSentAt: null,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async deleteDomain(domainId) {
+        return this.prisma.domainManagement.delete({
+            where: { id: domainId },
+        });
+    }
+};
+exports.DomainsService = DomainsService;
+exports.DomainsService = DomainsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], DomainsService);
+
+
+/***/ }),
+/* 59 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DomainsController = void 0;
+const common_1 = __webpack_require__(2);
+const domains_service_1 = __webpack_require__(58);
+let DomainsController = class DomainsController {
+    constructor(domainsService) {
+        this.domainsService = domainsService;
+    }
+    create(data) {
+        return this.domainsService.createDomain(data);
+    }
+    list(projectId) {
+        if (projectId) {
+            return this.domainsService.listDomainsByProject(projectId);
+        }
+        return { message: 'Use projectId query parameter' };
+    }
+    getExpiring(days = 30) {
+        return this.domainsService.listDomainsExpiringIn(parseInt(days));
+    }
+    getSSLExpiring(days = 30) {
+        return this.domainsService.listSSLExpiringIn(parseInt(days));
+    }
+    getDomain(domainId) {
+        return this.domainsService.getDomain(domainId);
+    }
+    update(domainId, data) {
+        return this.domainsService.updateDomain(domainId, data);
+    }
+    renewDomain(domainId) {
+        return this.domainsService.markDomainRenewed(domainId);
+    }
+    renewSSL(domainId) {
+        return this.domainsService.markSSLRenewed(domainId);
+    }
+    delete(domainId) {
+        return this.domainsService.deleteDomain(domainId);
+    }
+};
+exports.DomainsController = DomainsController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof domains_service_1.CreateDomainDTO !== "undefined" && domains_service_1.CreateDomainDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('expiring'),
+    __param(0, (0, common_1.Query)('days')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "getExpiring", null);
+__decorate([
+    (0, common_1.Get)('ssl/expiring'),
+    __param(0, (0, common_1.Query)('days')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "getSSLExpiring", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "getDomain", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof Partial !== "undefined" && Partial) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/renew'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "renewDomain", null);
+__decorate([
+    (0, common_1.Put)(':id/ssl/renew'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "renewSSL", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "delete", null);
+exports.DomainsController = DomainsController = __decorate([
+    (0, common_1.Controller)('v1/domains'),
+    __metadata("design:paramtypes", [typeof (_a = typeof domains_service_1.DomainsService !== "undefined" && domains_service_1.DomainsService) === "function" ? _a : Object])
+], DomainsController);
+
+
+/***/ }),
+/* 60 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SubscriptionsModule = void 0;
+const common_1 = __webpack_require__(2);
+const project_subscriptions_service_1 = __webpack_require__(61);
+const project_subscriptions_controller_1 = __webpack_require__(62);
+const prisma_module_1 = __webpack_require__(5);
+let SubscriptionsModule = class SubscriptionsModule {
+};
+exports.SubscriptionsModule = SubscriptionsModule;
+exports.SubscriptionsModule = SubscriptionsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [project_subscriptions_service_1.ProjectSubscriptionsService],
+        controllers: [project_subscriptions_controller_1.ProjectSubscriptionsController],
+        exports: [project_subscriptions_service_1.ProjectSubscriptionsService],
+    })
+], SubscriptionsModule);
+
+
+/***/ }),
+/* 61 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProjectSubscriptionsService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+const client_1 = __webpack_require__(7);
+let ProjectSubscriptionsService = class ProjectSubscriptionsService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async createSubscription(data) {
+        return this.prisma.projectSubscription.create({
+            data: {
+                projectId: data.projectId,
+                serviceName: data.serviceName,
+                monthlyCost: new client_1.Prisma.Decimal(data.monthlyCost),
+                billingFrequency: data.billingFrequency ?? 'MONTHLY',
+                renewalDate: data.renewalDate,
+                autoRenew: data.autoRenew ?? true,
+                notes: data.notes,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async getSubscription(subscriptionId) {
+        return this.prisma.projectSubscription.findUnique({
+            where: { id: subscriptionId },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async listSubscriptionsByProject(projectId) {
+        return this.prisma.projectSubscription.findMany({
+            where: { projectId },
+            orderBy: { renewalDate: 'asc' },
+        });
+    }
+    async listSubscriptionsRenewingIn(daysThreshold) {
+        const thresholdDate = new Date();
+        thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
+        return this.prisma.projectSubscription.findMany({
+            where: {
+                AND: [
+                    {
+                        renewalDate: {
+                            lte: thresholdDate,
+                            gte: new Date(),
+                        },
+                    },
+                ],
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+            orderBy: { renewalDate: 'asc' },
+        });
+    }
+    async getTotalMonthlyCost(projectId) {
+        const result = await this.prisma.projectSubscription.aggregate({
+            where: {
+                projectId,
+                billingFrequency: 'MONTHLY',
+            },
+            _sum: {
+                monthlyCost: true,
+            },
+        });
+        return result._sum.monthlyCost || new client_1.Prisma.Decimal(0);
+    }
+    async updateSubscription(subscriptionId, data) {
+        return this.prisma.projectSubscription.update({
+            where: { id: subscriptionId },
+            data: {
+                serviceName: data.serviceName,
+                monthlyCost: data.monthlyCost ? new client_1.Prisma.Decimal(data.monthlyCost) : undefined,
+                billingFrequency: data.billingFrequency,
+                renewalDate: data.renewalDate,
+                autoRenew: data.autoRenew,
+                notes: data.notes,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async markSubscriptionRenewed(subscriptionId) {
+        const subscription = await this.getSubscription(subscriptionId);
+        if (!subscription)
+            throw new Error('Subscription not found');
+        const newRenewalDate = new Date(subscription.renewalDate);
+        if (subscription.billingFrequency === 'ANNUAL') {
+            newRenewalDate.setFullYear(newRenewalDate.getFullYear() + 1);
+        }
+        else if (subscription.billingFrequency === 'MONTHLY') {
+            newRenewalDate.setMonth(newRenewalDate.getMonth() + 1);
+        }
+        else {
+            return subscription;
+        }
+        return this.prisma.projectSubscription.update({
+            where: { id: subscriptionId },
+            data: {
+                renewalDate: newRenewalDate,
+                alertSentAt: null,
+            },
+            include: {
+                project: { include: { client: true } },
+            },
+        });
+    }
+    async deleteSubscription(subscriptionId) {
+        return this.prisma.projectSubscription.delete({
+            where: { id: subscriptionId },
+        });
+    }
+};
+exports.ProjectSubscriptionsService = ProjectSubscriptionsService;
+exports.ProjectSubscriptionsService = ProjectSubscriptionsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], ProjectSubscriptionsService);
+
+
+/***/ }),
+/* 62 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProjectSubscriptionsController = void 0;
+const common_1 = __webpack_require__(2);
+const project_subscriptions_service_1 = __webpack_require__(61);
+let ProjectSubscriptionsController = class ProjectSubscriptionsController {
+    constructor(subscriptionsService) {
+        this.subscriptionsService = subscriptionsService;
+    }
+    create(data) {
+        return this.subscriptionsService.createSubscription(data);
+    }
+    list(projectId) {
+        if (projectId) {
+            return this.subscriptionsService.listSubscriptionsByProject(projectId);
+        }
+        return { message: 'Use projectId query parameter' };
+    }
+    getRenewing(days = 7) {
+        return this.subscriptionsService.listSubscriptionsRenewingIn(parseInt(days));
+    }
+    getSubscription(subscriptionId) {
+        return this.subscriptionsService.getSubscription(subscriptionId);
+    }
+    getTotalCost(projectId) {
+        return this.subscriptionsService.getTotalMonthlyCost(projectId);
+    }
+    update(subscriptionId, data) {
+        return this.subscriptionsService.updateSubscription(subscriptionId, data);
+    }
+    renewSubscription(subscriptionId) {
+        return this.subscriptionsService.markSubscriptionRenewed(subscriptionId);
+    }
+    delete(subscriptionId) {
+        return this.subscriptionsService.deleteSubscription(subscriptionId);
+    }
+};
+exports.ProjectSubscriptionsController = ProjectSubscriptionsController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof project_subscriptions_service_1.CreateSubscriptionDTO !== "undefined" && project_subscriptions_service_1.CreateSubscriptionDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('renewing'),
+    __param(0, (0, common_1.Query)('days')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "getRenewing", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "getSubscription", null);
+__decorate([
+    (0, common_1.Get)(':projectId/total-cost'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "getTotalCost", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof Partial !== "undefined" && Partial) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/renew'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "renewSubscription", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectSubscriptionsController.prototype, "delete", null);
+exports.ProjectSubscriptionsController = ProjectSubscriptionsController = __decorate([
+    (0, common_1.Controller)('v1/project-subscriptions'),
+    __metadata("design:paramtypes", [typeof (_a = typeof project_subscriptions_service_1.ProjectSubscriptionsService !== "undefined" && project_subscriptions_service_1.ProjectSubscriptionsService) === "function" ? _a : Object])
+], ProjectSubscriptionsController);
+
+
+/***/ }),
+/* 63 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AlertsModule = void 0;
+const common_1 = __webpack_require__(2);
+const alerts_service_1 = __webpack_require__(64);
+const alerts_controller_1 = __webpack_require__(65);
+const prisma_module_1 = __webpack_require__(5);
+const domains_module_1 = __webpack_require__(57);
+const subscriptions_module_1 = __webpack_require__(60);
+let AlertsModule = class AlertsModule {
+};
+exports.AlertsModule = AlertsModule;
+exports.AlertsModule = AlertsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule, domains_module_1.DomainsModule, subscriptions_module_1.SubscriptionsModule],
+        providers: [alerts_service_1.AlertsService],
+        controllers: [alerts_controller_1.AlertsController],
+        exports: [alerts_service_1.AlertsService],
+    })
+], AlertsModule);
+
+
+/***/ }),
+/* 64 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AlertsService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+const client_1 = __webpack_require__(7);
+const domains_service_1 = __webpack_require__(58);
+const project_subscriptions_service_1 = __webpack_require__(61);
+let AlertsService = class AlertsService {
+    constructor(prisma, domainsService, subscriptionsService) {
+        this.prisma = prisma;
+        this.domainsService = domainsService;
+        this.subscriptionsService = subscriptionsService;
+    }
+    async createAlertTrigger(data) {
+        return this.prisma.alertTrigger.create({
+            data: {
+                type: data.type,
+                daysBeforeExpiry: data.daysBeforeExpiry,
+                channels: data.channels ?? [client_1.AlertChannel.IN_APP, client_1.AlertChannel.EMAIL],
+                recipients: data.recipients ?? [],
+                enabled: data.enabled ?? true,
+            },
+        });
+    }
+    async getAlertTrigger(triggerId) {
+        return this.prisma.alertTrigger.findUnique({
+            where: { id: triggerId },
+        });
+    }
+    async listAlertTriggers(type) {
+        return this.prisma.alertTrigger.findMany({
+            where: type ? { type, enabled: true } : { enabled: true },
+        });
+    }
+    async getDomainRenewalAlerts() {
+        const trigger = await this.prisma.alertTrigger.findFirst({
+            where: {
+                type: client_1.AlertType.DOMAIN_RENEWAL,
+                enabled: true,
+            },
+        });
+        if (!trigger) {
+            return [];
+        }
+        return this.domainsService.listDomainsExpiringIn(trigger.daysBeforeExpiry);
+    }
+    async getSSLRenewalAlerts() {
+        const trigger = await this.prisma.alertTrigger.findFirst({
+            where: {
+                type: client_1.AlertType.DOMAIN_RENEWAL,
+                enabled: true,
+            },
+        });
+        if (!trigger) {
+            return [];
+        }
+        return this.domainsService.listSSLExpiringIn(trigger.daysBeforeExpiry);
+    }
+    async getSubscriptionRenewalAlerts() {
+        const trigger = await this.prisma.alertTrigger.findFirst({
+            where: {
+                type: client_1.AlertType.SUBSCRIPTION_RENEWAL,
+                enabled: true,
+            },
+        });
+        if (!trigger) {
+            return [];
+        }
+        return this.subscriptionsService.listSubscriptionsRenewingIn(trigger.daysBeforeExpiry);
+    }
+    async getProjectBehindScheduleAlerts() {
+        return this.prisma.projectCompletion.findMany({
+            where: {
+                AND: [
+                    { status: { in: ['AT_RISK', 'BLOCKED'] } },
+                ],
+            },
+            include: {
+                project: {
+                    include: {
+                        client: true,
+                    },
+                },
+            },
+            orderBy: { lastAssessedAt: 'desc' },
+        });
+    }
+    async getInvoiceOverdueAlerts() {
+        return this.prisma.invoice.findMany({
+            where: {
+                status: 'OVERDUE',
+            },
+            include: {
+                client: true,
+                project: true,
+            },
+            orderBy: { dueDate: 'asc' },
+        });
+    }
+    async updateAlertTrigger(triggerId, data) {
+        return this.prisma.alertTrigger.update({
+            where: { id: triggerId },
+            data,
+        });
+    }
+    async deleteAlertTrigger(triggerId) {
+        return this.prisma.alertTrigger.delete({
+            where: { id: triggerId },
+        });
+    }
+    async markDomainAlertSent(domainId) {
+        return this.prisma.domainManagement.update({
+            where: { id: domainId },
+            data: {
+                renewalAlertSentAt: new Date(),
+            },
+        });
+    }
+    async markSubscriptionAlertSent(subscriptionId) {
+        return this.prisma.projectSubscription.update({
+            where: { id: subscriptionId },
+            data: {
+                alertSentAt: new Date(),
+            },
+        });
+    }
+    async getAlertsSummary() {
+        const [domainAlerts, sslAlerts, subscriptionAlerts, projectAlerts, invoiceAlerts,] = await Promise.all([
+            this.getDomainRenewalAlerts(),
+            this.getSSLRenewalAlerts(),
+            this.getSubscriptionRenewalAlerts(),
+            this.getProjectBehindScheduleAlerts(),
+            this.getInvoiceOverdueAlerts(),
+        ]);
+        return {
+            domainRenewals: domainAlerts,
+            sslRenewals: sslAlerts,
+            subscriptionRenewals: subscriptionAlerts,
+            projectsAtRisk: projectAlerts,
+            overdueInvoices: invoiceAlerts,
+            totalAlerts: domainAlerts.length +
+                sslAlerts.length +
+                subscriptionAlerts.length +
+                projectAlerts.length +
+                invoiceAlerts.length,
+        };
+    }
+    async getAlertsForProject(projectId) {
+        const [domains, subscriptions, completion] = await Promise.all([
+            this.domainsService.listDomainsByProject(projectId),
+            this.subscriptionsService.listSubscriptionsByProject(projectId),
+            this.prisma.projectCompletion.findUnique({
+                where: { projectId },
+            }),
+        ]);
+        const alerts = [];
+        const domainTrigger = await this.prisma.alertTrigger.findFirst({
+            where: { type: client_1.AlertType.DOMAIN_RENEWAL, enabled: true },
+        });
+        if (domainTrigger) {
+            domains.forEach((domain) => {
+                if (domain.expirationDate) {
+                    const daysUntilExpiry = Math.floor((domain.expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (daysUntilExpiry <= domainTrigger.daysBeforeExpiry && daysUntilExpiry >= 0) {
+                        const severity = daysUntilExpiry < 7 ? 'CRITICAL' : daysUntilExpiry < 30 ? 'WARNING' : 'INFO';
+                        alerts.push({
+                            type: 'DOMAIN_RENEWAL',
+                            severity,
+                            title: `Domain expires in ${daysUntilExpiry} days`,
+                            description: `${domain.domainName} expires on ${domain.expirationDate.toDateString()}`,
+                            data: domain,
+                        });
+                    }
+                }
+            });
+        }
+        const subscriptionTrigger = await this.prisma.alertTrigger.findFirst({
+            where: { type: client_1.AlertType.SUBSCRIPTION_RENEWAL, enabled: true },
+        });
+        if (subscriptionTrigger) {
+            subscriptions.forEach((sub) => {
+                if (sub.renewalDate) {
+                    const daysUntilRenewal = Math.floor((sub.renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (daysUntilRenewal <= subscriptionTrigger.daysBeforeExpiry && daysUntilRenewal >= 0) {
+                        const severity = daysUntilRenewal < 7 ? 'WARNING' : 'INFO';
+                        alerts.push({
+                            type: 'SUBSCRIPTION_RENEWAL',
+                            severity,
+                            title: `${sub.serviceName} renews in ${daysUntilRenewal} days`,
+                            description: `Cost: $${sub.monthlyCost}/${sub.billingFrequency.toLowerCase()}`,
+                            data: sub,
+                        });
+                    }
+                }
+            });
+        }
+        if (completion && ['AT_RISK', 'BLOCKED'].includes(completion.status)) {
+            alerts.push({
+                type: 'PROJECT_BEHIND_SCHEDULE',
+                severity: completion.status === 'BLOCKED' ? 'CRITICAL' : 'WARNING',
+                title: `Project is ${completion.status.toLowerCase()}`,
+                description: completion.riskFactors.join(', '),
+                data: completion,
+            });
+        }
+        return alerts;
+    }
+};
+exports.AlertsService = AlertsService;
+exports.AlertsService = AlertsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, typeof (_b = typeof domains_service_1.DomainsService !== "undefined" && domains_service_1.DomainsService) === "function" ? _b : Object, typeof (_c = typeof project_subscriptions_service_1.ProjectSubscriptionsService !== "undefined" && project_subscriptions_service_1.ProjectSubscriptionsService) === "function" ? _c : Object])
+], AlertsService);
+
+
+/***/ }),
+/* 65 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AlertsController = void 0;
+const common_1 = __webpack_require__(2);
+const alerts_service_1 = __webpack_require__(64);
+const client_1 = __webpack_require__(7);
+let AlertsController = class AlertsController {
+    constructor(alertsService) {
+        this.alertsService = alertsService;
+    }
+    createTrigger(data) {
+        return this.alertsService.createAlertTrigger(data);
+    }
+    listTriggers(type) {
+        return this.alertsService.listAlertTriggers(type);
+    }
+    getTrigger(triggerId) {
+        return this.alertsService.getAlertTrigger(triggerId);
+    }
+    updateTrigger(triggerId, data) {
+        return this.alertsService.updateAlertTrigger(triggerId, data);
+    }
+    deleteTrigger(triggerId) {
+        return this.alertsService.deleteAlertTrigger(triggerId);
+    }
+    getDomainAlerts() {
+        return this.alertsService.getDomainRenewalAlerts();
+    }
+    getSSLAlerts() {
+        return this.alertsService.getSSLRenewalAlerts();
+    }
+    getSubscriptionAlerts() {
+        return this.alertsService.getSubscriptionRenewalAlerts();
+    }
+    getProjectBehindAlerts() {
+        return this.alertsService.getProjectBehindScheduleAlerts();
+    }
+    getInvoiceAlerts() {
+        return this.alertsService.getInvoiceOverdueAlerts();
+    }
+    getSummary() {
+        return this.alertsService.getAlertsSummary();
+    }
+    getAlertsForProject(projectId) {
+        return this.alertsService.getAlertsForProject(projectId);
+    }
+    markDomainAlertSent(domainId) {
+        return this.alertsService.markDomainAlertSent(domainId);
+    }
+    markSubscriptionAlertSent(subscriptionId) {
+        return this.alertsService.markSubscriptionAlertSent(subscriptionId);
+    }
+};
+exports.AlertsController = AlertsController;
+__decorate([
+    (0, common_1.Post)('triggers'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof alerts_service_1.CreateAlertTriggerDTO !== "undefined" && alerts_service_1.CreateAlertTriggerDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "createTrigger", null);
+__decorate([
+    (0, common_1.Get)('triggers'),
+    __param(0, (0, common_1.Query)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof client_1.AlertType !== "undefined" && client_1.AlertType) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "listTriggers", null);
+__decorate([
+    (0, common_1.Get)('triggers/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getTrigger", null);
+__decorate([
+    (0, common_1.Put)('triggers/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof Partial !== "undefined" && Partial) === "function" ? _d : Object]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "updateTrigger", null);
+__decorate([
+    (0, common_1.Delete)('triggers/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "deleteTrigger", null);
+__decorate([
+    (0, common_1.Get)('domain-renewal'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getDomainAlerts", null);
+__decorate([
+    (0, common_1.Get)('ssl-renewal'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getSSLAlerts", null);
+__decorate([
+    (0, common_1.Get)('subscription-renewal'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getSubscriptionAlerts", null);
+__decorate([
+    (0, common_1.Get)('project-behind'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getProjectBehindAlerts", null);
+__decorate([
+    (0, common_1.Get)('invoice-overdue'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getInvoiceAlerts", null);
+__decorate([
+    (0, common_1.Get)('summary'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getSummary", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "getAlertsForProject", null);
+__decorate([
+    (0, common_1.Put)('domain/:domainId/mark-sent'),
+    __param(0, (0, common_1.Param)('domainId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "markDomainAlertSent", null);
+__decorate([
+    (0, common_1.Put)('subscription/:subscriptionId/mark-sent'),
+    __param(0, (0, common_1.Param)('subscriptionId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "markSubscriptionAlertSent", null);
+exports.AlertsController = AlertsController = __decorate([
+    (0, common_1.Controller)('v1/alerts'),
+    __metadata("design:paramtypes", [typeof (_a = typeof alerts_service_1.AlertsService !== "undefined" && alerts_service_1.AlertsService) === "function" ? _a : Object])
+], AlertsController);
+
+
+/***/ }),
+/* 66 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MilestonesModule = void 0;
+const common_1 = __webpack_require__(2);
+const milestones_service_1 = __webpack_require__(67);
+const milestones_controller_1 = __webpack_require__(68);
+const prisma_module_1 = __webpack_require__(5);
+let MilestonesModule = class MilestonesModule {
+};
+exports.MilestonesModule = MilestonesModule;
+exports.MilestonesModule = MilestonesModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [milestones_service_1.MilestonesService],
+        controllers: [milestones_controller_1.MilestonesController],
+        exports: [milestones_service_1.MilestonesService],
+    })
+], MilestonesModule);
+
+
+/***/ }),
+/* 67 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MilestonesService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+let MilestonesService = class MilestonesService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async createMilestone(data) {
+        return this.prisma.projectMilestone.create({
+            data: {
+                projectId: data.projectId,
+                phase: data.phase,
+                title: data.title,
+                description: data.description,
+                targetDate: data.targetDate,
+                completionPercentage: data.completionPercentage || 0,
+                status: 'NOT_STARTED',
+            },
+            include: {
+                project: true,
+            },
+        });
+    }
+    async getMilestonesByProject(projectId) {
+        return this.prisma.projectMilestone.findMany({
+            where: { projectId },
+            orderBy: { targetDate: 'asc' },
+        });
+    }
+    async getMilestonesByPhase(projectId, phase) {
+        return this.prisma.projectMilestone.findMany({
+            where: { projectId, phase },
+            orderBy: { targetDate: 'asc' },
+        });
+    }
+    async getMilestone(milestoneId) {
+        return this.prisma.projectMilestone.findUnique({
+            where: { id: milestoneId },
+            include: { project: true },
+        });
+    }
+    async updateMilestone(milestoneId, data) {
+        return this.prisma.projectMilestone.update({
+            where: { id: milestoneId },
+            data: {
+                title: data.title,
+                description: data.description,
+                targetDate: data.targetDate,
+                completionPercentage: data.completionPercentage,
+                phase: data.phase,
+            },
+            include: { project: true },
+        });
+    }
+    async updateMilestoneStatus(milestoneId, status, completionPercentage) {
+        return this.prisma.projectMilestone.update({
+            where: { id: milestoneId },
+            data: {
+                status,
+                completionPercentage: completionPercentage !== undefined ? completionPercentage : undefined,
+                isCompleted: status === 'COMPLETE',
+                completedAt: status === 'COMPLETE' ? new Date() : null,
+            },
+            include: { project: true },
+        });
+    }
+    async deleteMilestone(milestoneId) {
+        return this.prisma.projectMilestone.delete({
+            where: { id: milestoneId },
+        });
+    }
+    async updateProjectCompletionFromMilestones(projectId) {
+        const milestones = await this.prisma.projectMilestone.findMany({
+            where: { projectId },
+        });
+        if (milestones.length === 0)
+            return;
+        const avgCompletion = milestones.reduce((sum, m) => sum + m.completionPercentage, 0) /
+            milestones.length;
+        await this.prisma.projectCompletion.update({
+            where: { projectId },
+            data: {
+                overallCompletionPercentage: Math.round(avgCompletion),
+                lastAssessedAt: new Date(),
+            },
+        });
+    }
+};
+exports.MilestonesService = MilestonesService;
+exports.MilestonesService = MilestonesService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], MilestonesService);
+
+
+/***/ }),
+/* 68 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MilestonesController = void 0;
+const common_1 = __webpack_require__(2);
+const milestones_service_1 = __webpack_require__(67);
+const client_1 = __webpack_require__(7);
+let MilestonesController = class MilestonesController {
+    constructor(milestonesService) {
+        this.milestonesService = milestonesService;
+    }
+    create(data) {
+        return this.milestonesService.createMilestone(data);
+    }
+    getByProject(projectId) {
+        return this.milestonesService.getMilestonesByProject(projectId);
+    }
+    getByPhase(projectId, phase) {
+        return this.milestonesService.getMilestonesByPhase(projectId, phase);
+    }
+    get(milestoneId) {
+        return this.milestonesService.getMilestone(milestoneId);
+    }
+    update(milestoneId, data) {
+        return this.milestonesService.updateMilestone(milestoneId, data);
+    }
+    updateStatus(milestoneId, data) {
+        return this.milestonesService.updateMilestoneStatus(milestoneId, data.status, data.completionPercentage);
+    }
+    delete(milestoneId) {
+        return this.milestonesService.deleteMilestone(milestoneId);
+    }
+};
+exports.MilestonesController = MilestonesController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof milestones_service_1.CreateMilestoneDTO !== "undefined" && milestones_service_1.CreateMilestoneDTO) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "getByProject", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId/phase/:phase'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('phase')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof client_1.ProjectPhase !== "undefined" && client_1.ProjectPhase) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "getByPhase", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "get", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_d = typeof Partial !== "undefined" && Partial) === "function" ? _d : Object]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Put)(':id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MilestonesController.prototype, "delete", null);
+exports.MilestonesController = MilestonesController = __decorate([
+    (0, common_1.Controller)('v1/milestones'),
+    __metadata("design:paramtypes", [typeof (_a = typeof milestones_service_1.MilestonesService !== "undefined" && milestones_service_1.MilestonesService) === "function" ? _a : Object])
+], MilestonesController);
+
+
+/***/ }),
+/* 69 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TeamModule = void 0;
+const common_1 = __webpack_require__(2);
+const team_service_1 = __webpack_require__(70);
+const team_controller_1 = __webpack_require__(71);
+const prisma_module_1 = __webpack_require__(5);
+let TeamModule = class TeamModule {
+};
+exports.TeamModule = TeamModule;
+exports.TeamModule = TeamModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
+        providers: [team_service_1.TeamService],
+        controllers: [team_controller_1.TeamController],
+        exports: [team_service_1.TeamService],
+    })
+], TeamModule);
+
+
+/***/ }),
+/* 70 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TeamService = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_service_1 = __webpack_require__(6);
+const teamMembers = new Map();
+let TeamService = class TeamService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async createTeamMember(data) {
+        const member = {
+            id: Math.random().toString(36).substr(2, 9),
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+        if (!teamMembers.has(data.projectId)) {
+            teamMembers.set(data.projectId, []);
+        }
+        teamMembers.get(data.projectId).push(member);
+        return member;
+    }
+    async getTeamByProject(projectId) {
+        return teamMembers.get(projectId) || [];
+    }
+    async getTeamMember(projectId, memberId) {
+        const team = teamMembers.get(projectId) || [];
+        return team.find((m) => m.id === memberId);
+    }
+    async updateTeamMember(projectId, memberId, data) {
+        const team = teamMembers.get(projectId) || [];
+        const index = team.findIndex((m) => m.id === memberId);
+        if (index === -1)
+            return null;
+        team[index] = { ...team[index], ...data, updatedAt: new Date() };
+        return team[index];
+    }
+    async deleteTeamMember(projectId, memberId) {
+        const team = teamMembers.get(projectId) || [];
+        const filtered = team.filter((m) => m.id !== memberId);
+        teamMembers.set(projectId, filtered);
+        return true;
+    }
+    async getTeamCapacityUtilization(projectId) {
+        const team = await this.getTeamByProject(projectId);
+        const totalCapacity = team.reduce((sum, m) => sum + m.capacityAllocation, 0);
+        const avgCapacity = team.length > 0 ? totalCapacity / team.length : 0;
+        return {
+            teamSize: team.length,
+            totalAllocated: totalCapacity,
+            averageCapacity: Math.round(avgCapacity),
+            members: team,
+        };
+    }
+    async assignPhase(projectId, memberId, phase) {
+        const member = await this.getTeamMember(projectId, memberId);
+        if (!member)
+            return null;
+        if (!member.assignedPhases.includes(phase)) {
+            member.assignedPhases.push(phase);
+        }
+        return this.updateTeamMember(projectId, memberId, member);
+    }
+    async unassignPhase(projectId, memberId, phase) {
+        const member = await this.getTeamMember(projectId, memberId);
+        if (!member)
+            return null;
+        member.assignedPhases = member.assignedPhases.filter((p) => p !== phase);
+        return this.updateTeamMember(projectId, memberId, member);
+    }
+};
+exports.TeamService = TeamService;
+exports.TeamService = TeamService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+], TeamService);
+
+
+/***/ }),
+/* 71 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TeamController = void 0;
+const common_1 = __webpack_require__(2);
+const team_service_1 = __webpack_require__(70);
+let TeamController = class TeamController {
+    constructor(teamService) {
+        this.teamService = teamService;
+    }
+    create(data) {
+        return this.teamService.createTeamMember({
+            ...data,
+            assignedPhases: data.assignedPhases || [],
+        });
+    }
+    getByProject(projectId) {
+        return this.teamService.getTeamByProject(projectId);
+    }
+    getCapacity(projectId) {
+        return this.teamService.getTeamCapacityUtilization(projectId);
+    }
+    getMember(projectId, memberId) {
+        return this.teamService.getTeamMember(projectId, memberId);
+    }
+    update(projectId, memberId, data) {
+        return this.teamService.updateTeamMember(projectId, memberId, data);
+    }
+    delete(projectId, memberId) {
+        return this.teamService.deleteTeamMember(projectId, memberId);
+    }
+    assignPhase(projectId, memberId, data) {
+        return this.teamService.assignPhase(projectId, memberId, data.phase);
+    }
+    unassignPhase(projectId, memberId, data) {
+        return this.teamService.unassignPhase(projectId, memberId, data.phase);
+    }
+};
+exports.TeamController = TeamController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "getByProject", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId/capacity'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "getCapacity", null);
+__decorate([
+    (0, common_1.Get)('project/:projectId/member/:memberId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('memberId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "getMember", null);
+__decorate([
+    (0, common_1.Put)('project/:projectId/member/:memberId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('memberId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, typeof (_b = typeof Partial !== "undefined" && Partial) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)('project/:projectId/member/:memberId'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('memberId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "delete", null);
+__decorate([
+    (0, common_1.Put)('project/:projectId/member/:memberId/assign-phase'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('memberId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "assignPhase", null);
+__decorate([
+    (0, common_1.Put)('project/:projectId/member/:memberId/unassign-phase'),
+    __param(0, (0, common_1.Param)('projectId')),
+    __param(1, (0, common_1.Param)('memberId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], TeamController.prototype, "unassignPhase", null);
+exports.TeamController = TeamController = __decorate([
+    (0, common_1.Controller)('v1/team'),
+    __metadata("design:paramtypes", [typeof (_a = typeof team_service_1.TeamService !== "undefined" && team_service_1.TeamService) === "function" ? _a : Object])
+], TeamController);
+
 
 /***/ })
 /******/ 	]);

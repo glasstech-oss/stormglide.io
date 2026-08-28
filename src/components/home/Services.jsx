@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion'
-import * as Icons from 'lucide-react'
 import { services } from '../../data/services'
 import SectionHeader from '../common/SectionHeader'
 import { BentoContainer, BentoItem } from './BentoGrid'

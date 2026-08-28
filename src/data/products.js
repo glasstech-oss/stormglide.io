@@ -4,8 +4,8 @@ export const products = [
     name: 'Nexus HRM',
     icon: 'Users',
     status: 'live',
-    tagline: 'Enterprise HR & payroll for growing businesses',
-    description: 'The full employee lifecycle — onboarding, payroll, leave, and performance — in one system.',
+    tagline: 'Enterprise HRM management app for growing businesses',
+    description: 'The full employee lifecycle — onboarding, payroll, leave, and performance — in one HRM management app.',
     features: [
       'Multi-company, multi-tenant architecture',
       'Full payroll processing with tax calculations',

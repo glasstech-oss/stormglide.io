@@ -145,16 +145,27 @@ function Station({ progress, enter, hold, exit, stay = false, first = false, chi
   // exactly why the hero's buttons stopped responding).
   const pointerEvents = useTransform(opacity, o => (o > 0.5 ? 'auto' : 'none'))
 
-  // Station subtle parallax based on gyroscope. tiltX/tiltY are always real
-  // motion values here (every call site passes useGyroscope()'s output) —
-  // no fallback needed, and `new useMotionValue()` would be calling a React
-  // hook conditionally besides being a meaningless use of `new` on a hook.
   const tiltOffX = useTransform(tiltX, v => v * 35)
   const tiltOffY = useTransform(tiltY, v => v * 35)
 
+  // Add 3D rotation mapping for a true gravitational tilt effect
+  const rotateX = useTransform(tiltY, [-1, 1], [-8, 8])
+  const rotateY = useTransform(tiltX, [-1, 1], [-8, 8])
+
   return (
     <motion.div className={`sg-world-station ${className || ''}`} style={{ opacity, transform, filter, pointerEvents }}>
-      <motion.div style={{ x: tiltOffX, y: tiltOffY, width: '100%', height: '100%', display: 'flex', justifyContent: 'center' }}>
+      <motion.div style={{ 
+        x: tiltOffX, 
+        y: tiltOffY,
+        rotateX,
+        rotateY,
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        justifyContent: 'center',
+        transformStyle: 'preserve-3d',
+        perspective: 1200
+      }}>
         {children}
       </motion.div>
     </motion.div>
@@ -299,12 +310,21 @@ function Debris({ d, progress, tiltX, tiltY }) {
   const tiltOffX = useTransform(tiltX, v => v * 45 * (d.z * 10))
   const tiltOffY = useTransform(tiltY, v => v * 45 * (d.z * 10))
 
+  const rotateX = useTransform(tiltY, [-1, 1], [-12, 12])
+  const rotateY = useTransform(tiltX, [-1, 1], [-12, 12])
+
   return (
     <motion.div
       className="sg-world-debris"
       style={{ opacity, transform, left: '50%', top: '50%' }}
     >
-      <motion.div style={{ x: tiltOffX, y: tiltOffY }}>
+      <motion.div style={{ 
+        x: tiltOffX, 
+        y: tiltOffY,
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d'
+      }}>
         <small>{d.tag}</small>
         {d.text}
       </motion.div>

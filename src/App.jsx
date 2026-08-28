@@ -438,7 +438,7 @@ function SiteContent() {
 
 function AdminDeprecatedRedirect() {
   useEffect(() => {
-    window.location.href = 'https://frontend-ten-blush-98.vercel.app/admin/login';
+    window.location.href = 'https://admin.stormglide.io/admin/login';
   }, []);
 
   return (
@@ -446,7 +446,7 @@ function AdminDeprecatedRedirect() {
       <div style={{ textAlign: 'center' }}>
         <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Admin Portal Moved</h1>
         <p style={{ color: '#888' }}>Redirecting you to the new Stormglide Mission Control...</p>
-        <a href="https://frontend-ten-blush-98.vercel.app/admin/login" style={{ color: '#5AD1FF', marginTop: '24px', display: 'inline-block', textDecoration: 'none' }}>
+        <a href="https://admin.stormglide.io/admin/login" style={{ color: '#5AD1FF', marginTop: '24px', display: 'inline-block', textDecoration: 'none' }}>
           Click here if not redirected
         </a>
       </div>

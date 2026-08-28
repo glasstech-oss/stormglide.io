@@ -27,7 +27,7 @@ const STEP3 = [
   { id: 'exploring', label: 'Just exploring for now', sub: 'No deadline' },
 ]
 
-function getRecommendation(needs, timeline) {
+function getRecommendation(needs) {
   if (needs.includes('hr')) return { name: 'Nexus HRM', desc: 'Nexus HRM is the perfect fit — it covers payroll, leave, and performance tracking for businesses your size. We can customize it to your exact workflow.' }
   if (needs.includes('production')) return { name: 'Custom Production System', desc: "We'll design and build a production management system around your exact floor — order tracking, materials, scheduling, and quality control, built for how your team actually works." }
   if (needs.includes('health')) return { name: 'SANO Health', desc: 'SANO is built for African healthcare contexts. Offline-first, mobile-first, and designed around how community health actually works.' }
@@ -51,7 +51,7 @@ export default function Configurator() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const rec = getRecommendation(needs, timeline)
+    const rec = getRecommendation(needs)
     addDemoRequest({
       ...form,
       product: rec.name,
@@ -75,7 +75,7 @@ export default function Configurator() {
     exit: { x: -40, opacity: 0 },
   }
 
-  const rec = getRecommendation(needs, timeline)
+  const rec = getRecommendation(needs)
 
   return (
     <section id="configurator" style={{ padding: 'var(--section-padding) 2rem', background: 'var(--color-background)' }}>

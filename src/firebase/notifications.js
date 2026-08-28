@@ -1,6 +1,6 @@
 import { functions } from './db'
 import { httpsCallable } from 'firebase/functions'
-import { getWelcomeEmailTemplate, getProjectUpdateEmailTemplate } from '../services/emailTemplates'
+import { getWelcomeEmailTemplate } from '../services/emailTemplates'
 
 /**
  * Send branded project welcome email to client

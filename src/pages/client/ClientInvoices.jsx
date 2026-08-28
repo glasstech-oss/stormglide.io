@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { Clock, CheckCircle2, AlertCircle, CreditCard, LogOut, Download } from 'lucide-react'
+import { Clock, CheckCircle2, CreditCard, LogOut } from 'lucide-react'
 import { getInvoicesByProject } from '../../firebase/collections'
 import { createPaystackPayment } from '../../services/paystack'
 import { sendPaymentConfirmation } from '../../firebase/notifications'
@@ -13,7 +13,6 @@ export default function ClientInvoices() {
   const [project, setProject] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
@@ -66,7 +65,6 @@ export default function ClientInvoices() {
         // Reload invoices
         const updated = await getInvoicesByProject(project.id)
         setInvoices(updated)
-        setSelectedInvoice(null)
       }
     } catch (error) {
       console.error('Payment error:', error)

@@ -249,6 +249,15 @@ export default function AINavBar() {
             </AnimatePresence>
           </div>
 
+          <button
+            type="button"
+            className="sg-ainav-open"
+            onClick={() => setExpanded(true)}
+            aria-label="Ask Stormglide AI assistant"
+          >
+            Ask AI
+          </button>
+
           <form className="sg-ainav-form" onSubmit={handleFormSubmit}>
             <textarea
               ref={textareaRef}
@@ -288,11 +297,12 @@ export default function AINavBar() {
         
         .sg-ainav {
           position: fixed;
-          bottom: 24px;
-          left: 0;
-          right: 0;
-          margin: 0 auto;
-          width: min(680px, calc(100vw - 2rem));
+          bottom: 16px;
+          left: auto;
+          right: 1.25rem;
+          margin: 0;
+          width: auto;
+          max-width: min(188px, calc(100vw - 2rem));
           z-index: 1500;
           display: flex;
           flex-direction: column;
@@ -301,32 +311,45 @@ export default function AINavBar() {
           backdrop-filter: var(--glass-blur-strong);
           -webkit-backdrop-filter: var(--glass-blur-strong);
           border: 1px solid var(--color-border-subtle);
-          border-radius: 28px;
-          box-shadow: 0 24px 64px rgba(15,23,42,0.18), inset 0 1px 0 var(--glass-highlight);
-          transition: border-radius 0.2s ease, width 0.2s ease;
+          border-radius: 999px;
+          box-shadow: 0 16px 44px rgba(15,23,42,0.14), inset 0 1px 0 var(--glass-highlight);
+          transition: border-radius 0.2s ease, width 0.2s ease, max-width 0.2s ease, bottom 0.2s ease;
         }
 
         .sg-ainav.is-expanded {
+          bottom: 24px;
+          left: 0;
+          right: 0;
+          margin: 0 auto;
           border-radius: 20px;
           width: min(720px, calc(100vw - 1rem));
+          max-width: none;
         }
 
         .sg-ainav-bar {
           display: flex;
+          align-items: center;
+          padding: 0.35rem;
+          gap: 0.25rem;
+        }
+
+        .sg-ainav.is-expanded .sg-ainav-bar {
           align-items: flex-end;
           padding: 0.5rem 0.5rem 0.5rem 0.8rem;
-          gap: 0.5rem;
         }
 
         .sg-ainav-menu-wrapper {
           position: relative;
           display: flex;
           align-items: center;
+        }
+
+        .sg-ainav.is-expanded .sg-ainav-menu-wrapper {
           padding-bottom: 0.25rem;
         }
 
         .sg-ainav-menu-btn {
-          width: 40px; height: 40px;
+          width: 36px; height: 36px;
           border-radius: 50%;
           border: none;
           background: transparent;
@@ -371,6 +394,30 @@ export default function AINavBar() {
           background: color-mix(in srgb, var(--sg-accent) 15%, transparent);
         }
 
+        .sg-ainav-open {
+          flex: none;
+          height: 36px;
+          min-width: 0;
+          border: none;
+          border-radius: 999px;
+          background: transparent;
+          color: var(--color-text-heading);
+          cursor: pointer;
+          font-size: 0.86rem;
+          font-weight: 800;
+          text-align: left;
+          padding: 0 0.65rem;
+          white-space: nowrap;
+        }
+
+        .sg-ainav-open:hover {
+          color: var(--sg-accent);
+        }
+
+        .sg-ainav.is-expanded .sg-ainav-open {
+          display: none;
+        }
+
         .sg-ainav-form {
           flex: 1;
           display: flex;
@@ -380,6 +427,10 @@ export default function AINavBar() {
           border-radius: 22px;
           padding: 0.25rem 0.25rem 0.25rem 1rem;
           border: 1px solid var(--color-border-subtle);
+        }
+
+        .sg-ainav:not(.is-expanded) .sg-ainav-form {
+          display: none;
         }
 
         .sg-ainav-input {
@@ -531,6 +582,18 @@ export default function AINavBar() {
         @media (max-width: 640px) {
           .sg-ainav {
             bottom: calc(12px + env(safe-area-inset-bottom, 0));
+            left: 1rem;
+            max-width: calc(100vw - 5.75rem);
+            margin-left: 0;
+            margin-right: auto;
+            right: auto;
+          }
+          .sg-ainav.is-expanded {
+            left: 0;
+            right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            width: min(720px, calc(100vw - 1rem));
           }
           .sg-ainav-menu-dropdown {
             left: 0;

@@ -1,6 +1,11 @@
-import React, { useRef, useMemo, useEffect, useState } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { MathUtils, Vector3 } from 'three'
+import { MathUtils } from 'three'
+
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
 
 function useGlobalPointer() {
   const pointer = useRef({ nx: 0, ny: 0, active: false })
@@ -135,9 +140,9 @@ function Particles({ scrollY, globalPointer }) {
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos((Math.random() * 2) - 1)
-      const r = 8 + Math.random() * 4
+      const theta = seededRandom(i * 3 + 1) * Math.PI * 2
+      const phi = Math.acos((seededRandom(i * 3 + 2) * 2) - 1)
+      const r = 8 + seededRandom(i * 3 + 3) * 4
       
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta)
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)

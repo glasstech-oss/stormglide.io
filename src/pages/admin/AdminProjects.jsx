@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { CheckCircle2, Clock, Plus } from 'lucide-react'
-import { getProjects, updateProject, getClient } from '../../firebase/collections'
+import { CheckCircle2, Plus } from 'lucide-react'
+import { getProjects, updateProject } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 import ProjectFormModal from '../../components/admin/ProjectFormModal'
 
@@ -10,8 +10,6 @@ export default function AdminProjects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState(null)
-  const [editMode, setEditMode] = useState(false)
-  const [editForm, setEditForm] = useState({})
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   useEffect(() => {
@@ -40,19 +38,6 @@ export default function AdminProjects() {
     }
   }
 
-  const handleSaveEdit = async () => {
-    try {
-      await updateProject(selectedProject.id, editForm)
-      setEditMode(false)
-      const updated = await getProjects()
-      setProjects(updated)
-      const refreshed = updated.find(p => p.id === selectedProject.id)
-      setSelectedProject(refreshed)
-    } catch (error) {
-      console.error('Error saving project:', error)
-    }
-  }
-
   const handleProjectCreated = async () => {
     setShowCreateForm(false)
     const updated = await getProjects()
@@ -78,6 +63,16 @@ export default function AdminProjects() {
   const completedDeliverables = selectedProject?.deliverables?.filter(d => d.status === 'completed').length || 0
   const totalDeliverables = selectedProject?.deliverables?.length || 0
   const progressPercent = totalDeliverables > 0 ? (completedDeliverables / totalDeliverables) * 100 : 0
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading projects...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>
@@ -177,11 +172,7 @@ export default function AdminProjects() {
                 projects.map((proj, i) => (
                   <div
                     key={i}
-                    onClick={() => {
-                      setSelectedProject(proj)
-                      setEditForm({})
-                      setEditMode(false)
-                    }}
+                    onClick={() => setSelectedProject(proj)}
                     style={{
                       padding: '1rem',
                       background: selectedProject?.id === proj.id ? 'var(--bg-soft)' : 'transparent',

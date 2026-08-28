@@ -2,7 +2,6 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDocs,
   getDoc,
@@ -10,7 +9,6 @@ import {
   where,
   orderBy,
   serverTimestamp,
-  writeBatch,
 } from 'firebase/firestore'
 import { db } from './db'
 

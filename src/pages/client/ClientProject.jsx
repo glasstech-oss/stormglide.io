@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { LogOut, CheckCircle2, Clock, Users, DollarSign } from 'lucide-react'
+import { LogOut, CheckCircle2, Clock, DollarSign } from 'lucide-react'
 import { auth } from '../../firebase/db'
 import { signOut } from 'firebase/auth'
-import { getProjectsByClient, getClient } from '../../firebase/collections'
 import PageLayout from '../../components/layout/PageLayout'
 
 export default function ClientProject() {

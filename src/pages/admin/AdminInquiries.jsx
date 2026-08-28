@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { MessageSquare, ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { getInquiries, updateInquiry, addProject } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
@@ -31,6 +31,16 @@ export default function AdminInquiries() {
     }
     loadData()
   }, [])
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading inquiries...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   const handleStatusChange = async (inquiryId, status) => {
     try {

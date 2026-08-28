@@ -6,7 +6,7 @@ export const triggerHaptic = (pattern = 10) => {
   if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
     try {
       window.navigator.vibrate(pattern)
-    } catch (err) {
+    } catch {
       // Ignore
     }
   }

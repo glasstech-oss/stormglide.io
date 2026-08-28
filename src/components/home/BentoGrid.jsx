@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import * as Icons from 'lucide-react'
 
 // Bento Box Grid Container
-export const BentoContainer = ({ children, isPrimary = false }) => (
+export const BentoContainer = ({ children }) => (
   <div
     className="bento-grid-container"
     style={{

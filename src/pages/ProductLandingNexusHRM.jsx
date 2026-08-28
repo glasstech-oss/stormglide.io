@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle, BarChart3, Users, Zap, Globe } from 'lucide-re
 import { Link } from 'react-router-dom'
 import SectionHeader from '../components/common/SectionHeader'
 import PageLayout from '../components/layout/PageLayout'
+import HRMPricing from '../components/pricing/HRMPricing'
 
 export default function NexusHRMLanding() {
   return (
@@ -13,21 +14,21 @@ export default function NexusHRMLanding() {
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div style={{ marginBottom: '1rem', color: 'var(--sg-accent)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
-              HR & Payroll Management
+              HRM Management App
             </div>
             <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', fontWeight: 700, lineHeight: 1.1, marginBottom: '1.5rem', color: 'var(--color-text-heading)' }}>
               Nexus HRM
             </h1>
             <p style={{ fontSize: '1.1rem', lineHeight: 1.65, color: 'var(--color-text-secondary)', maxWidth: '600px', marginBottom: '2rem' }}>
-              A production HR platform handling employee records, payroll, leave management, and performance tracking — built for how African businesses actually run HR.
+              A production HRM management app handling employee records, payroll, leave management, and performance tracking — built for how businesses actually run HR.
             </p>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-              <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.95rem 1.45rem', background: 'var(--sg-accent)', color: 'var(--color-background)', border: 'none', borderRadius: '999px', fontWeight: 800, fontSize: '0.94rem', textDecoration: 'none', cursor: 'pointer', transition: 'transform 160ms ease' }} onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}>
-                Request Demo <ArrowRight size={16} />
+              <Link to="/products/nexus-hrm/demo" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.95rem 1.45rem', background: 'var(--sg-accent)', color: 'var(--color-background)', border: 'none', borderRadius: '999px', fontWeight: 800, fontSize: '0.94rem', textDecoration: 'none', cursor: 'pointer', transition: 'transform 160ms ease' }} onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}>
+                Interactive Demo <ArrowRight size={16} />
               </Link>
-              <a href="#features" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.95rem 1.45rem', background: 'color-mix(in srgb, var(--color-surface) 38%, transparent)', color: 'var(--color-text-heading)', border: '1px solid var(--color-border-subtle)', borderRadius: '999px', fontWeight: 800, fontSize: '0.94rem', textDecoration: 'none', cursor: 'pointer', transition: 'transform 160ms ease' }} onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}>
-                Learn More
-              </a>
+              <Link to="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.95rem 1.45rem', background: 'color-mix(in srgb, var(--color-surface) 38%, transparent)', color: 'var(--color-text-heading)', border: '1px solid var(--color-border-subtle)', borderRadius: '999px', fontWeight: 800, fontSize: '0.94rem', textDecoration: 'none', cursor: 'pointer', transition: 'transform 160ms ease' }} onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}>
+                Book a call
+              </Link>
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', border: '1px solid color-mix(in srgb, var(--sg-accent) 22%, transparent)', borderRadius: 'var(--radius)', background: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)', color: 'var(--color-text-secondary)', padding: '0.72rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.03em' }}>
               <span style={{ color: 'var(--sg-accent)', fontWeight: 700 }}>✓ LIVE PRODUCT</span> • Multi-currency payroll • Local payment integrations
@@ -39,7 +40,7 @@ export default function NexusHRMLanding() {
       {/* Key Features */}
       <section id="features" style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <SectionHeader label="Core Capabilities" title="What Nexus HRM Does" alignment="left" maxWidth="700px" />
+          <SectionHeader label="Core Capabilities" title="Everything you need in an HRM management app" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem' }}>
             {[
               { icon: Users, title: 'Employee Management', desc: 'Centralized employee records, contact info, documents, org charts' },
@@ -55,6 +56,55 @@ export default function NexusHRMLanding() {
                 <p style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{item.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Product Manual / Documentation Embed */}
+      <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <SectionHeader label="Product Manual" title="Deep-dive into every module" alignment="center" />
+          <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '600px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
+            Explore our comprehensive documentation covering features, role access, and compliance standards.
+          </p>
+          
+          <div style={{ 
+            maxWidth: '1000px', 
+            margin: '0 auto', 
+            background: 'var(--color-background)',
+            borderRadius: '16px',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 20px 40px -20px rgba(0,0,0,0.1)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* macOS window header */}
+            <div style={{ 
+              background: 'var(--glass-bg)', 
+              padding: '12px 16px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              borderBottom: '1px solid var(--color-border)' 
+            }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ff5f56' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ffbd2e' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#27c93f' }}></div>
+              <div style={{ flexGrow: 1, textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                stormglide-hrm-manual.pdf
+              </div>
+              <a href="/products/nexus-hrm/manual.html" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--sg-accent)', textDecoration: 'none', fontWeight: 600 }}>
+                Open Full Screen ↗
+              </a>
+            </div>
+            
+            <iframe 
+              src="/products/nexus-hrm/manual.html" 
+              style={{ width: '100%', height: '70vh', minHeight: '600px', border: 'none', background: '#F8FAFF' }}
+              title="Stormglide HRM Product Manual"
+              loading="lazy"
+            ></iframe>
           </div>
         </div>
       </section>
@@ -89,6 +139,9 @@ export default function NexusHRMLanding() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <HRMPricing />
 
       {/* FAQ */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)' }}>

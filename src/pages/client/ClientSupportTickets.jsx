@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { MessageSquare, Send, AlertTriangle } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { auth } from '../../firebase/db'
 import { addSupportTicket, getTicketsByProject } from '../../firebase/collections'
 import PageLayout from '../../components/layout/PageLayout'
 
+const DEFAULT_PROJECT_ID = 'client_project_123'
+
 export default function ClientSupportTickets() {
-  const [projectId, setProjectId] = useState('')
+  const [projectId] = useState(DEFAULT_PROJECT_ID)
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [newTicket, setNewTicket] = useState({
@@ -20,16 +22,7 @@ export default function ClientSupportTickets() {
   const navigate = useNavigate()
   const user = auth.currentUser
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/client/login')
-    } else {
-      setProjectId('client_project_123') // Would normally get from user context
-      loadTickets('client_project_123')
-    }
-  }, [user, navigate])
-
-  const loadTickets = async (projId) => {
+  const loadTickets = useCallback(async (projId) => {
     try {
       const ticketData = await getTicketsByProject(projId)
       setTickets(ticketData)
@@ -38,7 +31,16 @@ export default function ClientSupportTickets() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/client/login')
+      return
+    }
+    const timer = window.setTimeout(() => loadTickets(projectId), 0)
+    return () => window.clearTimeout(timer)
+  }, [user, navigate, loadTickets, projectId])
 
   const handleSubmitTicket = async (e) => {
     e.preventDefault()
@@ -75,6 +77,16 @@ export default function ClientSupportTickets() {
       case 'low': return '#10b981'
       default: return '#6b7280'
     }
+  }
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading support tickets...</p>
+        </div>
+      </PageLayout>
+    )
   }
 
   return (

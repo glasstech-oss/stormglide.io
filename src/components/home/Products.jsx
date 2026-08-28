@@ -7,7 +7,7 @@ import { submitLead } from '../../lib/crm'
 
 const ICONS = { Users, Heart, Package, Factory, Layers }
 
-function OrbitCard({ product, angle, paused, onClick }) {
+function OrbitCard({ product, angle, onClick }) {
   const radius = 220
   const rad = (angle * Math.PI) / 180
   const x = Math.cos(rad) * radius
@@ -204,7 +204,6 @@ export default function Products() {
               key={product.id}
               product={product}
               angle={baseAngles[i] + rotation}
-              paused={paused}
               onClick={() => { setSelected(product); setPaused(true) }}
             />
           ))}

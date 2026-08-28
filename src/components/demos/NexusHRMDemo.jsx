@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, DollarSign, Calendar, Bell, LayoutDashboard, FileText, BarChart2 } from 'lucide-react'
+import { Users, DollarSign, Calendar, Bell, LayoutDashboard, BarChart2 } from 'lucide-react'
 
 const employees = [
   { name: 'Abena Mensah', dept: 'Engineering', role: 'Lead Developer', status: 'Active', joined: 'Mar 2022' },

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, ChevronDown } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useAdmin } from '../../context/AdminContext'
 
 const STATUSES = ['new', 'in_review', 'quoted', 'won', 'lost', 'closed']
@@ -128,7 +128,7 @@ export default function InquiriesManager() {
             </thead>
           )}
           <tbody>
-            {filtered.map((inq, i) => (
+            {filtered.map(inq => (
               <tr key={inq.id} onClick={() => setSelected(inq)} style={{ borderTop: '1px solid var(--color-border-subtle)', cursor: 'pointer', transition: 'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-alt)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}

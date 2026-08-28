@@ -32,20 +32,15 @@ function ProductCard({ product, i }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.07 }}
     >
-      <Link
-        to={path}
-        onClick={e => handleViewTransitionClick(e, vtNavigate, path, { name: 'depth' })}
-        style={{ display: 'block', textDecoration: 'none', height: '100%' }}
+      <div style={{
+        background: 'transparent', border: 'none',
+        padding: '0', height: '100%',
+        transition: 'all 0.25s',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
       >
-        <div style={{
-          background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)',
-          borderRadius: 'var(--border-radius-lg)', padding: '2rem', height: '100%',
-          boxShadow: '0 1px 4px rgba(15,23,42,0.04)', transition: 'all 0.25s',
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = product.color + '50'; e.currentTarget.style.boxShadow = `0 8px 40px ${product.color}12`; e.currentTarget.style.transform = 'translateY(-3px)' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(15,23,42,0.04)'; e.currentTarget.style.transform = 'none' }}
-        >
-          <div style={{ margin: '-2rem -2rem 1.5rem', borderBottom: '1px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg) var(--border-radius-lg) 0 0', overflow: 'hidden', aspectRatio: '16 / 8', background: shot ? 'color-mix(in srgb, var(--color-text-heading) 4%, transparent)' : `linear-gradient(135deg, ${product.color}18, ${product.color}05)` }}>
+          <div style={{ margin: '0 0 1.5rem', borderRadius: 'var(--border-radius-lg)', overflow: 'hidden', aspectRatio: '16 / 8', background: shot ? 'color-mix(in srgb, var(--color-text-heading) 4%, transparent)' : `linear-gradient(135deg, ${product.color}18, ${product.color}05)` }}>
             {shot ? (
               <img
                 src={shot}
@@ -93,19 +88,21 @@ function ProductCard({ product, i }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: product.color, fontSize: '0.85rem', fontWeight: 600 }}>
+            <Link
+              to={path}
+              onClick={e => handleViewTransitionClick(e, vtNavigate, path, { name: 'depth' })}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: product.color, fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}
+            >
               View full product <ArrowRight size={14} />
-            </div>
+            </Link>
             <Link
               to="/price-estimator"
-              onClick={e => e.stopPropagation()}
               style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', fontWeight: 600, color: 'var(--color-text-secondary)', textDecoration: 'none', padding: '0.3rem 0.6rem', borderRadius: '999px', background: 'var(--color-surface-alt)', border: '1px solid var(--color-border-subtle)' }}
             >
               Get an instant estimate
             </Link>
           </div>
         </div>
-      </Link>
     </motion.div>
   )
 }

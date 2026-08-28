@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Gamepad2, X, Trophy, Rocket } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 
 export default function StormGliderGame() {
+  const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [gameState, setGameState] = useState('start') // start, playing, over
   const [score, setScore] = useState(0)
@@ -22,6 +24,8 @@ export default function StormGliderGame() {
     score: 0,
     highScore: parseInt(localStorage.getItem('sg_highscore') || '0', 10)
   })
+
+  const showLauncher = location.pathname === '/' || isOpen
 
   const resetGame = () => {
     state.current = {
@@ -244,7 +248,7 @@ export default function StormGliderGame() {
     <>
       {/* Floating Widget Button */}
       <AnimatePresence>
-        {!isOpen && (
+        {showLauncher && !isOpen && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -252,15 +256,15 @@ export default function StormGliderGame() {
             onClick={() => setIsOpen(true)}
             style={{
               position: 'fixed',
-              bottom: '100px', // Above chat widget if exists
+              bottom: '24px',
               left: '24px',
-              width: '56px',
-              height: '56px',
+              width: '46px',
+              height: '46px',
               borderRadius: '50%',
               background: 'color-mix(in srgb, var(--color-surface) 70%, transparent)',
               backdropFilter: 'blur(16px)',
               border: '1px solid var(--color-border-subtle)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -268,9 +272,11 @@ export default function StormGliderGame() {
               zIndex: 90
             }}
             whileHover={{ scale: 1.1, background: 'var(--sg-accent)' }}
-            className="group"
+            className="sg-game-launcher group"
+            aria-label="Open Storm Glider"
+            title="Storm Glider"
           >
-            <Gamepad2 size={24} className="text-[var(--sg-accent)] group-hover:text-black transition-colors" />
+            <Gamepad2 size={20} className="text-[var(--sg-accent)] group-hover:text-black transition-colors" />
           </motion.button>
         )}
       </AnimatePresence>

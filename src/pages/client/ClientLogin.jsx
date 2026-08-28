@@ -60,7 +60,7 @@ export default function ClientLogin() {
     try {
       await confirmationResult.confirm(otp)
       navigate('/client/dashboard')
-    } catch (err) {
+    } catch {
       setError('Invalid OTP. Please try again.')
     } finally {
       setLoading(false)

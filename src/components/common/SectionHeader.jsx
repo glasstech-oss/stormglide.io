@@ -9,7 +9,6 @@ export default function SectionHeader({
   title,
   description,
   alignment = 'left',
-  color = 'blue',
   maxWidth = '640px',
   showMotion = true,
 }) {

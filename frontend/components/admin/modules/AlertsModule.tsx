@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertSeverity, AlertType } from "@/lib/alertsData";
 import { MonitoringAPI } from "@/lib/api";
+import { toDate } from "@/lib/firestore";
 import {
     Globe, ShieldCheck, Flame, FileText, Database, Activity,
     Shield, Bell, CheckCircle2, XCircle, Filter, ChevronDown, Loader2
@@ -37,7 +38,7 @@ export default function AlertsModule() {
     const [showResolved, setShowResolved] = useState(false);
 
     useEffect(() => {
-        MonitoringAPI.getAlerts().then((apiAlerts: any[]) => {
+        const fetchAlerts = () => MonitoringAPI.getAlerts().then((apiAlerts: any[]) => {
             // A genuinely empty result (no alerts at all) is a real, valid
             // state — it should clear to an empty list, not silently keep
             // whatever was there before. Previously this bailed out on an
@@ -52,14 +53,22 @@ export default function AlertsModule() {
                 title: a.title,
                 description: a.description,
                 client: a.clientName || a.client?.companyName || "System",
-                timestamp: new Date(a.createdAt).toISOString().slice(0, 16).replace("T", " "),
+                timestamp: toDate(a.createdAt)?.toISOString().slice(0, 16).replace("T", " ") || "Unknown",
                 resolved: a.resolved,
             }));
             setAlerts(mapped);
+            setError("");
         }).catch((err) => {
             console.error("Failed to load alerts:", err);
             setError("Could not load alerts.");
         }).finally(() => setLoading(false));
+
+        fetchAlerts();
+        // Passive poll so a newly-fired alert shows up here without a manual
+        // refresh — see the matching note in InfrastructureModule.tsx for why
+        // this is polling rather than a live Firestore listener.
+        const interval = setInterval(fetchAlerts, 60_000);
+        return () => clearInterval(interval);
     }, []);
 
     const resolve = async (id: string) => {

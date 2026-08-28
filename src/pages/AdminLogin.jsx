@@ -43,7 +43,7 @@ export default function AdminLogin() {
       sessionStorage.setItem('stormglide_admin_auth', uid)
       sessionStorage.setItem('stormglide_admin_email', userEmail)
       navigate('/admin/dashboard')
-    } catch (err) {
+    } catch {
       setError('Google sign-in failed. Make sure your account is authorized.')
     } finally {
       setLoading(false)

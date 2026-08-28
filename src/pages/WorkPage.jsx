@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { ArrowRight, MoveUpRight, CheckCircle2, ExternalLink } from 'lucide-react'
@@ -8,6 +8,8 @@ import { SITE_URL } from '../data/seo'
 import { CLIENT_WORK, getWorkPath } from '../data/clientWork'
 import { handleViewTransitionClick, useViewTransitionNavigate } from '../lib/viewTransition'
 import GyroCard from '../components/common/GyroCard'
+import MotionProofStrip from '../components/common/MotionProofStrip'
+import { usePageMotion } from '../lib/usePageMotion'
 
 const clientWorkSchema = {
   '@context': 'https://schema.org',
@@ -23,20 +25,39 @@ const clientWorkSchema = {
   })),
 }
 
+const WORK_PREVIEW_IMAGES = {
+  'lollarod-enterprise': '/images/mockups/website.webp',
+  'nexus-dental-system': '/images/mockups/dental.webp',
+  'cosmetology-spa-management-system': '/images/mockups/cosmetology.webp',
+  kentehaul: '/images/mockups/website.webp',
+  'jaybesin-logistics': '/images/mockups/webapp.webp',
+  'kyekye-cuisine': '/images/mockups/mobile.webp',
+  barbermanager: '/images/mockups/mobile.webp',
+}
+
+function getWorkPreviewImage(item) {
+  return WORK_PREVIEW_IMAGES[item.slug] || '/images/mockups/webapp.webp'
+}
+
 export default function WorkPage() {
-  const [activeSlug, setActiveSlug] = useState(CLIENT_WORK[0].slug)
+  const pageRef = useRef(null)
+  const [activeSlug, setActiveSlug] = useState(() => CLIENT_WORK.find(item => !item.noEmbed)?.slug || CLIENT_WORK[0].slug)
   const vtNavigate = useViewTransitionNavigate()
 
   const active = CLIENT_WORK.find(c => c.slug === activeSlug)
+  const activePreviewImage = getWorkPreviewImage(active)
+
+  usePageMotion('/work', pageRef)
 
   return (
     <PageLayout>
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(clientWorkSchema)}</script>
-      </Helmet>
+      <div ref={pageRef}>
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(clientWorkSchema)}</script>
+        </Helmet>
 
-      {/* Header */}
-      <div style={{ borderBottom: '1px solid var(--ink-100)', background: 'var(--bg-soft)', padding: '5rem 2rem 3.5rem' }}>
+        {/* Header */}
+        <div style={{ borderBottom: '1px solid var(--ink-100)', background: 'var(--bg-soft)', padding: '5rem 2rem 3.5rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div className="section-label">OUR WORK</div>
@@ -50,8 +71,14 @@ export default function WorkPage() {
         </div>
       </div>
 
+      <MotionProofStrip
+        eyebrow="LIVE INTERFACES"
+        title="Proof should move, not just read well."
+        body="The portfolio now leads with interface motion: product screens, storefronts, and operational dashboards moving through the page before the visitor reaches the detailed case list."
+      />
+
       {/* Live site browser */}
-      <div className="sg-work-demo-section" style={{ maxWidth: '1280px', margin: '0 auto', padding: '4rem 2rem 2rem' }}>
+      <div className="sg-work-demo-section" data-motion="reveal" style={{ maxWidth: '1280px', margin: '0 auto', padding: '4rem 2rem 2rem' }}>
         <div style={{ marginBottom: '2rem' }}>
           <div className="section-label">BROWSE LIVE</div>
           <h2 style={{ fontSize: '1.4rem', letterSpacing: '-0.028em', marginBottom: 0 }}>Click through the sites we've built</h2>
@@ -121,8 +148,8 @@ export default function WorkPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="sg-demo-frame" style={{ border: '1.5px solid var(--ink-100)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
-                  <div style={{ background: 'var(--bg-soft)', padding: '0.75rem 1rem', borderBottom: '1px solid var(--ink-100)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="sg-demo-frame" style={{ border: 'none', borderRadius: '0', overflow: 'hidden', boxShadow: 'none' }}>
+                  <div style={{ background: 'transparent', padding: '0.75rem 0', borderBottom: '1px solid var(--ink-100)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-danger)' }} />
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-warning)' }} />
                     <div style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--color-success)' }} />
@@ -136,9 +163,25 @@ export default function WorkPage() {
                       <ExternalLink size={11} style={{ flexShrink: 0 }} />
                     </a>
                   </div>
-                  <div className="sg-demo-frame-body">
+                  <div className="sg-demo-frame-body" style={{ position: 'relative' }}>
+                    {/* Invisible overlay to prevent scroll trapping on mobile, but allow clicks to pass through on desktop */}
+                    <a 
+                      href={active.url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="sg-mobile-iframe-overlay"
+                      aria-label={`Open ${active.name} live site`}
+                    >
+                      <div className="sg-overlay-pill">
+                        Open Site <ExternalLink size={14} />
+                      </div>
+                    </a>
+                    
                     {active.noEmbed ? (
                       <div className="sg-embed-blocked">
+                        <div className="sg-embed-blocked-preview">
+                          <img src={activePreviewImage} alt={`${active.name} interface preview`} loading="lazy" decoding="async" />
+                        </div>
                         <div className="sg-mobile-demo-icon" style={{ '--demo-color': active.color }}>
                           <active.RegionIcon size={22} />
                         </div>
@@ -157,17 +200,6 @@ export default function WorkPage() {
                       />
                     )}
                   </div>
-                  <div className="sg-mobile-demo-summary">
-                    <div className="sg-mobile-demo-icon" style={{ '--demo-color': active.color }}>
-                      <active.RegionIcon size={22} />
-                    </div>
-                    <span>{active.category}</span>
-                    <h3>{active.name}</h3>
-                    <p>{active.scope}</p>
-                    <a href={active.url} target="_blank" rel="noreferrer">
-                      Visit {active.name} <MoveUpRight size={14} />
-                    </a>
-                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -176,7 +208,7 @@ export default function WorkPage() {
       </div>
 
       {/* Client Work Showcase */}
-      <div style={{ padding: '4rem 2rem 6rem', background: 'var(--glass-bg)', position: 'relative', overflow: 'hidden', marginTop: '3rem' }}>
+      <div data-motion="reveal" style={{ padding: '4rem 2rem 6rem', background: 'var(--glass-bg)', position: 'relative', overflow: 'hidden', marginTop: '3rem' }}>
         {/* Background glow */}
         <div style={{ position: 'absolute', top: '-20%', left: '20%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, color-mix(in srgb, var(--sg-accent) 10%, transparent) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
@@ -202,14 +234,14 @@ export default function WorkPage() {
                 transition={{ delay: i * 0.1 }}
                 style={{
                   position: 'relative',
-                  background: 'var(--color-surface)',
-                  border: '1.5px solid color-mix(in srgb, var(--color-text-heading) 7%, transparent)',
-                  borderRadius: 'var(--radius-xl)',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '0',
                   overflow: 'hidden',
-                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  transition: 'transform 0.3s ease',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = `${c.color}40`; e.currentTarget.style.boxShadow = `0 16px 48px ${c.color}18` }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--color-text-heading) 7%, transparent)'; e.currentTarget.style.boxShadow = 'none' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
               >
                 {/* Stretched link — the whole card opens the case study;
                     "Visit site" below sits above this (z-index) so it still
@@ -222,10 +254,8 @@ export default function WorkPage() {
                   style={{ position: 'absolute', inset: 0, zIndex: 1 }}
                 />
 
-                {/* Card top accent */}
-                <div style={{ height: '3px', background: `linear-gradient(90deg, ${c.color}, transparent 70%)` }} />
-
-                <div className="sg-client-card-body" style={{ padding: '2rem', position: 'relative' }}>
+                {/* Card top accent removed for editorial style */}
+                <div className="sg-client-card-body" style={{ padding: '1rem 0', position: 'relative' }}>
                   {/* Header row */}
                   <div className="sg-client-card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                     <div>
@@ -244,7 +274,7 @@ export default function WorkPage() {
                     </a>
                   </div>
 
-                  <p style={{ fontSize: '0.875rem', color: 'color-mix(in srgb, var(--color-text-heading) 45%, transparent)', lineHeight: 1.75, marginBottom: '1.5rem' }}>{c.desc}</p>
+                  <p className="sg-client-desc" style={{ fontSize: '0.875rem', color: 'color-mix(in srgb, var(--color-text-heading) 45%, transparent)', lineHeight: 1.75, marginBottom: '1.5rem' }}>{c.desc}</p>
 
                   {/* What was built */}
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'color-mix(in srgb, var(--color-text-heading) 25%, transparent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '0.875rem', fontWeight: 600 }}>
@@ -290,7 +320,7 @@ export default function WorkPage() {
       </div>
 
       <style>{`
-        .sg-mobile-demo-summary {
+        .sg-mobile-iframe-overlay {
           display: none;
         }
 
@@ -299,10 +329,28 @@ export default function WorkPage() {
           justify-items: center;
           text-align: center;
           gap: 0.9rem;
-          padding: 3rem 2rem;
+          padding: 2rem;
           min-height: 400px;
           align-content: center;
           background: var(--bg-soft);
+        }
+
+        .sg-embed-blocked-preview {
+          width: min(100%, 620px);
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid var(--color-border-subtle);
+          box-shadow: var(--shadow-sm);
+          background: var(--color-surface);
+        }
+
+        .sg-embed-blocked-preview img {
+          display: block;
+          width: 100%;
+          height: min(36vw, 250px);
+          min-height: 180px;
+          object-fit: cover;
+          object-position: top;
         }
 
         .sg-embed-blocked p {
@@ -385,63 +433,43 @@ export default function WorkPage() {
             box-shadow: var(--shadow-sm) !important;
           }
 
-          .sg-demo-frame-body {
-            display: none;
-          }
-
-          .sg-mobile-demo-summary {
-            display: grid;
-            gap: 0.72rem;
-            padding: 1.3rem;
-            min-height: 280px;
-            background:
-              radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--demo-color, var(--sg-accent)) 18%, transparent), transparent 42%),
-              var(--glass-bg);
-          }
-
-          .sg-mobile-demo-icon {
-            width: 52px;
-            height: 52px;
-            display: grid;
-            place-items: center;
-            border-radius: 18px;
-            color: var(--demo-color, var(--sg-accent));
-            background: color-mix(in srgb, var(--demo-color, var(--sg-accent)) 14%, transparent);
-            border: 1px solid color-mix(in srgb, var(--demo-color, var(--sg-accent)) 28%, var(--glass-border));
-          }
-
-          .sg-mobile-demo-summary span {
-            color: var(--sg-accent);
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-          }
-
-          .sg-mobile-demo-summary h3 {
-            font-size: clamp(1.55rem, 8vw, 2.05rem);
-          }
-
-          .sg-mobile-demo-summary p {
-            color: var(--color-text-secondary);
-            line-height: 1.7;
-          }
-
-          .sg-mobile-demo-summary a {
-            display: inline-flex;
+          .sg-mobile-iframe-overlay {
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.45rem;
-            min-height: 46px;
-            width: fit-content;
-            border: 1px solid color-mix(in srgb, var(--sg-accent) 36%, var(--glass-border));
-            border-radius: 999px;
-            background: color-mix(in srgb, var(--sg-accent) 13%, transparent);
-            color: var(--color-text-heading);
-            font-weight: 800;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.02);
             text-decoration: none;
-            padding: 0.72rem 1rem;
+          }
+
+          .sg-overlay-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem 1.25rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-heading);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(8px);
+          }
+
+          .sg-demo-frame-body iframe {
+            height: 400px !important;
+            pointer-events: none; /* Let the overlay catch the tap and prevent scroll hijack */
+          }
+
+          .sg-client-desc {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 1rem !important;
           }
 
           .client-grid { grid-template-columns: 1fr !important; }
@@ -462,12 +490,12 @@ export default function WorkPage() {
           }
 
           .sg-client-built-list {
-            grid-template-columns: 1fr !important;
-            gap: 0.7rem !important;
+            display: none !important;
           }
         }
 
       `}</style>
+      </div>
     </PageLayout>
   )
 }

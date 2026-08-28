@@ -7,7 +7,6 @@ import { calculateMargin, getExpiringProjects, calculateInfrastructureCost } fro
 import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminInsights() {
-  const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState(null)
 
@@ -15,7 +14,6 @@ export default function AdminInsights() {
     const loadData = async () => {
       try {
         const projectsData = await getProjects()
-        setProjects(projectsData)
 
         // Calculate metrics
         const totalRevenue = projectsData.reduce((sum, p) => {

@@ -172,10 +172,8 @@ export const getPaystackTransactionHistory = async (serverKey, limit = 10, offse
 
 export const generatePaymentLink = (invoiceData) => {
   const {
-    invoiceNumber,
     amount,
     clientEmail,
-    clientName,
     invoiceId,
   } = invoiceData
 

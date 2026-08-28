@@ -55,6 +55,16 @@ export default function AdminDashboard() {
     loadData()
   }, [])
 
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading dashboard...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   const activeProjects = projects.filter(p => p.status === 'active')
   const pendingInquiries = inquiries.filter(i => i.status === 'new' || i.status === 'contacted')
   const teamUtilization = team.length > 0

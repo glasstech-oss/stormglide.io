@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { DollarSign, Send, Check, Clock, AlertTriangle } from 'lucide-react'
-import { getInvoices, getProject, updateInvoice, addInvoice } from '../../firebase/collections'
+import { DollarSign, Clock } from 'lucide-react'
+import { getInvoices, updateInvoice, addInvoice } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminInvoices() {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [newInvoice, setNewInvoice] = useState({
     projectId: '',
@@ -31,6 +30,16 @@ export default function AdminInvoices() {
     }
     loadData()
   }, [])
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading invoices...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   const handleCreateInvoice = async (e) => {
     e.preventDefault()

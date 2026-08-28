@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { AlertTriangle, Calendar, DollarSign, Server } from 'lucide-react'
+import { AlertTriangle, DollarSign } from 'lucide-react'
 import { getProjects } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
 export default function AdminInfrastructure() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all') // all, expiring-soon, over-capacity
 
   useEffect(() => {
     const loadData = async () => {
@@ -23,6 +22,16 @@ export default function AdminInfrastructure() {
     }
     loadData()
   }, [])
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading infrastructure...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   const getDaysUntilExpiry = (timestamp) => {
     if (!timestamp) return null

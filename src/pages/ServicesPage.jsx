@@ -41,14 +41,13 @@ function ServiceCard({ s }) {
       className="service-card sg-cursor-hover"
       whileHover={{ y: -4 }}
       style={{
-        background: 'var(--glass-bg)', border: '1.5px solid var(--ink-100)',
-        borderRadius: 'var(--radius-xl)', padding: '2rem',
-        boxShadow: 'var(--shadow-sm)', position: 'relative', overflow: 'hidden',
+        background: 'transparent', border: 'none',
+        padding: '0 0 2rem 0',
+        position: 'relative', overflow: 'visible',
         height: '100%',
       }}
     >
-      {/* Top accent line */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2.5px', background: `linear-gradient(90deg, ${s.color}, transparent 60%)`, borderRadius: '99px 99px 0 0' }} />
+      {/* Top accent line removed for editorial design */}
 
       {/* Icon + badge */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>

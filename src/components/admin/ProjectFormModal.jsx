@@ -21,40 +21,49 @@ const STACKS = [
   { name: 'Server Management', type: 'service', costTypes: ['monthly', 'annual'] },
 ]
 
+const DAY_MS = 24 * 60 * 60 * 1000
+const todayISO = new Date().toISOString().split('T')[0]
+const oneYearFromLoadISO = new Date(Date.now() + 365 * DAY_MS).toISOString().split('T')[0]
+const thirtyDaysFromLoadISO = new Date(Date.now() + 30 * DAY_MS).toISOString().split('T')[0]
+
+const getInitialFormData = () => ({
+  // Project Details
+  name: '',
+  contactPerson: '',
+  contactEmail: '',
+  contactPhone: '',
+  domain: '',
+
+  // Pricing
+  packageName: '',
+  clientPaymentMonthly: 0,
+  clientPaymentAnnual: 0,
+  paymentCycle: 'monthly', // monthly or annual
+  billingStartDate: todayISO,
+  billingEndDate: oneYearFromLoadISO,
+
+  // Infrastructure Stacks
+  stacks: [],
+  deliverables: [],
+
+  // Additional
+  description: '',
+  status: 'active',
+})
+
+const getInitialStack = () => ({
+  name: '',
+  costPerMonth: 0,
+  costPerYear: 0,
+  billingCycle: 'monthly',
+  renewalDate: thirtyDaysFromLoadISO,
+})
+
 export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
   const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState({
-    // Project Details
-    name: '',
-    contactPerson: '',
-    contactEmail: '',
-    contactPhone: '',
-    domain: '',
+  const [formData, setFormData] = useState(getInitialFormData)
 
-    // Pricing
-    packageName: '',
-    clientPaymentMonthly: 0,
-    clientPaymentAnnual: 0,
-    paymentCycle: 'monthly', // monthly or annual
-    billingStartDate: new Date().toISOString().split('T')[0],
-    billingEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-
-    // Infrastructure Stacks
-    stacks: [],
-    deliverables: [],
-
-    // Additional
-    description: '',
-    status: 'active',
-  })
-
-  const [newStack, setNewStack] = useState({
-    name: '',
-    costPerMonth: 0,
-    costPerYear: 0,
-    billingCycle: 'monthly',
-    renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  })
+  const [newStack, setNewStack] = useState(getInitialStack)
 
   const [newDeliverable, setNewDeliverable] = useState({
     name: '',
@@ -66,13 +75,7 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
         ...formData,
         stacks: [...formData.stacks, { ...newStack, id: Date.now() }],
       })
-      setNewStack({
-        name: '',
-        costPerMonth: 0,
-        costPerYear: 0,
-        billingCycle: 'monthly',
-        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      })
+      setNewStack(getInitialStack())
     }
   }
 
@@ -466,7 +469,7 @@ export default function ProjectFormModal({ isOpen, onClose, onSubmit }) {
                         type="number"
                         placeholder="e.g., 5000, 18000, 60000 (optional)"
                         value={formData.paymentCycle === 'annual' ? formData.clientPaymentMonthly : 0}
-                        onChange={(e) => {}}
+                        onChange={() => {}}
                         className="input"
                         disabled
                         style={{ fontSize: '1rem', fontWeight: 600, padding: '0.75rem', opacity: 0.6 }}

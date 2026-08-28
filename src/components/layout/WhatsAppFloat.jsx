@@ -35,7 +35,7 @@ export default function WhatsAppFloat() {
         .sg-whatsapp-float {
           position: fixed;
           right: 1.25rem;
-          bottom: 1.25rem;
+          bottom: 5.8rem;
           z-index: 1000;
           width: 48px;
           height: 48px;
@@ -77,7 +77,7 @@ export default function WhatsAppFloat() {
         @media (max-width: 640px) {
           .sg-whatsapp-float {
             right: 1rem;
-            bottom: 1rem;
+            bottom: calc(5.25rem + env(safe-area-inset-bottom, 0));
             width: 44px;
             height: 44px;
           }

@@ -5,6 +5,7 @@ import PageLayout from '../components/layout/PageLayout'
 import { useTheme } from '../context/ThemeContext'
 import SystemBuilderCanvas from '../components/estimator/SystemBuilderCanvas'
 import { Eye, List } from 'lucide-react'
+import { submitLead } from '../lib/crm'
 
 // Grounded in what we've actually delivered (see src/data/clientWork.js) and
 // realistic Ghana SME software-project pricing — not a copied rate card.

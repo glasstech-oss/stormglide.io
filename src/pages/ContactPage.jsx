@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { MessageSquare, Mail, MapPin, Check, ArrowRight, ArrowUpRight, Clock, Loader2, Zap, Building2, Layers, Brain, Shield, Wrench, Phone, Monitor, Lock, UserRound, Globe2 } from 'lucide-react'
@@ -10,17 +10,19 @@ import { revealItem } from '../lib/reveal'
 import { submitLead } from '../lib/crm'
 import { LIVE_PRODUCT_COUNT } from '../data/products'
 import { CLIENT_WORK_COUNT } from '../data/clientWork'
+import MotionProofStrip from '../components/common/MotionProofStrip'
+import { usePageMotion } from '../lib/usePageMotion'
 
 const API_BASE = 'https://us-central1-stormglideio.cloudfunctions.net/api'
 
 const TYPES = ['New System', 'Product Demo', 'Tech Consulting', 'Partnership', 'Other']
 
 const PILLARS = [
-  { icon: Building2, title: 'Built in Africa', desc: "We understand the market, the infrastructure, the constraints, and the opportunity. We don't build for Africa from the outside — we are inside it.", color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--sg-accent) 7%, transparent)', border: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)' },
-  { icon: Layers, title: 'Full-Stack Delivery', desc: 'Design, build, deploy, support — one team handles it all. No handoffs, no excuses, no disappearing after launch.', color: 'var(--color-accent-violet)', bg: 'color-mix(in srgb, var(--color-success) 7%, transparent)', border: 'color-mix(in srgb, var(--color-success) 15%, transparent)' },
-  { icon: Brain, title: 'AI-Native by Default', desc: 'Every system we build considers artificial intelligence from day one. Not as a gimmick — as a genuine tool for doing more with less.', color: 'var(--color-accent-coral)', bg: 'color-mix(in srgb, var(--color-accent-coral) 7%, transparent)', border: 'color-mix(in srgb, var(--color-accent-coral) 15%, transparent)' },
-  { icon: Shield, title: 'Enterprise-Grade Security', desc: 'Multi-tenant architecture, role-based access control, audit trails, and data encryption. Built right from the start.', color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 7%, transparent)', border: 'color-mix(in srgb, var(--color-success) 18%, transparent)' },
-  { icon: Zap, title: 'Speed Without Shortcuts', desc: "We scope in 48 hours, demo in week one, and ship on the exact date we commit to. No 6-month timelines, no excuses, no disappearing developers. Fast is how we work.", color: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 7%, transparent)', border: 'color-mix(in srgb, var(--color-warning) 18%, transparent)' },
+  { icon: Building2, title: 'Built in Africa', desc: 'We design for local infrastructure, mobile-first teams, WhatsApp-heavy workflows, and customers who need systems to work without hand-holding.', color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--sg-accent) 7%, transparent)', border: 'color-mix(in srgb, var(--sg-accent) 15%, transparent)' },
+  { icon: Layers, title: 'Full-Stack Delivery', desc: 'One team handles interface, database, deployment, training, and support so the system is owned end to end.', color: 'var(--color-accent-violet)', bg: 'color-mix(in srgb, var(--color-success) 7%, transparent)', border: 'color-mix(in srgb, var(--color-success) 15%, transparent)' },
+  { icon: Brain, title: 'AI Where It Helps', desc: 'We add AI only where it improves work: search, summaries, lead triage, recommendations, and admin assistance.', color: 'var(--color-accent-coral)', bg: 'color-mix(in srgb, var(--color-accent-coral) 7%, transparent)', border: 'color-mix(in srgb, var(--color-accent-coral) 15%, transparent)' },
+  { icon: Shield, title: 'Security by Default', desc: 'Role-based access, audit trails, protected routes, and managed infrastructure are treated as normal product requirements.', color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 7%, transparent)', border: 'color-mix(in srgb, var(--color-success) 18%, transparent)' },
+  { icon: Zap, title: 'Visible Progress', desc: 'We scope quickly, show early demos, and keep the delivery path visible so clients are not guessing what happens next.', color: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 7%, transparent)', border: 'color-mix(in srgb, var(--color-warning) 18%, transparent)' },
 ]
 
 const CLIENT_COUNTRIES = ['Ghana', 'Guinea', 'UK', 'US', 'UAE', 'Togo', 'China']
@@ -35,7 +37,7 @@ const STATS = [
 const SECURITY_POINTS = [
   { title: 'Encrypted in transit and at rest', desc: 'All data moves over HTTPS, and every system we build stores data with provider-level encryption at rest — the same standard used by Google Cloud and Firebase infrastructure.' },
   { title: 'Role-based access control', desc: "Nobody sees more than their role requires. Admins, staff, and clients each get scoped access — built into every system from day one, not bolted on later." },
-  { title: 'Automatic backups', desc: 'Your data is backed up continuously on managed infrastructure, not sitting on a single laptop or unmonitored server.' },
+  { title: 'Backup strategy on managed infrastructure', desc: 'We design systems around managed providers and documented recovery paths instead of leaving business data on a single laptop or unmanaged server.' },
   { title: 'You own your data', desc: 'Every system we build is yours — exportable, documented, and never held hostage. If you ever leave, you leave with your data intact.' },
 ]
 
@@ -52,13 +54,14 @@ const WEB3FORMS_KEY = 'f921c153-954b-431f-bbe5-30475c682b44'
 const FAQS = [
   { q: 'How long does a typical project take?', a: 'Most custom systems take 6–16 weeks depending on scope. Simple web apps can be ready in 3–4 weeks. We give you a clear timeline before we start.' },
   { q: 'Do you work with clients outside Ghana?', a: 'Yes. We currently have clients across Ghana, Guinea, the UK, the US, the UAE, Togo, and China, and we work remotely with clients anywhere. We communicate over WhatsApp, email, and video.' },
-  { q: 'What happens after launch?', a: "We provide ongoing support and maintenance for everything we build. We don't disappear. Bug fixes are free; new features are quoted separately." },
+  { q: 'What happens after launch?', a: 'We provide ongoing support and maintenance options for the systems we build. Bugs inside the support window are handled as support work; new features are scoped and quoted separately.' },
   { q: 'Can we start with one of your existing products?', a: 'Absolutely. Several products like Nexus HRM and LOÙ Beauty Hub can be deployed and customized for your business within days.' },
   { q: 'Do you own the code after delivery?', a: 'Yes. Every project we deliver, you own the source code and all assets outright. No vendor lock-in — host it, modify it, or hand it to another developer, any time.' },
   { q: 'How does pricing work?', a: 'We quote a fixed price after scoping your project. No hourly billing, no surprise invoices. What we quote is what you pay — nothing more.' },
 ]
 
 export default function ContactPage() {
+  const pageRef = useRef(null)
   const { theme } = useTheme()
   const { addInquiry } = useAdmin()
   const location = useLocation()
@@ -67,6 +70,8 @@ export default function ContactPage() {
   const [status, setStatus]       = useState('idle')   // idle | loading | success | error
   const [errorMsg, setErrorMsg]   = useState('')
   const [team, setTeam]           = useState([])
+
+  usePageMotion('/contact', pageRef)
 
   useEffect(() => {
     let cancelled = false
@@ -148,6 +153,7 @@ export default function ContactPage() {
 
   return (
     <PageLayout>
+      <div ref={pageRef}>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '4rem 2rem 3rem' }}>
@@ -167,8 +173,16 @@ export default function ContactPage() {
         </div>
       </div>
 
+      <MotionProofStrip
+        eyebrow="BUILD STYLE"
+        title="A company page should prove how the work feels."
+        body="The site now breaks up long copy with moving interface proof: dashboards, storefronts, mobile flows, and product surfaces a buyer can understand quickly."
+        ctaLabel="See the work"
+        ctaHref="/work"
+      />
+
       {/* Who we are */}
-      <div style={{ padding: '5rem 2rem', background: 'var(--glass-bg)' }}>
+      <div data-motion="reveal" style={{ padding: '5rem 2rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6rem', alignItems: 'start' }} className="about-grid">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <WordReveal
@@ -183,10 +197,10 @@ export default function ContactPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', overflow: 'hidden', border: '1.5px solid var(--color-border-subtle)', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
               {STATS.map(s => (
-                <div key={s.label} style={{ background: 'var(--glass-bg)', padding: '1.75rem', textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, background: 'linear-gradient(120deg, var(--color-accent-blue), var(--color-accent-violet))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '0.25rem' }}>{s.value}</div>
+                <div key={s.label} style={{ padding: '0.5rem 0', textAlign: 'left' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, color: 'var(--color-text-heading)', marginBottom: '0.25rem' }}>{s.value}</div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{s.label}</div>
                 </div>
               ))}
@@ -265,7 +279,7 @@ export default function ContactPage() {
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>HOW WE OPERATE</div>
-            <WordReveal as="h2" text="Four principles we don't compromise on" style={{ letterSpacing: '-0.02em' }} />
+            <WordReveal as="h2" text="Operating rules we keep visible" style={{ letterSpacing: '-0.02em' }} />
           </motion.div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
             {PILLARS.map((p, i) => {
@@ -274,9 +288,8 @@ export default function ContactPage() {
                 <motion.div
                   key={p.title}
                   {...revealItem(i)}
-                  style={{ background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '2rem', position: 'relative', overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,23,42,0.04)' }}
+                  style={{ background: 'transparent', border: 'none', padding: '0 0 2rem 0', position: 'relative', overflow: 'visible' }}
                 >
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${p.color}, transparent)` }} />
                   <div style={{ width: 44, height: 44, borderRadius: '12px', background: p.bg, border: `1.5px solid ${p.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
                     <Icon size={20} color={p.color} />
                   </div>
@@ -299,8 +312,7 @@ export default function ContactPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }} className="founder-grid">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <div style={{ background: 'linear-gradient(135deg, var(--sg-accent)08 0%, var(--color-success)08 100%)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '2.5rem', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, var(--color-accent-blue), var(--color-accent-violet))', borderRadius: '99px 99px 0 0' }} />
+              <div style={{ padding: '0 0 2.5rem 0', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                   <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'linear-gradient(135deg, var(--sg-accent), var(--color-success))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Zap size={26} color="var(--color-text-heading)" fill="var(--color-text-heading)" />
@@ -311,13 +323,13 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.85, fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-                  Stormglide started because we kept watching African businesses get burned — paying for expensive imported software that didn't fit how they work, or getting burned by developers who disappeared after launch.
+                  Stormglide started because we kept watching African businesses pay for software that did not fit how they work, then struggle to get practical support after launch.
                 </p>
                 <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.85, fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-                  We are engineers, designers, and product builders — all from Ghana — who decided the solution was simple: build the software ourselves, for clients who deserve the same quality as any Fortune 500 company.
+                  We are engineers, designers, and product builders from Ghana building serious software for clients who need reliable websites, admin tools, dashboards, and business systems.
                 </p>
                 <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.85, fontSize: '0.95rem' }}>
-                  Every system we've shipped is live, running real businesses, and maintained by us today. We don't move on. We stay in.
+                  The standard is simple: useful software, clear ownership, and support that remains available after launch.
                 </p>
               </div>
             </motion.div>
@@ -325,15 +337,15 @@ export default function ContactPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {[
-                  { Icon: Wrench,       color: 'var(--sg-accent)', bg: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)',  title: 'We build what we promise', desc: 'Every feature we scope, we deliver. Every timeline we give, we hit. If something changes, you hear it from us first — not after the fact.' },
-                  { Icon: Phone,        color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)',  title: "We don't disappear",       desc: 'Our WhatsApp is always open. Every system we\'ve ever shipped still has our support. Clients call us two years after launch — and we answer.' },
-                  { Icon: Globe2,       color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)', title: 'We understand Africa first', desc: "We've built for Paystack, MTN MoMo, SSNIT, NHIS, and GES. We know how Ghanaian businesses actually operate — and we design for that reality." },
-                  { Icon: Monitor,      color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)',  title: 'No outsourcing, ever',      desc: 'Every line of code is written by our in-house team. No freelancers, no handoffs to unknown developers, no AI-generated junk. Just our engineers.' },
+                  { Icon: Wrench,       color: 'var(--sg-accent)', bg: 'color-mix(in srgb, var(--sg-accent) 8%, transparent)',  title: 'Scoped work stays visible', desc: 'Features, timeline, and tradeoffs are documented before build. If the scope changes, the reason is made clear.' },
+                  { Icon: Phone,        color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)',  title: 'Support stays close',       desc: 'Clients get practical support routes after launch, including WhatsApp for urgent operational questions.' },
+                  { Icon: Globe2,       color: 'var(--color-success)', bg: 'color-mix(in srgb, var(--color-success) 8%, transparent)', title: 'Africa-first operations', desc: 'We design around local payments, staff workflows, mobile devices, connectivity issues, and the admin reality of businesses here.' },
+                  { Icon: Monitor,      color: 'var(--color-accent-blue)', bg: 'color-mix(in srgb, var(--color-accent-blue) 8%, transparent)',  title: 'Core team delivery',      desc: 'Your project stays with the Stormglide team responsible for design, code, deployment, and handover.' },
                 ].map((item, i) => (
                   <motion.div
                     key={i}
                     {...revealItem(i)}
-                    style={{ display: 'flex', gap: '1rem', padding: '1.25rem', background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', alignItems: 'flex-start' }}
+                    style={{ display: 'flex', gap: '1rem', padding: '1.25rem 0', alignItems: 'flex-start' }}
                   >
                     <div style={{ width: 36, height: 36, borderRadius: '10px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <item.Icon size={16} color={item.color} />
@@ -363,7 +375,7 @@ export default function ContactPage() {
                 <motion.div
                   key={member.id}
                   {...revealItem(i)}
-                  style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '1.75rem' }}
+                  style={{ padding: '0 0 1.75rem 0' }}
                 >
                   <div style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', background: 'var(--color-surface-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                     {member.photoDataUri ? (
@@ -388,7 +400,7 @@ export default function ContactPage() {
       )}
 
       {/* Data & security */}
-      <div style={{ padding: '5rem 2rem', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border-subtle)' }}>
+      <div data-motion="reveal" style={{ padding: '5rem 2rem', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border-subtle)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ marginBottom: '2.5rem' }}>
             <div className="section-label">DATA & SECURITY</div>
@@ -399,7 +411,7 @@ export default function ContactPage() {
               <motion.div
                 key={point.title}
                 {...revealItem(i)}
-                style={{ background: 'var(--glass-bg)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '1.75rem' }}
+                style={{ padding: '0 0 1.75rem 0' }}
               >
                 <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'color-mix(in srgb, var(--color-success) 8%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.1rem' }}>
                   <Lock size={18} color="var(--color-success)" />
@@ -413,7 +425,7 @@ export default function ContactPage() {
       </div>
 
       {/* ── Let's build (contact form) ── */}
-      <div id="build" style={{ borderTop: '1px solid var(--color-border-subtle)', padding: '5rem 2rem 3rem', background: 'var(--glass-bg)' }}>
+      <div id="build" data-motion="reveal" style={{ borderTop: '1px solid var(--color-border-subtle)', padding: '5rem 2rem 3rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="section-label">CONTACT</div>
@@ -617,6 +629,7 @@ export default function ContactPage() {
           .founder-grid { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
         }
       `}</style>
+      </div>
     </PageLayout>
   )
 }

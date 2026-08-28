@@ -216,6 +216,10 @@ export const ProjectsAPI = {
         const { data } = await apiClient.post('/v1/projects', body);
         return data;
     },
+    update: async (projectId: string, body: { projectName?: string; description?: string; estimatedEnd?: string; clientId?: string; productionUrl?: string; stagingUrl?: string }) => {
+        const { data } = await apiClient.put(`/v1/projects/${projectId}`, body);
+        return data;
+    },
     updateCompletion: async (projectId: string, body: Record<string, unknown>) => {
         const { data } = await apiClient.put(`/v1/projects/${projectId}/completion`, body);
         return data;

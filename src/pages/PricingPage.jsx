@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, ArrowRight, Zap, Code2, Building2, HelpCircle, ChevronDown, ChevronUp, Users, Package, Sparkles, Heart, Layers, GraduationCap, UtensilsCrossed, Home, Truck, Stethoscope, Calculator } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -6,6 +6,8 @@ import PageLayout from '../components/layout/PageLayout'
 import WordReveal from '../components/common/WordReveal'
 import { getProductPath, LIVE_PRODUCT_COUNT } from '../data/products'
 import { revealItem } from '../lib/reveal'
+import MotionProofStrip from '../components/common/MotionProofStrip'
+import { usePageMotion } from '../lib/usePageMotion'
 
 const PLANS = [
   {
@@ -94,7 +96,7 @@ const FAQS = [
   },
   {
     q: 'How accurate are your project timelines?',
-    a: "We scope every project in detail before we start — and our estimates are conservative, not optimistic. Simple apps take 3–5 weeks. Medium systems take 8–14 weeks. We tell you the real number upfront and we hit it.",
+    a: "We scope every project in detail before we start, and our estimates are conservative rather than optimistic. Simple apps usually take 3–5 weeks. Medium systems often take 8–14 weeks. We give you the real number upfront and keep progress visible.",
   },
   {
     q: 'Can you integrate with software we already use?',
@@ -131,28 +133,28 @@ const INDUSTRY_EXAMPLES = [
     industry: 'Schools & Education',
     system: 'Admissions + student records + fee management',
     tier: 'Build', weeks: '8–10 wks',
-    example: 'Multi-school deployment ready',
+    example: 'Multi-school workflows scoped per school',
   },
   {
     icon: UtensilsCrossed, color: 'var(--color-danger)',
     industry: 'Restaurants & Food',
     system: 'POS + kitchen orders + inventory + reports',
     tier: 'Build', weeks: '6–9 wks',
-    example: 'Works offline, built for real service speed',
+    example: 'Offline mode can be scoped for service speed',
   },
   {
     icon: Stethoscope, color: 'var(--color-success)',
     industry: 'Clinics & Pharmacy',
     system: 'Patient records + dispensing + NHIS billing',
     tier: 'Build', weeks: '10–14 wks',
-    example: 'NHIS-compatible out of the box',
+    example: 'Local billing workflows scoped before build',
   },
   {
     icon: Truck, color: 'var(--color-warning)',
     industry: 'Logistics & Delivery',
     system: 'Order dispatch + driver tracking + COD reconciliation',
     tier: 'Build', weeks: '8–12 wks',
-    example: 'Includes driver mobile app',
+    example: 'Driver tools scoped to the operation',
   },
   {
     icon: Home, color: 'var(--color-success)',
@@ -169,12 +171,9 @@ function FAQItem({ faq, index }) {
     <motion.div
       {...revealItem(index)}
       style={{
-        border: '1.5px solid var(--color-border-subtle)',
-        borderRadius: 'var(--border-radius-lg)',
-        background: 'var(--glass-bg)',
+        borderBottom: '1px solid var(--color-border-subtle)',
+        background: 'transparent',
         overflow: 'hidden',
-        transition: 'border-color 0.2s',
-        ...(open && { borderColor: 'color-mix(in srgb, var(--sg-accent) 25%, transparent)' }),
       }}
     >
       <button
@@ -201,8 +200,12 @@ function FAQItem({ faq, index }) {
 }
 
 export default function PricingPage() {
+  const pageRef = useRef(null)
+  usePageMotion('/pricing', pageRef)
+
   return (
     <PageLayout>
+      <div ref={pageRef}>
 
       {/* Header */}
       <div style={{ borderBottom: '1px solid var(--color-border-subtle)', background: 'var(--color-surface)', padding: '5rem 2rem 4rem' }}>
@@ -232,7 +235,7 @@ export default function PricingPage() {
       </div>
 
       {/* Price estimator CTA */}
-      <div style={{ padding: '3rem 2rem 0' }}>
+      <div data-motion="reveal" style={{ padding: '3rem 2rem 0' }}>
         <motion.div
           initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{
@@ -257,8 +260,16 @@ export default function PricingPage() {
         </motion.div>
       </div>
 
+      <MotionProofStrip
+        eyebrow="SCOPE IN MOTION"
+        title="Pricing should show the system taking shape."
+        body="Instead of more paragraphs, this section uses moving interface visuals to show the difference between a website, an operations system, a mobile product, and a deployable platform."
+        ctaLabel="Try the estimator"
+        ctaHref="/price-estimator"
+      />
+
       {/* Pricing cards */}
-      <section style={{ padding: '5rem 2rem 4rem', background: 'var(--glass-bg)' }}>
+      <section data-motion="reveal" style={{ padding: '5rem 2rem 4rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '1.5rem', alignItems: 'start' }}>
             {PLANS.map((plan, i) => {
@@ -269,21 +280,9 @@ export default function PricingPage() {
                   {...revealItem(i)}
                   style={{
                     position: 'relative',
-                    background: plan.highlight ? `linear-gradient(160deg, ${plan.color}48, ${plan.color}22)` : 'var(--glass-bg)',
-                    border: plan.highlight ? `1.5px solid ${plan.color}80` : '1.5px solid var(--glass-border)',
-                    borderRadius: 'var(--border-radius-lg)',
-                    backdropFilter: 'var(--glass-blur)',
-                    WebkitBackdropFilter: 'var(--glass-blur)',
-                    overflow: 'hidden',
-                    boxShadow: plan.highlight
-                      ? `0 24px 64px ${plan.color}38, inset 0 1px 0 var(--glass-highlight)`
-                      : 'var(--shadow-sm)',
-                    // the recommended plan leads visually: scaled up and lifted
-                    // above the row; the entry-level plan sits smaller and
-                    // muted beneath it, present but clearly secondary
-                    transform: plan.highlight ? 'scale(1.045)' : 'none',
-                    marginTop: plan.highlight ? '-0.75rem' : plan.compact ? '1.25rem' : '0',
-                    zIndex: plan.highlight ? 2 : 1,
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '0 0 2rem 0',
                     opacity: plan.compact ? 0.82 : 1,
                   }}
                 >
@@ -378,7 +377,7 @@ export default function PricingPage() {
       </section>
 
       {/* Products available to deploy */}
-      <section style={{ padding: '2rem 2rem 5rem', background: 'var(--glass-bg)' }}>
+      <section data-motion="reveal" style={{ padding: '2rem 2rem 5rem', background: 'var(--glass-bg)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border-subtle)', borderRadius: 'var(--border-radius-lg)', padding: '2.5rem', display: 'flex', gap: '3rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ flex: '1 1 280px' }}>
@@ -412,7 +411,7 @@ export default function PricingPage() {
       </section>
 
       {/* Industry examples */}
-      <section style={{ padding: '1rem 2rem 5rem', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border-subtle)' }}>
+      <section data-motion="reveal" style={{ padding: '1rem 2rem 5rem', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border-subtle)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>REAL EXAMPLES</div>
@@ -470,7 +469,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: '2rem 2rem 6rem', background: 'var(--color-surface)' }}>
+      <section data-motion="reveal" style={{ padding: '2rem 2rem 6rem', background: 'var(--color-surface)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>
@@ -485,7 +484,7 @@ export default function PricingPage() {
       </section>
 
       {/* Bottom CTA */}
-      <section style={{ padding: '5rem 2rem', background: 'linear-gradient(135deg, var(--sg-accent) 0%, var(--color-success) 100%)', position: 'relative', overflow: 'hidden' }}>
+      <section data-motion="reveal" style={{ padding: '5rem 2rem', background: 'linear-gradient(135deg, var(--sg-accent) 0%, var(--color-success) 100%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-40%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'color-mix(in srgb, var(--color-text-heading) 4%, transparent)' }} />
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -514,6 +513,7 @@ export default function PricingPage() {
           </motion.div>
         </div>
       </section>
+      </div>
     </PageLayout>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { AlertTriangle, Clock, CheckCircle, MessageSquare } from 'lucide-react'
+import { AlertTriangle, Clock, CheckCircle } from 'lucide-react'
 import { getSupportTickets, updateSupportTicket, addSupportTicket } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
@@ -101,6 +101,16 @@ export default function AdminSupportTickets() {
   const openTickets = tickets.filter(t => t.status === 'open').length
   const inProgressTickets = tickets.filter(t => t.status === 'in-progress').length
   const resolvedTickets = tickets.filter(t => t.status === 'resolved').length
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading support tickets...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>

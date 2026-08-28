@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
-import { TrendingUp, Users, DollarSign, Clock, AlertTriangle } from 'lucide-react'
+import { TrendingUp, Users, DollarSign } from 'lucide-react'
 import { getProjects, getInvoices, getTeam, getSupportTickets } from '../../firebase/collections'
 import AdminLayout from '../../components/layout/AdminLayout'
 
@@ -84,6 +84,16 @@ export default function AdminReports() {
   const topClients = data.projects
     .sort((a, b) => (b.budget?.quoted || 0) - (a.budget?.quoted || 0))
     .slice(0, 5)
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+          <p>Loading reports...</p>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>

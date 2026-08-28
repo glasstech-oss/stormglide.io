@@ -74,7 +74,7 @@ export default function DemoRequestsManager() {
               </tr>
             </thead>
             <tbody>
-              {demoRequests.map((req, i) => (
+              {demoRequests.map(req => (
                 <tr key={req.id} onClick={() => setSelected(req)} style={{ borderTop: '1px solid var(--color-border-subtle)', cursor: 'pointer', transition: 'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-alt)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}

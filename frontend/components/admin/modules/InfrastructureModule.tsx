@@ -257,7 +257,7 @@ function ClientDetail({ client, onClose }: { client: ClientInfra; onClose: () =>
                         <span className={`text-xs font-mono font-bold ${statusColor(client.ssl.status)}`}>{client.ssl.status}</span>
                     </div>
                     {client.ssl.status === "UNKNOWN" ? (
-                        <p className="text-xs text-gray-600">No check has run yet — the monitoring cycle checks every 6 hours.</p>
+                        <p className="text-xs text-gray-600">No check has run yet — the monitoring cycle checks every 30 minutes.</p>
                     ) : (
                         <div className="grid grid-cols-3 gap-3">
                             {[
@@ -283,7 +283,7 @@ function ClientDetail({ client, onClose }: { client: ClientInfra; onClose: () =>
                         <span className={`text-xs font-mono font-bold ${statusColor(client.uptime.status)}`}>{client.uptime.status}</span>
                     </div>
                     {client.uptime.status === "UNKNOWN" ? (
-                        <p className="text-xs text-gray-600">No check has run yet — the monitoring cycle checks every 6 hours.</p>
+                        <p className="text-xs text-gray-600">No check has run yet — the monitoring cycle checks every 30 minutes.</p>
                     ) : (
                         <div className="grid grid-cols-3 gap-3">
                             {[
@@ -342,6 +342,13 @@ export default function InfrastructureModule() {
 
     useEffect(() => {
         load();
+        // Passive auto-refresh so a problem the 30-minute monitoring cycle
+        // just recorded shows up here without the admin having to remember
+        // to hit Refresh — polling, not a live Firestore listener, since
+        // firestore.rules deliberately denies all direct client reads (see
+        // that file's comment) and everything goes through this REST API.
+        const interval = setInterval(load, 60_000);
+        return () => clearInterval(interval);
     }, [load]);
 
     const handleRefresh = async () => {

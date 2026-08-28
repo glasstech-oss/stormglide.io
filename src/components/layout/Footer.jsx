@@ -253,7 +253,7 @@ export default function Footer() {
           <p style={{ color: 'var(--ink-300)', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
             © 2026 Stormglide Technologies Ltd. · Built in Accra, Ghana
           </p>
-          <a href="https://frontend-ten-blush-98.vercel.app/admin/login" style={{
+          <a href="https://admin.stormglide.io/admin/login" style={{
             display: 'flex', alignItems: 'center', gap: '0.3rem',
             color: 'var(--ink-300)', fontSize: '0.72rem', textDecoration: 'none',
             transition: 'color 0.15s',

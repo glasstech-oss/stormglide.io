@@ -5,11 +5,14 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
+  Check,
   Clock,
   FileText,
   Gauge,
+  Loader2,
   Lock,
   Package,
+  Radio,
   ReceiptText,
   WalletCards,
 } from "lucide-react";
@@ -26,6 +29,8 @@ interface ProjectData {
   id: string;
   projectName: string;
   currentPhase: string;
+  productionUrl?: string | null;
+  stagingUrl?: string | null;
   client?: { companyName?: string };
   completion: {
     overallCompletionPercentage: number;
@@ -143,7 +148,7 @@ export default function ProjectDetailPage() {
 
       {/* Tab Content */}
       <div className="mt-8">
-        {activeTab === "overview" && <OverviewTab project={project} />}
+        {activeTab === "overview" && <OverviewTab project={project} onUpdated={fetchProject} />}
         {activeTab === "progress" && <CompletionTab projectId={projectId} />}
         {activeTab === "technology" && <TechStackTab projectId={projectId} />}
         {activeTab === "domains" && <DomainsTab projectId={projectId} />}
@@ -159,7 +164,7 @@ export default function ProjectDetailPage() {
   );
 }
 
-function OverviewTab({ project }: { project: ProjectData }) {
+function OverviewTab({ project, onUpdated }: { project: ProjectData; onUpdated: () => void }) {
   const summary = project.summary || { monthlyRecurring: 0, totalExpenses: 0, totalInvoiced: 0, totalPaid: 0 };
   const money = (value: number) => new Intl.NumberFormat("en-GH", {
     style: "currency",
@@ -169,6 +174,7 @@ function OverviewTab({ project }: { project: ProjectData }) {
 
   return (
     <div className="space-y-6">
+      <MonitoringUrlsCard project={project} onUpdated={onUpdated} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {[
           { label: "Monthly services", value: money(summary.monthlyRecurring), icon: WalletCards, color: "text-cyan-400" },
@@ -246,6 +252,96 @@ function OverviewTab({ project }: { project: ProjectData }) {
           </div>
         </div>
       </div>
+      </div>
+    </div>
+  );
+}
+
+// Setting one of these is what makes a project visible to the 6-hourly
+// SSL/uptime monitoring cycle (see monitoringCycle in functions/index.js) —
+// without a URL here, a project is never checked and never shows up on
+// /admin/monitoring, no matter how it's created.
+function MonitoringUrlsCard({ project, onUpdated }: { project: ProjectData; onUpdated: () => void }) {
+  const [productionUrl, setProductionUrl] = useState(project.productionUrl || "");
+  const [stagingUrl, setStagingUrl] = useState(project.stagingUrl || "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setProductionUrl(project.productionUrl || "");
+    setStagingUrl(project.stagingUrl || "");
+  }, [project.productionUrl, project.stagingUrl]);
+
+  const dirty = productionUrl !== (project.productionUrl || "") || stagingUrl !== (project.stagingUrl || "");
+  const isMonitored = Boolean(project.productionUrl || project.stagingUrl);
+
+  const save = async () => {
+    setSaving(true);
+    setSaved(false);
+    try {
+      await ProjectsAPI.update(project.id, {
+        productionUrl: productionUrl.trim(),
+        stagingUrl: stagingUrl.trim(),
+      });
+      setSaved(true);
+      onUpdated();
+      setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      console.error("Failed to update monitoring URLs:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="p-6 rounded-2xl bg-[#111827] border border-white/5">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-lg font-bold">Monitoring</h3>
+        {isMonitored ? (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+            <Radio size={9} className="animate-pulse" /> Checked every 6h
+          </span>
+        ) : (
+          <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-mono text-gray-500">
+            Not monitored
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 mb-4">
+        Add a production or staging URL to bring this project into SSL/uptime monitoring and cloud-budget alerts on the Monitoring page.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] font-mono text-gray-600 uppercase tracking-widest">Production URL</label>
+          <input
+            type="url"
+            value={productionUrl}
+            onChange={(e) => setProductionUrl(e.target.value)}
+            placeholder="https://client-site.com"
+            className="mt-1.5 w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono text-gray-600 uppercase tracking-widest">Staging URL</label>
+          <input
+            type="url"
+            value={stagingUrl}
+            onChange={(e) => setStagingUrl(e.target.value)}
+            placeholder="https://staging.client-site.com"
+            className="mt-1.5 w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-3 mt-4">
+        <button
+          onClick={save}
+          disabled={!dirty || saving}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-sm text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          {saving ? "Saving..." : "Save"}
+        </button>
+        {saved && <span className="text-xs text-emerald-400">Saved — picked up on the next monitoring cycle.</span>}
       </div>
     </div>
   );
