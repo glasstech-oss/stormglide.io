@@ -28,6 +28,15 @@ app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 const toDoc = (snap) => (snap.exists ? { id: snap.id, ...snap.data() } : null);
 const toDocs = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 const now = () => admin.firestore.Timestamp.now();
+// infraSnapshots is written every 30 min per project/checkType (~384
+// docs/day across 4 projects) with nothing else pruning it. Named ttlAt,
+// not expiresAt — this file already uses "expires" for SSL cert/domain
+// expiry, a different concept. Pointing a Firestore TTL policy at this
+// field lets Firestore delete old rows itself — no scheduled function,
+// no read/delete cost. Only the last-30-days window is ever queried
+// anyway (spend charts, snapshot summaries), so nothing downstream needs
+// data older than this.
+const snapshotTtlAt = () => admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 86400000));
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 const verifyToken = async (req, res, next) => {
@@ -2736,6 +2745,7 @@ const checkSSL = (clientId, projectId, hostname) => new Promise((resolve) => {
         await db.collection('infraSnapshots').add({
           clientId, projectId: projectId || null, checkType: 'SSL', target: hostname,
           status: 'UNKNOWN', details: { error: 'No certificate data' }, checkedAt: now(),
+          ttlAt: snapshotTtlAt(),
         });
         return resolve();
       }
@@ -2745,7 +2755,7 @@ const checkSSL = (clientId, projectId, hostname) => new Promise((resolve) => {
       await db.collection('infraSnapshots').add({
         clientId, projectId: projectId || null, checkType: 'SSL', target: hostname, status,
         details: { issuer: cert.issuer?.O || 'Unknown', expiresAt: expiresAt.toISOString(), daysLeft, valid: daysLeft > 0 },
-        checkedAt: now(),
+        checkedAt: now(), ttlAt: snapshotTtlAt(),
       });
       if (status !== 'HEALTHY') {
         const clientDoc = await db.collection('clientProfiles').doc(clientId).get();
@@ -2759,7 +2769,7 @@ const checkSSL = (clientId, projectId, hostname) => new Promise((resolve) => {
     } catch (e) {
       await db.collection('infraSnapshots').add({
         clientId, projectId: projectId || null, checkType: 'SSL', target: hostname,
-        status: 'UNKNOWN', details: { error: e.message }, checkedAt: now(),
+        status: 'UNKNOWN', details: { error: e.message }, checkedAt: now(), ttlAt: snapshotTtlAt(),
       }).catch(() => {});
     }
     resolve();
@@ -2767,7 +2777,7 @@ const checkSSL = (clientId, projectId, hostname) => new Promise((resolve) => {
   socket.on('error', async (e) => {
     await db.collection('infraSnapshots').add({
       clientId, projectId: projectId || null, checkType: 'SSL', target: hostname,
-      status: 'CRITICAL', details: { error: e.message }, checkedAt: now(),
+      status: 'CRITICAL', details: { error: e.message }, checkedAt: now(), ttlAt: snapshotTtlAt(),
     }).catch(() => {});
     resolve();
   });
@@ -2784,7 +2794,7 @@ const checkUptime = (clientId, projectId, url) => new Promise((resolve) => {
     const status = code >= 500 ? 'CRITICAL' : (code >= 400 || latencyMs > 3000) ? 'WARNING' : 'HEALTHY';
     await db.collection('infraSnapshots').add({
       clientId, projectId: projectId || null, checkType: 'UPTIME', target: url, status,
-      details: { statusCode: code, latencyMs }, checkedAt: now(),
+      details: { statusCode: code, latencyMs }, checkedAt: now(), ttlAt: snapshotTtlAt(),
     });
     if (status !== 'HEALTHY') {
       const clientDoc = await db.collection('clientProfiles').doc(clientId).get();
@@ -2800,7 +2810,7 @@ const checkUptime = (clientId, projectId, url) => new Promise((resolve) => {
   req.on('error', async (e) => {
     await db.collection('infraSnapshots').add({
       clientId, projectId: projectId || null, checkType: 'UPTIME', target: url,
-      status: 'CRITICAL', details: { error: e.message }, checkedAt: now(),
+      status: 'CRITICAL', details: { error: e.message }, checkedAt: now(), ttlAt: snapshotTtlAt(),
     }).catch(() => {});
     resolve();
   });

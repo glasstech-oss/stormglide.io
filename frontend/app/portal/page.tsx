@@ -678,7 +678,7 @@ export default function ClientPortal() {
                                     </div>
                                 ))}
                             </div>
-                            <p className="text-[10px] text-gray-700 mt-4 font-mono">Checked automatically every 6 hours.</p>
+                            <p className="text-[10px] text-gray-700 mt-4 font-mono">Checked automatically every 30 minutes.</p>
                         </motion.div>
                     )}
                 </div>
