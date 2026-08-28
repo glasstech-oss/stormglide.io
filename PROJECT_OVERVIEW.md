@@ -14,6 +14,8 @@ This repo contains **three separate applications** that together make up Stormgl
 
 **Admin portal deploys:** as of 2026-08-28, the `frontend` Vercel project is git-connected to this repo, so a push to `main` auto-deploys it — same as the marketing site and backend already did. If it ever stops auto-deploying again, `cd frontend && npx vercel --prod --yes` deploys directly from whatever's on disk, bypassing git entirely — useful for confirming a fix immediately, but don't mistake that manual deploy for proof that git-triggered auto-deploy is still working.
 
+The first git-triggered build after reconnecting failed with "No Next.js version detected" — the Vercel project's **Root Directory** setting was `.` (repo root), which is correct for a manual `vercel --prod` run from inside `frontend/` (the CLI treats cwd as the root regardless of the setting) but wrong for a git-triggered build, which clones the whole repo and needs to be told to `cd frontend` before building. Fixed by setting Root Directory to `frontend` via `PATCH /v9/projects/{id}` (`{"rootDirectory": "frontend"}`) — not exposed as a `vercel` CLI subcommand, only the dashboard or the API.
+
 The `backend/` folder (an early NestJS + PostgreSQL + Prisma rewrite) was deleted on 2026-08-28 — it was never deployed anywhere and nothing in production ever talked to it.
 
 ---
