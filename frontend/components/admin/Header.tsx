@@ -4,67 +4,24 @@ import { ExternalLink, LogOut, UserCircle } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
-import { PUBLIC_SITE_URL } from "@/lib/navigation";
+import { PUBLIC_SITE_URL, ADMIN_NAV_ITEMS, AdminNavItem } from "@/lib/navigation";
 import { useAdminStore } from "@/store/adminStore";
-
-const PAGE_LABELS: Record<string, string> = {
-    dashboard: "Overview",
-    crm: "Clients",
-    projects: "Projects",
-    monitoring: "Monitoring",
-    kanban: "Tasks",
-    vault: "Documents",
-    audit: "Audit Log",
-    billing: "Payments",
-    subscriptions: "Subscriptions",
-    forecast: "Forecast",
-    settings: "Website settings",
-};
 
 export default function Header() {
     const { activeTab, setActiveTab } = useAdminStore();
     const pathname = usePathname();
     const router = useRouter();
-    const current = pathname.startsWith("/admin/projects") ? "projects"
-        : pathname.startsWith("/admin/monitoring") ? "monitoring"
-        : pathname.startsWith("/admin/kanban") ? "kanban"
-        : pathname.startsWith("/admin/vault") ? "vault"
-        : pathname.startsWith("/admin/audit") ? "audit"
-        : pathname.startsWith("/admin/subscriptions") ? "subscriptions"
-        : pathname.startsWith("/admin/forecast") ? "forecast"
-        : activeTab;
+
+    const current = ADMIN_NAV_ITEMS.find((item) => item.route && pathname.startsWith(item.route))?.id
+        ?? (pathname === "/admin/dashboard" ? activeTab : "dashboard");
     const email = auth?.currentUser?.email || "Administrator";
 
-    const navigate = (id: string) => {
-        if (id === "projects") {
-            router.push("/admin/projects");
+    const navigate = (item: AdminNavItem) => {
+        if (item.route) {
+            router.push(item.route);
             return;
         }
-        if (id === "monitoring") {
-            router.push("/admin/monitoring");
-            return;
-        }
-        if (id === "kanban") {
-            router.push("/admin/kanban");
-            return;
-        }
-        if (id === "vault") {
-            router.push("/admin/vault");
-            return;
-        }
-        if (id === "audit") {
-            router.push("/admin/audit");
-            return;
-        }
-        if (id === "subscriptions") {
-            router.push("/admin/subscriptions");
-            return;
-        }
-        if (id === "forecast") {
-            router.push("/admin/forecast");
-            return;
-        }
-        setActiveTab(id);
+        setActiveTab(item.id);
         if (pathname !== "/admin/dashboard") router.push("/admin/dashboard");
     };
 
@@ -81,10 +38,13 @@ export default function Header() {
                     <select
                         aria-label="Admin page"
                         value={current}
-                        onChange={(event) => navigate(event.target.value)}
+                        onChange={(event) => {
+                            const item = ADMIN_NAV_ITEMS.find((i) => i.id === event.target.value);
+                            if (item) navigate(item);
+                        }}
                         className="rounded-lg border border-white/10 bg-[#101827] px-3 py-2 text-sm font-medium text-white outline-none"
                     >
-                        {Object.entries(PAGE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+                        {ADMIN_NAV_ITEMS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
                     </select>
                 </div>
                 <div className="hidden md:block">

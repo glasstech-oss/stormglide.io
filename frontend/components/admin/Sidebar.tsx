@@ -3,30 +3,12 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, CreditCard, LayoutDashboard, LogOut, Settings2, Users, BriefcaseBusiness, Receipt, UserSquare2, Inbox, BarChart3, Activity, Kanban, FileCheck, ScrollText, Package, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAdminStore } from "@/store/adminStore";
 import { cn } from "@/lib/utils";
 import { auth } from "@/lib/firebase";
-import { PUBLIC_SITE_URL } from "@/lib/navigation";
-
-const MENU_ITEMS = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
-    { id: "crm", label: "Clients", icon: Users },
-    { id: "leads", label: "Leads", icon: Inbox },
-    { id: "monitoring", label: "Monitoring", icon: Activity },
-    { id: "kanban", label: "Tasks", icon: Kanban },
-    { id: "vault", label: "Documents", icon: FileCheck },
-    { id: "projects", label: "Projects", icon: BriefcaseBusiness },
-    { id: "invoices", label: "Invoices", icon: Receipt },
-    { id: "billing", label: "Payments", icon: CreditCard },
-    { id: "subscriptions", label: "Subscriptions", icon: Package },
-    { id: "forecast", label: "Forecast", icon: TrendingUp },
-    { id: "analytics", label: "Visitor insight", icon: BarChart3 },
-    { id: "team", label: "About page team", icon: UserSquare2 },
-    { id: "audit", label: "Audit Log", icon: ScrollText },
-    { id: "settings", label: "Website settings", icon: Settings2 },
-];
+import { PUBLIC_SITE_URL, ADMIN_NAV_GROUPS, AdminNavItem } from "@/lib/navigation";
 
 function BrandMark() {
     return (
@@ -46,54 +28,20 @@ export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const navigate = (id: string) => {
-        if (id === "projects") {
-            router.push("/admin/projects");
+    const navigate = (item: AdminNavItem) => {
+        if (item.route) {
+            router.push(item.route);
             return;
         }
-        if (id === "invoices") {
-            router.push("/admin/invoices");
-            return;
-        }
-        if (id === "team") {
-            router.push("/admin/team");
-            return;
-        }
-        if (id === "leads") {
-            router.push("/admin/leads");
-            return;
-        }
-        if (id === "monitoring") {
-            router.push("/admin/monitoring");
-            return;
-        }
-        if (id === "kanban") {
-            router.push("/admin/kanban");
-            return;
-        }
-        if (id === "vault") {
-            router.push("/admin/vault");
-            return;
-        }
-        if (id === "audit") {
-            router.push("/admin/audit");
-            return;
-        }
-        if (id === "subscriptions") {
-            router.push("/admin/subscriptions");
-            return;
-        }
-        if (id === "forecast") {
-            router.push("/admin/forecast");
-            return;
-        }
-        if (id === "analytics") {
-            router.push("/admin/analytics");
-            return;
-        }
-        setActiveTab(id);
+        setActiveTab(item.id);
         if (pathname !== "/admin/dashboard") router.push("/admin/dashboard");
     };
+
+    // Tab-based items (route: null) all live on /admin/dashboard and switch
+    // on activeTab — they must never read as active from a stale activeTab
+    // value while looking at an unrelated dedicated route like /admin/kanban.
+    const isActive = (item: AdminNavItem) =>
+        item.route ? pathname.startsWith(item.route) : pathname === "/admin/dashboard" && activeTab === item.id;
 
     const logout = async () => {
         setIsLoggingOut(true);
@@ -121,49 +69,33 @@ export default function Sidebar() {
                 )}
             </div>
 
-            <nav className="flex-1 space-y-1 px-3 py-6" aria-label="Admin navigation">
-                {MENU_ITEMS.map((item) => {
-                    const isProjects = pathname.startsWith("/admin/projects");
-                    const isInvoices = pathname.startsWith("/admin/invoices");
-                    const isTeam = pathname.startsWith("/admin/team");
-                    const isLeads = pathname.startsWith("/admin/leads");
-                    const isMonitoring = pathname.startsWith("/admin/monitoring");
-                    const isKanban = pathname.startsWith("/admin/kanban");
-                    const isVault = pathname.startsWith("/admin/vault");
-                    const isAudit = pathname.startsWith("/admin/audit");
-                    const isSubscriptions = pathname.startsWith("/admin/subscriptions");
-                    const isForecast = pathname.startsWith("/admin/forecast");
-                    const isAnalytics = pathname.startsWith("/admin/analytics");
-                    const isDedicatedRoute = isProjects || isInvoices || isTeam || isLeads || isMonitoring || isKanban || isVault || isAudit || isSubscriptions || isForecast || isAnalytics;
-                    const active = item.id === "projects" ? isProjects
-                        : item.id === "invoices" ? isInvoices
-                        : item.id === "team" ? isTeam
-                        : item.id === "leads" ? isLeads
-                        : item.id === "monitoring" ? isMonitoring
-                        : item.id === "kanban" ? isKanban
-                        : item.id === "vault" ? isVault
-                        : item.id === "audit" ? isAudit
-                        : item.id === "subscriptions" ? isSubscriptions
-                        : item.id === "forecast" ? isForecast
-                        : item.id === "analytics" ? isAnalytics
-                        : !isDedicatedRoute && activeTab === item.id;
-                    return (
-                        <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => navigate(item.id)}
-                            title={sidebarCollapsed ? item.label : undefined}
-                            className={cn(
-                                "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition",
-                                active ? "bg-blue-500/12 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white",
-                                sidebarCollapsed && "justify-center px-0",
-                            )}
-                        >
-                            <item.icon size={19} className={active ? "text-blue-400" : "text-slate-500"} />
-                            {!sidebarCollapsed && <span>{item.label}</span>}
-                        </button>
-                    );
-                })}
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-6" aria-label="Admin navigation">
+                {ADMIN_NAV_GROUPS.map((group) => (
+                    <div key={group.label} className="space-y-1">
+                        {!sidebarCollapsed && (
+                            <div className="px-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-slate-600">{group.label}</div>
+                        )}
+                        {group.items.map((item) => {
+                            const active = isActive(item);
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => navigate(item)}
+                                    title={sidebarCollapsed ? item.label : undefined}
+                                    className={cn(
+                                        "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition",
+                                        active ? "bg-blue-500/12 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white",
+                                        sidebarCollapsed && "justify-center px-0",
+                                    )}
+                                >
+                                    <item.icon size={19} className={active ? "text-blue-400" : "text-slate-500"} />
+                                    {!sidebarCollapsed && <span>{item.label}</span>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ))}
             </nav>
 
             <div className="border-t border-white/10 p-3">
