@@ -9,10 +9,10 @@ Business systems studio site — public marketing site, admin portal, and backen
 | App | Where | Deploy |
 |---|---|---|
 | Public site (`src/`) | Firebase Hosting — `stormglide.io` | `npm run build && firebase deploy --only hosting` |
-| Admin portal (`frontend/`) | Vercel | `cd frontend && npx vercel --prod --yes` |
+| Admin portal (`frontend/`) | Vercel — `admin.stormglide.io` | Auto-deploys on push to `main` (git-connected as of 2026-08-28). Manual fallback: `cd frontend && npx vercel --prod --yes` |
 | Backend API (`functions/`) | Firebase Functions | `firebase deploy --only functions:api` |
 
-The `backend/` folder (NestJS + PostgreSQL) is **dead code** — an early rewrite that was never deployed. Don't build on it. The real backend is `functions/index.js` (Firebase Functions + Firestore).
+The real backend is `functions/index.js` (Firebase Functions + Firestore) — an earlier NestJS + PostgreSQL rewrite in `backend/` was deleted as dead code, never deployed.
 
 ## Local development
 

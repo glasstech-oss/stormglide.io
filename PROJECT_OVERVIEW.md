@@ -1,16 +1,20 @@
 # Stormglide.io — Project Overview
 
-_Last verified accurate: 2026-07-06. If this drifts from reality, trust the code and update this file._
+_Last verified accurate: 2026-08-28. If this drifts from reality, trust the code and update this file._
 
 This repo contains **three separate applications** that together make up Stormglide.io. They deploy independently, to three different places.
 
 | App | Framework | Deploys to | Live at |
 |---|---|---|---|
 | Public marketing site | Vite + React 19 (this repo's root `src/`) | Firebase Hosting | `stormglide.io` / `stormglideio.web.app` |
-| Admin portal | Next.js App Router (`frontend/`) | Vercel | `frontend-ten-blush-98.vercel.app` |
+| Admin portal | Next.js App Router (`frontend/`) | Vercel | `admin.stormglide.io` |
 | Backend API | Firebase Cloud Functions, Express (`functions/`) | Firebase Functions | `us-central1-stormglideio.cloudfunctions.net/api` |
 
-There is a **fourth folder, `backend/`, that is dead code** — an early NestJS + PostgreSQL + Prisma rewrite that was started and abandoned. It is not deployed anywhere and nothing in production talks to it. Don't build on it without first confirming with the user; the live backend is the Firebase Functions app described below.
+**Repo ownership:** this repo now lives at `github.com/johnsedofiadakey-hue/stormglide.io` (transferred back from a `glasstech-oss` account on 2026-08-28 — the Vercel GitHub App was never authorized on `glasstech-oss`, which is why pushes silently stopped auto-deploying the admin portal for a while; `johnsedofiadakey-hue` already had it).
+
+**Admin portal deploys:** as of 2026-08-28, the `frontend` Vercel project is git-connected to this repo, so a push to `main` auto-deploys it — same as the marketing site and backend already did. If it ever stops auto-deploying again, `cd frontend && npx vercel --prod --yes` deploys directly from whatever's on disk, bypassing git entirely — useful for confirming a fix immediately, but don't mistake that manual deploy for proof that git-triggered auto-deploy is still working.
+
+The `backend/` folder (an early NestJS + PostgreSQL + Prisma rewrite) was deleted on 2026-08-28 — it was never deployed anywhere and nothing in production ever talked to it.
 
 ---
 
@@ -101,7 +105,6 @@ Three "visual variants" — **Aurora** (default, cinematic dark/light), **Editor
 
 ## 6. Known loose ends (not fixed, worth knowing about)
 
-- **`backend/` (NestJS/Postgres)** — dead code, never deployed, don't extend it.
 - **`frontend/app/contact`, `frontend/app/portfolio`, `frontend/app/security`, `frontend/app/lab`, etc.** — old Next.js public-site remnants, still publicly reachable on the Vercel deployment root, showing stale content (old email, old copy). Not linked anywhere live, but a real duplicate-content/confusion risk if someone stumbles onto them.
 - **`localStorage` theme caching** — see §4.
 - **Firestore Settings doc overriding code defaults** — see §3. Any time a "site-wide default" change doesn't seem to take effect, check whether a saved value in Admin → Website Settings is masking it.
