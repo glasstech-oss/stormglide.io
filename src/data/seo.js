@@ -1,4 +1,5 @@
 import { testimonials } from './testimonials.js'
+import { INDUSTRIES } from './industries.js'
 
 export const SITE_URL = 'https://stormglide.io'
 export const DEFAULT_SOCIAL_IMAGE = `${SITE_URL}/og-image.jpg`
@@ -345,6 +346,32 @@ export const seoRoutes = [
     topics: ['Website project enquiries', 'Custom software consultations', 'SaaS and mobile product development', 'Company background, team, and data security'],
     schemaType: 'ContactPage',
   },
+  {
+    path: '/industries',
+    title: 'Industries We Build For | Business Systems by Stormglide',
+    description: 'Construction, logistics, wholesale, professional services, healthcare — real systems and real capabilities for growing businesses, organized by how each industry actually operates.',
+    h1: 'We understand how businesses operate.',
+    kicker: 'Industries',
+    summary: 'Every industry runs on its own repeated processes. See what we\'ve built and what we\'d build for construction, logistics, wholesale, professional services, and healthcare.',
+    topics: ['Construction & property systems', 'Logistics & supply chain systems', 'Wholesale & distribution systems', 'Healthcare systems'],
+    schemaType: 'CollectionPage',
+  },
+  // One entry per industry, generated from src/data/industries.js so this
+  // list can't drift from the actual pages — each gets full meta/schema and
+  // (unlike /work/:slug case studies, deliberately excluded from the
+  // sitemap) IS included, since these are meant to be used directly in
+  // outbound campaigns and need to be indexable.
+  ...INDUSTRIES.map(industry => ({
+    path: `/industries/${industry.slug}`,
+    title: `${industry.name} Software & Business Systems | Stormglide`,
+    description: `${industry.tagline} ${industry.description}`.slice(0, 300),
+    h1: industry.tagline,
+    kicker: industry.name,
+    summary: industry.description,
+    topics: industry.systems,
+    schemaType: 'Service',
+    serviceType: `${industry.name} business systems`,
+  })),
 ]
 
 const routeMap = new Map(seoRoutes.map(route => [route.path, route]))

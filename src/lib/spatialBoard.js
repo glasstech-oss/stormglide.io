@@ -17,6 +17,7 @@ export function getSpatialPosition(pathname) {
     return { x: SPATIAL_X['/products'], depth: 1 }
   }
   if (pathname.startsWith('/work/')) return { x: SPATIAL_X['/work'], depth: 1 }
+  if (pathname.startsWith('/industries')) return { x: SPATIAL_X['/work'], depth: 1 }
   return null // off-board routes (client portal, admin, 404)
 }
 
