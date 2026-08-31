@@ -169,12 +169,16 @@ export default function ServiceLandingWebsiteDevelopment() {
       {/* Case Studies */}
       <section style={{ padding: 'calc(var(--section-padding) * 1.2) 2rem', background: 'var(--bg-soft)' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <SectionHeader label="Success Stories" title="Websites That Convert" alignment="left" maxWidth="700px" />
+          <SectionHeader label="Real Client Work" title="Websites We've Actually Built" alignment="left" maxWidth="700px" />
           <div style={{ marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))', gap: '2rem' }}>
             {[
-              { name: 'Lollarod Enterprise', industry: 'E-Commerce', before: 'Managing orders manually via WhatsApp', after: 'Automated e-commerce platform with online ordering', metric: '3x sales increase in 3 months' },
-              { name: 'Local Service Business', industry: 'Services', before: 'No online presence, bookings via phone', after: 'Professional website with booking system', metric: '40% more inquiries' },
-              { name: 'Retail Shop Ghana', industry: 'Retail', before: 'Selling in one location only', after: 'E-commerce website, ship nationwide', metric: '2x revenue from online sales' },
+              // Real clients, real scope — pulled from src/data/clientWork.js.
+              // No invented metrics: we don't have before/after numbers for
+              // these, so "Result" states what shipped and when, not a
+              // percentage or multiplier nobody measured.
+              { name: 'Lollarod Enterprise', slug: 'lollarod-enterprise', industry: 'Fine Home & Interior Products', before: 'Selling across 3 showrooms with no online catalog or wholesale pricing', after: 'A 200+ SKU e-commerce platform with Paystack checkout and an admin backoffice with sales analytics and inventory tracking', result: 'Live since 2023' },
+              { name: 'Green Gold Gardens', slug: 'green-gold-gardens', industry: 'Nursery, Landscaping & Design', before: 'Running the business through WhatsApp — no catalog, no repeat-customer tracking', after: 'A live plant catalog, bookable design services, staff payroll, and a CRM tracking every repeat customer', result: 'Live since 2025' },
+              { name: 'KenteHaul', slug: 'kente-haul', industry: 'Fashion & Heritage Retail', before: 'No dedicated online store for authentic Kente and Fugu products', after: 'A full e-commerce platform with wishlist, order tracking, and heritage content alongside the shop', result: 'Live since 2025' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ padding: '2rem', border: '1px solid var(--color-border)', borderRadius: '14px', background: 'var(--glass-bg)' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text-heading)' }}>{item.name}</h3>
@@ -183,7 +187,10 @@ export default function ServiceLandingWebsiteDevelopment() {
                   <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}><strong>Before:</strong> {item.before}</p>
                   <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}><strong>After:</strong> {item.after}</p>
                 </div>
-                <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--sg-accent)' }}>Result: {item.metric}</p>
+                <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--sg-accent)', marginBottom: '0.75rem' }}>{item.result}</p>
+                <Link to={`/work/${item.slug}`} style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-heading)', textDecoration: 'none' }}>
+                  View case study →
+                </Link>
               </motion.div>
             ))}
           </div>

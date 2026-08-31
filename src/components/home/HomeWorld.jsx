@@ -80,22 +80,30 @@ const PROOF_STATS = [
   { value: '24h', label: 'Response on every enquiry', tone: 'orange' },
 ]
 
+// Capability statements, not a live feed — there's no real-time pipe behind
+// this ticker, so it must never read as specific transactional data (see the
+// CORE_MODULES comment below for the same reasoning).
 const FEED = [
-  'invoice #204 approved — GHS 3,120',
-  'payroll batch reconciled',
-  'new booking confirmed — Fri 10:00',
-  'inventory check-in — 240 units',
-  'client portal request closed',
-  'Paystack webhook confirmed',
+  'invoices tracked to payment automatically',
+  'bookings synced across every channel',
+  'payroll calculated and reconciled',
+  'inventory updated as stock moves',
+  'client requests routed to the right person',
+  'payments reconciled without manual entry',
 ]
 
 const TRUSTED_BY = ['LOLLAROD', 'JAYBESIN LOGISTICS', 'KYEKYE CUISINE', 'GREEN GOLD GARDENS']
 
+// Deliberately capability labels, not numbers. This panel used to show
+// specific figures (GHS 48,200 invoiced, 136 bookings...) under a "LIVE"
+// badge — nothing on this static marketing site is wired to real client
+// data, so those were fabricated, not live. What's true and worth showing
+// instead: these are the modules one connected system actually runs.
 const CORE_STATS = [
-  { label: 'Invoiced this month', value: 'GHS 48,200', tone: 'blue' },
-  { label: 'Bookings this week', value: '136', tone: 'ink' },
+  { label: 'Invoicing', value: 'Tracked to payment', tone: 'blue' },
+  { label: 'Bookings', value: 'Synced everywhere', tone: 'green' },
   { label: 'Payroll', value: 'Reconciled', tone: 'green' },
-  { label: 'Open requests', value: '5', tone: 'orange' },
+  { label: 'Reporting', value: 'Live across modules', tone: 'orange' },
 ]
 
 const RAIL = ['Surface', 'The chaos', 'The thesis', 'The proof', 'The system']
@@ -375,7 +383,7 @@ function HeroStation({ whatsappPhone }) {
         ))}
       </motion.div>
       <motion.div {...heroRise(5)} className="sg-world-feed" aria-hidden="true">
-        <span className="sg-world-feed-label"><i /> LIVE FROM OUR SYSTEMS</span>
+        <span className="sg-world-feed-label"><i /> INSIDE ONE STORMGLIDE SYSTEM</span>
         <span className="sg-world-feed-track">
           <span>{FEED.join('   ·   ')}   ·   </span>
           <span>{FEED.join('   ·   ')}   ·   </span>
@@ -421,8 +429,8 @@ function CoreStation() {
     <div className="sg-world-core">
       <div className="sg-world-core-panel">
         <div className="sg-world-core-head">
-          <span>APP.STORMGLIDE.IO</span>
-          <span className="live">LIVE</span>
+          <span>A STORMGLIDE SYSTEM</span>
+          <span className="live">CONNECTED</span>
         </div>
         <div className="sg-world-core-grid">
           {CORE_STATS.map(stat => (
