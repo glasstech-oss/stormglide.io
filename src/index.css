@@ -85,6 +85,8 @@
   --sg-accent-dark: var(--blue-dark);
   --sg-accent-2: var(--violet);
   --sg-accent-3: var(--green);
+  --sg-accent-orange: #E06A0F;
+  --sg-accent-orange-light: #F07F23;
   --sg-border: var(--color-border-subtle);
   --sg-spotlight-color: rgba(37,99,235,0.16);
   --sg-spotlight-flash: var(--blue);
