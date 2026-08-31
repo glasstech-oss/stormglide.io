@@ -21,6 +21,7 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const WorkDetail = lazy(() => import('./pages/WorkDetail'))
 const IndustriesIndex = lazy(() => import('./pages/IndustriesIndex'))
 const IndustryLanding = lazy(() => import('./pages/IndustryLanding'))
+const SystemsAudit = lazy(() => import('./pages/SystemsAudit'))
 const PriceEstimator = lazy(() => import('./pages/PriceEstimator'))
 const NexusHRMLanding = lazy(() => import('./pages/ProductLandingNexusHRM'))
 const CargoScanLanding = lazy(() => import('./pages/ProductLandingCargoScan'))
@@ -172,6 +173,7 @@ function SiteRoutes({ location, includeTopLevel }) {
       <Route path="/industries" element={<IndustriesIndex />} />
       <Route path="/industries/:slug" element={<IndustryLanding />} />
       <Route path="/price-estimator" element={<PriceEstimator />} />
+      <Route path="/systems-audit" element={<SystemsAudit />} />
       <Route path="/about"          element={<Navigate to="/contact" replace />} />
       <Route path="/admin/*" element={<AdminDeprecatedRedirect />} />
       <Route path="/client/login" element={<ClientLogin />} />

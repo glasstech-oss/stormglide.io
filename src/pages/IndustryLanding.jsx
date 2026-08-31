@@ -81,8 +81,8 @@ export default function IndustryLanding() {
         <div style={{ maxWidth: '560px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '1.7rem', marginBottom: '1rem', color: 'var(--color-text-heading)' }}>Tell us how {industry.name.toLowerCase()} works at your business.</h2>
           <p style={{ color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>We'll tell you what a connected system would actually look like — no generic pitch, no rigid template.</p>
-          <Link to="/contact" className="btn-primary">
-            Tell us what's slowing you down <ArrowRight size={16} />
+          <Link to="/systems-audit" className="btn-primary">
+            Request a systems audit <ArrowRight size={16} />
           </Link>
         </div>
       </div>

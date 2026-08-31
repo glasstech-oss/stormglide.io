@@ -327,6 +327,16 @@ export const seoRoutes = [
     schemaType: 'WebPage',
   },
   {
+    path: '/systems-audit',
+    title: 'Request a Business Systems Audit | Stormglide',
+    description: 'Five short questions about how your business actually runs today. We come back with specific ideas for your operation, not a generic pitch — no obligation.',
+    h1: "Let's look at how your business works.",
+    kicker: 'Systems audit',
+    summary: 'Tell us your business type, team size, biggest friction, and how things run today — we come back within 24 hours with specific ideas, not a sales pitch.',
+    topics: ['Business systems diagnosis', 'Operational friction assessment', 'Custom software scoping'],
+    schemaType: 'WebPage',
+  },
+  {
     path: '/pricing',
     title: 'Custom Business System Pricing Ghana | Stormglide',
     description: 'Clear pricing for customer portals, booking systems, inventory & operations dashboards, and full business management systems built by Stormglide in Accra, Ghana.',
