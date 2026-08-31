@@ -15,11 +15,13 @@ const PRODUCTS = [
 ]
 
 const NAV = [
-  { label: 'Products',  href: '/products'  },
-  { label: 'Services',  href: '/services'  },
-  { label: 'Pricing',   href: '/pricing'   },
-  { label: 'Work',      href: '/work'      },
-  { label: 'Contact',   href: '/contact'   },
+  { label: 'Products',   href: '/products'   },
+  { label: 'Services',   href: '/services'   },
+  { label: 'Industries', href: '/industries' },
+  { label: 'Pricing',    href: '/pricing'    },
+  { label: 'Work',       href: '/work'       },
+  { label: 'Insights',   href: '/insights'   },
+  { label: 'Contact',    href: '/contact'    },
 ]
 
 const linkBase = {

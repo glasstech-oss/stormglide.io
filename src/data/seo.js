@@ -1,5 +1,6 @@
 import { testimonials } from './testimonials.js'
 import { INDUSTRIES } from './industries.js'
+import { INSIGHTS } from './insights.js'
 
 export const SITE_URL = 'https://stormglide.io'
 export const DEFAULT_SOCIAL_IMAGE = `${SITE_URL}/og-image.jpg`
@@ -381,6 +382,29 @@ export const seoRoutes = [
     topics: industry.systems,
     schemaType: 'Service',
     serviceType: `${industry.name} business systems`,
+  })),
+  {
+    path: '/insights',
+    title: 'Insights — Notes on Business Systems | Stormglide',
+    description: 'What we\'ve actually learned scoping and building business systems for growing companies — disconnected tools, offline-first architecture, payment integration, and more.',
+    h1: 'Notes from building business systems.',
+    kicker: 'Insights',
+    summary: 'Practical notes from real systems work — not generic advice, just what shows up repeatedly when scoping and building software for growing businesses.',
+    topics: INSIGHTS.map(a => a.category),
+    schemaType: 'CollectionPage',
+  },
+  // One entry per article, generated from src/data/insights.js for the same
+  // reason as the industries entries above — can't drift from the real
+  // content, and each article needs its own indexable page.
+  ...INSIGHTS.map(article => ({
+    path: `/insights/${article.slug}`,
+    title: `${article.title} | Stormglide`,
+    description: article.dek.slice(0, 300),
+    h1: article.title,
+    kicker: article.category,
+    summary: article.dek,
+    topics: [article.category],
+    schemaType: 'Article',
   })),
 ]
 
